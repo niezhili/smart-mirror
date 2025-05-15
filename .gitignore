@@ -5,7 +5,7 @@ logs
 features/audio/temp_audio/*
 .venv
 app flow
-
+myenv
 features/weather/__pycache__
 temp_audio/*
 
