@@ -5,7 +5,7 @@ import tempfile
 import sys
 import threading
 import wave
-
+import pygame
 import pyaudio
 import pyttsx3
 from dotenv import load_dotenv
@@ -13,7 +13,6 @@ import shutil
 from aip import AipSpeech
 from datetime import datetime
 from pathlib import Path
-import playsound
 import cv2
 from features.speech_recognizer import RecognizeSpeech
 
@@ -139,11 +138,17 @@ def read_text_baidu(
         with open(temp_file, 'wb') as f:
             f.write(result)
 
-        # Play the audio
-        playsound.playsound(str(temp_file), True)
+        pygame.mixer.init()
+        try:
+            pygame.mixer.music.load(str(temp_file))
+            pygame.mixer.music.play()
 
-        # Remove the temporary file
-        os.remove(temp_file)
+            while pygame.mixer.music.get_busy():
+                pygame.time.wait(100)  # 避免CPU空转
+        finally:
+            pygame.mixer.music.stop()
+            pygame.mixer.quit()  # 确保资源释放
+            os.remove(temp_file)
     else:
         print("Error in speech synthesis:", result)
 

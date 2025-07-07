@@ -157,11 +157,12 @@ def assistant_mode():
 
 def run_face_detection():
     global face_detection_running, face_detection_success
+    
     face_detection_running = True
     if detect_face(timeout=60):
         face_detection_success = True
     else:
-        text_to_speech_chinese("我无法识别您的面部。如果需要我，请随时叫我。")
+        read_text_baidu("我无法识别您的面部。如果需要我，请随时叫我。")
     face_detection_running = False
 
 
@@ -180,7 +181,7 @@ def wake_word_detection_loop():
 
         if face_detection_success:
             face_detected = True
-            face_detection_success = False  # Reset
+            # face_detection_success = False  # Reset
             assistant_thread = threading.Thread(target=assistant_mode)
             assistant_thread.start()
             continue
@@ -191,8 +192,10 @@ def wake_word_detection_loop():
             if script:
                 for wake_word in wake_words:
                     if wake_word in script:
-                        text_to_speech_chinese("唤醒成功，请靠近并扫描您的面部以继续互动。这是为了您的安全。")
-                        threading.Thread(target=run_face_detection).start()
+                        read_text_baidu("唤醒成功,正在进入系统")
+                        # read_text_baidu("唤醒成功，请靠近并扫描您的面部以继续互动。这是为了您的安全。")
+                        # threading.Thread(target=run_face_detection).start()
+                        face_detection_success=True
                         break
                 else:
                     print("Wake word not detected.")

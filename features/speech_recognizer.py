@@ -83,7 +83,7 @@ class RecognizeSpeech:
         self.recognizer.dynamic_energy_adjustment_damping = 0.15
         self.recognizer.dynamic_energy_ratio = 1.5
         self.recognizer.energy_threshold = 1500
-        self.recognizer.pause_threshold = 0.5
+        self.recognizer.pause_threshold = 2
         self.recognizer.operation_timeout = None
         self.recognizer.phrase_threshold = 0.3
         self.recognizer.non_speaking_duration = 0.5
