@@ -8,7 +8,6 @@ import threading
 import pyttsx3
 from aip import AipSpeech
 from datetime import datetime
-import logging
 from pathlib import Path
 import time
 import io
@@ -16,6 +15,15 @@ import audioop
 import requests
 import socket
 from functools import lru_cache
+from loguru import logger
+import sys
+logger.remove()  # 移除默认的 handler
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
+)
+TAG = __name__
 
 
 class VoiceAssistant:
@@ -33,8 +41,7 @@ class VoiceAssistant:
             deepseek_api_key (str): DeepSeek API Key
         """
         # Initialize logging
-        self.logger = self._setup_logger('voice_assistant', log_dir)
-
+        self.logger=logger.bind(tag=TAG)
         # Initialize speech recognition
         self.recognizer = sr.Recognizer()
 
@@ -60,43 +67,6 @@ class VoiceAssistant:
         self.temp_audio_dir = Path(__file__).parent / 'temp_audio'
         self.temp_audio_dir.mkdir(exist_ok=True)
 
-    def _setup_logger(self, name, log_dir):
-        """Set up logger configuration.
-
-        Args:
-            name (str): Logger name
-            log_dir (str): Directory for logs
-
-        Returns:
-            logging.Logger: Configured logger
-        """
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
-
-        # Create log directory if it doesn't exist
-        log_path = Path(log_dir)
-        log_path.mkdir(exist_ok=True)
-
-        # File handler
-        file_handler = logging.FileHandler(
-            log_path / f"{name}_{datetime.now().strftime('%Y%m%d')}.log"
-        )
-        file_handler.setLevel(logging.INFO)
-
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-
-        # Create formatter
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
-
-        # Add handlers to logger
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
-
-        return logger
 
     def _setup_voice_engine(self):
         """Configure text-to-speech engine."""

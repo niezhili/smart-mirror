@@ -1,3 +1,4 @@
+
 from collections import defaultdict
 import audioop
 import os
@@ -15,7 +16,8 @@ from datetime import datetime
 from pathlib import Path
 import cv2
 from features.speech_recognizer import RecognizeSpeech
-
+from loguru import logger
+TAG = __name__
 load_dotenv()
 
 # Baidu API credentials
@@ -259,6 +261,7 @@ def text_to_speech_chinese(text):
         # Optional: Kill or cleanup logic here
         return True
     else:
+        logger.bind(tag=TAG).info("Text:", text)
         print("✅ Done speaking.")
 
 
@@ -266,10 +269,11 @@ def audio_to_text():
     audio = record_audio_until_silence()
     text = speech_to_text(audio)
     if text:
-        print("Recognized text:", text)
+        logger.bind(tag=TAG).info("Recognized text:", text)
         return text
     else:
-        print("Could not convert audio to text.")
+        logger.bind(tag=TAG).warning("Could not convert audio to text.")
+        # print("Could not convert audio to text.")
 
 
 

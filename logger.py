@@ -9,9 +9,10 @@ logger.add(
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
 )
 
+TAG = __name__
 # 使用 tag 输出日志
-logger.bind(tag="APP").info("应用启动")
-logger.bind(tag="DEBUG").debug("这是一个调试信息")
-logger.bind(tag="ERROR").error("发生了一个错误")
-logger.bind(tag="WARNING").warning("警告信息")
-logger.bind(tag="SUCCESS").success("操作成功")
+logger.bind(tag=TAG).info("应用启动")
+logger.bind(tag=TAG).debug("这是一个调试信息")
+logger.bind(tag=TAG).error("发生了一个错误")
+logger.bind(tag=TAG).warning("警告信息")
+logger.bind(tag=TAG).success("操作成功")

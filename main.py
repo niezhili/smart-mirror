@@ -9,6 +9,10 @@ from features.voice_feat_system import VoiceAssistant
 from features.weather import WeatherService
 import time
 import threading
+import logging
+from loguru import logger
+
+TAG =__name__
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -56,7 +60,7 @@ def detect_face(timeout=60) -> bool:
     """Detect a face using preloaded face data."""
     global preloaded_face_data
     if preloaded_face_data is None:
-        print("Error: Face data not preloaded.")
+        logger.bind(tag=TAG).error("Face data not preloaded.")
         return False
 
     start_time = time.time()
@@ -65,13 +69,13 @@ def detect_face(timeout=60) -> bool:
         try:
             recognized = preloaded_face_data.start_recognition()
             if recognized:
-                print("Face detected")
+                logger.bind(tag=TAG).info("Face detected")
                 return True
             else:
-                print("No face detected (during activation)")
+                logger.bind(tag=TAG).warning("No face detected (during activation)")
                 time.sleep(0.5)
         except Exception as e:
-            print(f"Error during recognition: {e}")
+            logger.bind(tag=TAG).error(f"Error during recognition: {e}")
             time.sleep(0.5)
 
     return False
@@ -82,14 +86,14 @@ def get_user_location():
     try:
         return geocoder.ip("me")
     except Exception as e:
-        print(f"Error getting location: {e}")
+        logger.bind(tag=TAG).error(f"Error getting location: {e}")
         return None
 
 
 def assistant_mode():
     global running, face_detected, assistant
     if assistant is None:
-        print("Error: Assistant not initialized.")
+        logger.bind(tag=TAG).error("Assistant not initialized.")
         return
 
     location = get_user_location()
@@ -109,12 +113,12 @@ def assistant_mode():
 
         text = user_speech_recognition()
         if text:
-            print(f"User said: {text}")
+            logger.bind(tag=TAG).info(f"User said: {text}")
             last_interaction_time = time.time()  # Reset the timer
 
             if '天气' in text:
-                print("Weather query detected")
-                print("Response: " + response['weather_condition'])
+                logger.bind(tag=TAG).info("Weather query detected")
+                logger.bind(tag=TAG).info("Response: " + response['weather_condition'])
                 read_text_baidu(f"今天的天气状况如下,  位置:{location.city}")
                 read_text_baidu(f"天气：{response['weather_condition']}")
                 read_text_baidu(f"温度：{response['temperature']}")
@@ -127,11 +131,11 @@ def assistant_mode():
                 read_text_baidu(f"云量：{response['cloud_coverage']}")
                 continue
             elif '几点' in text:
-                print("Time query detected")
+                logger.bind(tag=TAG).info("Time query detected")
                 read_text_baidu(f"现在是 {time.strftime('%H:%M')}")
                 continue
             elif '空调' in text:
-                print("AC query detected")
+                logger.bind(tag=TAG).info("AC query detected")
                 # Add your AC control logic here
                 read_text_baidu("好的，正在处理空调指令。")
                 continue
@@ -140,14 +144,14 @@ def assistant_mode():
                 face_detected = False
                 continue
             else:
-                print("Deepseek request")
-                print(f"Heard: {text}, processing with DeepSeek...")
+                logger.bind(tag=TAG).info("DeepSeek qequest")
+                logger.bind(tag=TAG).info(f"Heard: {text}, processing with DeepSeek...")
                 response = assistant.chat(text)
-                print(f"DeepSeek response: {response}")
+                logger.bind(tag=TAG).info(f"DeepSeek response: {response}")
                 read_text_baidu(response)
                 continue
         else:
-            print("Listening for command...")
+            logger.bind(tag=TAG).warning("Listening for command...")
             time.sleep(1)  # Small delay while actively listening
 
     if face_detected:
@@ -171,7 +175,7 @@ def wake_word_detection_loop():
     global face_detection_running, face_detection_success
 
     if assistant is None:
-        print("Error: Assistant not initialized.")
+        logger.bind(tag=TAG).error("Assistant not initialized.")
         return
 
     while running:
@@ -187,7 +191,7 @@ def wake_word_detection_loop():
             continue
 
         if not face_detection_running:
-            print("Listening for wake word...")
+            logger.bind(tag=TAG).info("Listening for wake word...")
             script = audio_to_text()
             if script:
                 for wake_word in wake_words:
@@ -198,9 +202,9 @@ def wake_word_detection_loop():
                         face_detection_success=True
                         break
                 else:
-                    print("Wake word not detected.")
+                    logger.bind(tag=TAG).warning("Wake word not detected.")
             else:
-                print("No speech detected.")
+                logger.bind(tag=TAG).warning("No speech detected.")
 
         time.sleep(1)  # Small delay to avoid busy loop
 
@@ -223,6 +227,7 @@ def launch_gui():
     except ImportError:
         try:
             # Fallback to Kivy implementation
+
             from kivy.app import App
             from kivy.uix.label import Label
 
@@ -234,8 +239,8 @@ def launch_gui():
 
         except ImportError:
             # Final fallback to console mode
-            print("GUI frameworks not available - running in console mode")
-            print("Access the mirror at http://localhost:8080")
+            logger.bind(tag=TAG).warning("GUI frameworks not available- running in console mode")
+            logger.bind(tag=TAG).info("Starting console modehttp://localhost:8080")
             import time
             while True:
                 time.sleep(1)
@@ -243,7 +248,7 @@ def launch_gui():
 
 def main() -> None:
     global running, assistant, preloaded_face_data
-    print("Smart Mirror started.")
+    logger.bind(tag=TAG).info("Starting Smart Mirror...")
 
     # Initialize the voice assistant
     assistant = VoiceAssistant(
@@ -267,7 +272,7 @@ def main() -> None:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Exiting...")
+        logger.bind(tag=TAG).info("Exiting...")
         running = False
         voice_thread.join()
         # GUI thread will exit when the Qt application is closed
