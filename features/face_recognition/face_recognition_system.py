@@ -20,7 +20,8 @@ logger.add(
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
 )
 
-from features.common.utils import read_text_baidu
+from features.common.utils import tts_speech
+
 TAG = __name__
 
 class FaceRecognition:
@@ -230,7 +231,8 @@ class FaceRecognition:
                             self.logger.info(f"Recognized: {name} with confidence {confidence:.1f}%")
 
                             # Voice announcement
-                            read_text_baidu(f"您好 {name}")
+                            tts_speech(f"您好 {name}")
+                            # read_text_baidu(f"您好 {name}")
                             # self.voice_queue.put(f"Hello {name}")
                             time.sleep(1)
 

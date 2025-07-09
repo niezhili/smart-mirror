@@ -1,0 +1,16 @@
+env : dev
+
+#选择接口
+choose:
+  tts: tts_huoshan
+#接口配置
+tts :
+  tts_huoshan :
+    appid: 6082784057
+    token: bF4nRpNiCcP8HDLfDJYvFupObvZxy0gq
+    cluster: volcano_tts
+    # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
+    # zh_female_shuangkuaisisi_moon_bigtts 中英
+    voice_type: zh_female_shuangkuaisisi_moon_bigtts
+    host: openspeech.bytedance.com
+  tts_baidu :

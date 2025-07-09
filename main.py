@@ -3,7 +3,7 @@ import sys
 from flask import Flask, render_template
 import geocoder
 from features.face_recognition.face_recognition_system import FaceRecognition
-from features.common.utils import read_text_baidu, user_speech_recognition, record_audio_until_silence, audio_to_text, \
+from features.common.utils import tts_speech, user_speech_recognition, record_audio_until_silence, audio_to_text, \
     text_to_speech_chinese, load_known_faces_from_folder
 from features.voice_feat_system import VoiceAssistant
 from features.weather import WeatherService
@@ -24,7 +24,7 @@ app = Flask(__name__)
 # Global flags and variables
 running = True
 face_detected = False
-wake_words = ["小", "小朋友", "朋友"]  # Example wake words in Chinese (adjust as needed)
+wake_words = ["你好","树莓派","小", "小朋友", "朋友"]  # Example wake words in Chinese (adjust as needed)
 WAKE_WORD_THRESHOLD = 0.7  # Adjust based on your speech recognition sensitivity
 assistant = None  # Initialize VoiceAssistant globally
 face_detection_running = False
@@ -104,10 +104,10 @@ def assistant_mode():
     listening_duration = 60  # 1 minute in seconds
     last_interaction_time = time.time()
 
-    read_text_baidu("你好！有什么我可以帮您？")
+    tts_speech("你好！有什么我可以帮您？")
     while running and face_detected:
         if time.time() - last_interaction_time > listening_duration:
-            read_text_baidu("等待唤醒...")
+            tts_speech("等待唤醒...")
             face_detected = False
             break
 
@@ -119,28 +119,28 @@ def assistant_mode():
             if '天气' in text:
                 logger.bind(tag=TAG).info("Weather query detected")
                 logger.bind(tag=TAG).info("Response: " + response['weather_condition'])
-                read_text_baidu(f"今天的天气状况如下,  位置:{location.city}")
-                read_text_baidu(f"天气：{response['weather_condition']}")
-                read_text_baidu(f"温度：{response['temperature']}")
-                read_text_baidu(f"体感温度：{response['feels_like']}")
-                read_text_baidu(f"湿度：{response['humidity']}")
-                read_text_baidu(f"风向：{response['wind_direction']}")
-                read_text_baidu(f"风速：{response['wind_speed']}")
-                read_text_baidu(f"气压：{response['pressure']}")
-                read_text_baidu(f"能见度：{response['visibility']}")
-                read_text_baidu(f"云量：{response['cloud_coverage']}")
+                tts_speech(f"今天的天气状况如下,  位置:{location.city}")
+                tts_speech(f"天气：{response['weather_condition']}")
+                tts_speech(f"温度：{response['temperature']}")
+                tts_speech(f"体感温度：{response['feels_like']}")
+                tts_speech(f"湿度：{response['humidity']}")
+                tts_speech(f"风向：{response['wind_direction']}")
+                tts_speech(f"风速：{response['wind_speed']}")
+                tts_speech(f"气压：{response['pressure']}")
+                tts_speech(f"能见度：{response['visibility']}")
+                tts_speech(f"云量：{response['cloud_coverage']}")
                 continue
             elif '几点' in text:
                 logger.bind(tag=TAG).info("Time query detected")
-                read_text_baidu(f"现在是 {time.strftime('%H:%M')}")
+                tts_speech(f"现在是 {time.strftime('%H:%M')}")
                 continue
             elif '空调' in text:
                 logger.bind(tag=TAG).info("AC query detected")
                 # Add your AC control logic here
-                read_text_baidu("好的，正在处理空调指令。")
+                tts_speech("好的，正在处理空调指令。")
                 continue
             elif '拜拜' in text or '再见' in text:
-                read_text_baidu("拜拜，下次再见！")
+                tts_speech("拜拜，下次再见！")
                 face_detected = False
                 continue
             else:
@@ -148,14 +148,14 @@ def assistant_mode():
                 logger.bind(tag=TAG).info(f"Heard: {text}, processing with DeepSeek...")
                 response = assistant.chat(text)
                 logger.bind(tag=TAG).info(f"DeepSeek response: {response}")
-                read_text_baidu(response)
+                tts_speech(response)
                 continue
         else:
             logger.bind(tag=TAG).warning("Listening for command...")
             time.sleep(1)  # Small delay while actively listening
 
     if face_detected:
-        read_text_baidu("等待唤醒...")
+        tts_speech("等待唤醒...")
         face_detected = False
 
 
@@ -166,7 +166,7 @@ def run_face_detection():
     if detect_face(timeout=60):
         face_detection_success = True
     else:
-        read_text_baidu("我无法识别您的面部。如果需要我，请随时叫我。")
+        tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
     face_detection_running = False
 
 
@@ -196,8 +196,8 @@ def wake_word_detection_loop():
             if script:
                 for wake_word in wake_words:
                     if wake_word in script:
-                        read_text_baidu("唤醒成功,正在进入系统")
-                        # read_text_baidu("唤醒成功，请靠近并扫描您的面部以继续互动。这是为了您的安全。")
+                        tts_speech("唤醒成功,正在进入系统")
+                        # tts_speech("唤醒成功，请靠近并扫描您的面部以继续互动。这是为了您的安全。")
                         # threading.Thread(target=run_face_detection).start()
                         face_detection_success=True
                         break

@@ -9,7 +9,11 @@ import wave
 import pygame
 import pyaudio
 import pyttsx3
+import glob
 from dotenv import load_dotenv
+from numpy.ma.core import choose
+import yaml
+from features.tts.tts_huoshan import text_to_speech
 import shutil
 from aip import AipSpeech
 from datetime import datetime
@@ -17,6 +21,7 @@ from pathlib import Path
 import cv2
 from features.speech_recognizer import RecognizeSpeech
 from loguru import logger
+import pygame
 TAG = __name__
 load_dotenv()
 
@@ -25,11 +30,83 @@ APP_ID = os.getenv('BAIDU_APP_ID')
 API_KEY = os.getenv('BAIDU_API_KEY')
 SECRET_KEY = os.getenv('BAIDU_SECRET_KEY')
 
+# def tts_to_voice(rext: str, output_dir: str = "temp_tts"):
+#     tts_platform=
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+def tts_speech(text: str, output_dir: str = "temp_tts"):
+    if config["choose"]["tts"]=="tts_huoshan":
+        # logger.bind(tag=TAG).error("火山火山火山")
+        tts_huoshan(text)
+    elif config["choose"]["tts"]=="tts_baidu":
+        # logger.bind(tag=TAG).error("百度")
+        tts_baidu(text)
+    else:
+        logger.bind(tag=TAG).error(" 请检查yaml配置，选择正确的语音合成平台")
+def tts_huoshan(text: str, output_dir: str = "temp_tts"):
+    """
+    //qishibushi
+    huoshan_tts
+    合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
+    使用 .wav 格式 + pygame 播放，适用于树莓派。
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
+    output_file = os.path.abspath(output_file)
+
+    print(f"正在合成语音：{text}")
+    text_to_speech(text, output_file=output_file)
+    logger.bind(tag=TAG).info(f"已保存音频至：{output_file}")
+
+    manage_audio_files(output_dir)
+
+    print("正在播放音频...")
+    try:
+        play_audio_file(output_file)
+        print("播放完成。")
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
+
+
+def play_audio_file(file_path):
+    """
+    huoshan
+    使用 pygame 播放 .wav 音频文件（支持树莓派）
+    """
+    pygame.mixer.init()
+    sound = pygame.mixer.Sound(file_path)
+    sound.play()
+
+    # 等待播放完成
+    while pygame.mixer.get_busy():
+        pygame.time.delay(100)
+
+
+def manage_audio_files(directory: str, max_files: int = 15):
+    """
+    huoshan
+    管理指定目录下的音频文件数量，保留最新的 max_files 个文件。
+    """
+    files = glob.glob(os.path.join(directory, "*.wav"))  # 改为 .wav
+    if len(files) > max_files:
+        files.sort(key=os.path.getmtime)
+        for file in files[:len(files) - max_files]:
+            try:
+                os.remove(file)
+                logger.bind(tag=TAG).info(f"已删除旧音频：{file}")
+
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"无法删除 {file}: {str(e)}")
+
+
 
 def create_directory_if_not_exists(directory: str):
     if not os.path.exists(directory):
         os.makedirs(directory)
-        print(f"Created directory: {directory}")
+        logger.bind(tag=TAG).info(f"Created directory: {directory}")
 
 
 def copy_image_to_directory(image_path: str, target_dir: str):
@@ -39,7 +116,7 @@ def copy_image_to_directory(image_path: str, target_dir: str):
         shutil.copy2(image_path, new_path)
         return new_path
     except Exception as e:
-        print(f"Error copying {image_path}: {str(e)}")
+        logger.bind(tag=TAG).error(f"Error copying {image_path}: {str(e)}")
         return None
 
 
@@ -90,7 +167,7 @@ def _draw_face_annotations(frame, top, right, bottom, left, display_text):
     )
 
 
-def read_text_baidu(
+def tts_baidu(
         text,
         baidu_app_id=os.getenv('BAIDU_APP_ID'),
         baidu_api_key=os.getenv('BAIDU_API_KEY'),
@@ -129,30 +206,30 @@ def read_text_baidu(
         'spd': 5,  # Speed
         'pit': 5,  # Pitch
         'vol': 5,  # Volume
-        'per': 4  # Voice type
+        'per': 4,  # Voice type
+        'aue': 6   # Audio format : 6 for WAV
     })
 
     # Check if synthesis was successful
     if not isinstance(result, dict):
         # Save the audio to a temporary file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        temp_file = temp_audio_path / f'tts_{timestamp}.mp3'
+        temp_file = temp_audio_path / f'tts_{timestamp}.wav'
         with open(temp_file, 'wb') as f:
             f.write(result)
 
-        pygame.mixer.init()
+        manage_audio_files(temp_audio_dir)  # 使用已有的函数管理文件
+        # play audio
+        logger.bind(tag=TAG).info("正在播放音频...")
         try:
-            pygame.mixer.music.load(str(temp_file))
-            pygame.mixer.music.play()
-
-            while pygame.mixer.music.get_busy():
-                pygame.time.wait(100)  # 避免CPU空转
-        finally:
-            pygame.mixer.music.stop()
-            pygame.mixer.quit()  # 确保资源释放
-            os.remove(temp_file)
+            play_audio_file(str(temp_file))
+            logger.bind(tag=TAG).info("播放完成。")
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
     else:
-        print("Error in speech synthesis:", result)
+        logger.bind(tag=TAG).error("Error in speech synthesis",result)
+
+
 
 
 def user_speech_recognition() -> str:
@@ -181,7 +258,7 @@ def record_audio_until_silence():
             data = stream.read(CHUNK)
             rms = audioop.rms(data, 2)
             if rms >= SILENCE_THRESHOLD:
-                print("Voice detected, starting recording...")
+                logger.bind(tag=TAG).info("Voice detected")
                 break
 
         print("Recording... Press Ctrl+C to stop.")
@@ -208,7 +285,8 @@ def record_audio_until_silence():
                                     wf.setsampwidth(p.get_sample_size(FORMAT))
                                     wf.setframerate(RATE)
                                     wf.writeframes(b"".join(frames))
-                                print(f"Speech segment stored at: {filename}")
+                                logger.bind(tag=TAG).info(f"Speech segment saved to: {filename}")
+
 
                                 # Clear frames for next detection
                             frames = []
@@ -220,7 +298,8 @@ def record_audio_until_silence():
                     silent_chunks = 0
 
         except KeyboardInterrupt:
-            print("Stopped listening.")
+            logger.bind(tag=TAG).info("Stopped listening.")
+
 
         finally:
             stream.stop_stream()
@@ -237,7 +316,8 @@ def speech_to_text(audio):
     if "result" in result:
         return result["result"][0]
     else:
-        print("Error in STT:", result)
+        logger.bind(tag=TAG).warning("Could not convert audio to text.")
+        # print("Error in STT:", result)
         return None
 
 
@@ -257,7 +337,8 @@ def text_to_speech_chinese(text):
     t.join(timeout=10)  # Wait 10 seconds max
 
     if t.is_alive():
-        print("⚠️ Speech timed out. Something went wrong.")
+        logger.bind(tag=TAG).warning("Speech timed out. Something went wrong.")
+        # print("⚠️ Speech timed out. Something went wrong.")
         # Optional: Kill or cleanup logic here
         return True
     else:
