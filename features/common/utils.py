@@ -3,15 +3,12 @@ from collections import defaultdict
 import audioop
 import os
 import tempfile
-import sys
 import threading
 import wave
-import pygame
 import pyaudio
 import pyttsx3
 import glob
 from dotenv import load_dotenv
-from numpy.ma.core import choose
 import yaml
 from features.tts.tts_huoshan import text_to_speech
 import shutil

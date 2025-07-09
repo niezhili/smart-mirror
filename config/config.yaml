@@ -11,6 +11,7 @@ tts :
     cluster: volcano_tts
     # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
     # zh_female_shuangkuaisisi_moon_bigtts 中英
-    voice_type: zh_female_shuangkuaisisi_moon_bigtts
+    # zh_male_jingqiangkanye_emo_mars_bigtts 京腔侃爷
+    voice_type: zh_male_jingqiangkanye_emo_mars_bigtts
     host: openspeech.bytedance.com
   tts_baidu :

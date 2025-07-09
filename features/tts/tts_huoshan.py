@@ -4,8 +4,9 @@ import uuid
 import json
 import gzip
 import copy
-import os
 import yaml
+import os
+import glob
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
@@ -61,7 +62,6 @@ async def _synthesize(text: str, output_file: str):
     full_client_request = bytearray(default_header)
     full_client_request.extend((len(payload_bytes)).to_bytes(4, 'big'))
     full_client_request.extend(payload_bytes)
-
     async with websockets.connect(
         api_url,
         extra_headers={"Authorization": f"Bearer; {token}"},
@@ -107,40 +107,6 @@ def text_to_speech(text: str, output_file: str = "output.mp3"):
     :param output_file: 输出的 MP3 文件路径
     """
     asyncio.run(_synthesize(text, output_file))
-
-import os
-import glob
-import shutil
-from datetime import datetime
-from playsound import playsound
-
-def tts_and_play(text: str, output_dir: str = "temp_tts"):
-    """
-    合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
-
-    :param text: 要合成的文本
-    :param output_dir: 保存音频的文件夹
-    """
-    # 创建目录（如果不存在）
-    os.makedirs(output_dir, exist_ok=True)
-
-    # 生成带时间戳的文件名
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = os.path.join(output_dir, f"{timestamp}.mp3")
-
-    # 合成语音并保存
-    print(f"正在合成语音：{text}")
-    text_to_speech(text, output_file=output_file)
-    print(f"音频已保存至：{output_file}")
-
-    # 控制文件夹内文件数量 <= 15
-    manage_audio_files(output_dir, max_files=15)
-
-    # 播放音频
-    print("正在播放音频...")
-    playsound(output_file)
-    print("播放完成。")
-
 
 def manage_audio_files(directory: str, max_files: int = 15):
     """
