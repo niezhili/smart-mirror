@@ -3,6 +3,7 @@ from collections import defaultdict
 import audioop
 import os
 import tempfile
+import time
 import threading
 import wave
 import pyaudio
@@ -229,79 +230,90 @@ def tts_baidu(
 
 
 
-def user_speech_recognition() -> str:
-    speech_recognition = RecognizeSpeech()
-    recognized_text = speech_recognition.recognize_from_microphone()
+def user_speech_recognition(timeout=5) -> str:
+    # speech_recognition = RecognizeSpeech()
+    # recognized_text = speech_recognition.recognize_from_microphone()
+
+    recognized_text=audio_to_text(timeout)
     return recognized_text
 
 
 # Update the listening and reading of data
 
-def record_audio_until_silence():
-        CHUNK = 1024
-        FORMAT = pyaudio.paInt16
-        CHANNELS = 1
-        RATE = 16000
-        SILENCE_THRESHOLD = 500
-        SILENCE_DURATION = 2  # seconds
-        p = pyaudio.PyAudio()
+def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒）
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 16000
+    SILENCE_THRESHOLD = 500  # 静音阈值（根据实际环境调整）
+    SILENCE_DURATION = 1.5  # 检测到静默后停止录音的持续时间
+    p = pyaudio.PyAudio()
 
-        stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    print("Listening for voice...")
 
-        print("Listening for voice...")
+    # --- 新增超时逻辑 ---
+    start_time = time.time()
+    max_recording_time = timeout  # 最大录音时间
+    # -------------------
 
-        # Pre-listening phase: Wait until a voice is detected
+    frames = []
+    silent_chunks = 0
+    max_silent_chunks = int(SILENCE_DURATION * RATE / CHUNK)
+
+    try:
+        # 第一阶段：等待语音开始
         while True:
             data = stream.read(CHUNK)
             rms = audioop.rms(data, 2)
             if rms >= SILENCE_THRESHOLD:
-                logger.bind(tag=TAG).info("Voice detected")
+                # logger.bind(tag=TAG).info("Voice detected")
+                logger.bind(tag=TAG).info("正在倾听...")
                 break
+            # --- 检查超时 ---
+            if time.time() - start_time > timeout:
+                logger.bind(tag=TAG).warning("录音超时：未检测到语音输入")
+                return None
+            # -----------------
 
-        print("Recording... Press Ctrl+C to stop.")
-        frames = []
-        silent_chunks = 0
-        max_silent_chunks = int(SILENCE_DURATION * RATE / CHUNK)
+        # 第二阶段：录音直到静默
+        while True:
+            data = stream.read(CHUNK)
+            frames.append(data)
+            rms = audioop.rms(data, 2)
 
-        try:
-            while True:
-                data = stream.read(CHUNK)
-                frames.append(data)
-                rms = audioop.rms(data, 2)
+            if rms < SILENCE_THRESHOLD:
+                silent_chunks += 1
+                if silent_chunks > max_silent_chunks:
+                    # 静默足够长，结束录音
+                    break
+            else:
+                silent_chunks = 0
 
-                if rms < SILENCE_THRESHOLD:
-                    silent_chunks += 1
-                    if silent_chunks > max_silent_chunks:
-                        # Silence detected, save current segment
-                        if frames:
-                            # Save to temporary file
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmpfile:
-                                filename = tmpfile.name
-                                with wave.open(filename, "wb") as wf:
-                                    wf.setnchannels(CHANNELS)
-                                    wf.setsampwidth(p.get_sample_size(FORMAT))
-                                    wf.setframerate(RATE)
-                                    wf.writeframes(b"".join(frames))
-                                logger.bind(tag=TAG).info(f"Speech segment saved to: {filename}")
+            # --- 检查最大录音时间 ---
+            if time.time() - start_time > max_recording_time:
+                logger.bind(tag=TAG).warning("达到最大录音时间，强制结束")
+                break
+            # -------------------------
 
+        # 保存临时文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmpfile:
+            filename = tmpfile.name
+            with wave.open(filename, "wb") as wf:
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(p.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                wf.writeframes(b"".join(frames))
+            logger.bind(tag=TAG).info(f"Speech segment saved to: {filename}")
+            return filename
 
-                                # Clear frames for next detection
-                            frames = []
+    except KeyboardInterrupt:
+        logger.bind(tag=TAG).info("Stopped listening.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
 
-                            # Return filename for processing (or directly pass to STT)
-                            return filename
-
-                else:
-                    silent_chunks = 0
-
-        except KeyboardInterrupt:
-            logger.bind(tag=TAG).info("Stopped listening.")
-
-
-        finally:
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
 
 
 def speech_to_text(audio):
@@ -343,17 +355,19 @@ def text_to_speech_chinese(text):
         print("✅ Done speaking.")
 
 
-def audio_to_text():
-    audio = record_audio_until_silence()
-    text = speech_to_text(audio)
+def audio_to_text(timeout=5):  # 添加超时参数
+    """带超时的语音转文字"""
+    audio_file = record_audio_until_silence(timeout=timeout)
+    if not audio_file:
+        return None
+
+    text = speech_to_text(audio_file)
     if text:
         logger.bind(tag=TAG).info("Recognized text:", text)
         return text
     else:
         logger.bind(tag=TAG).warning("Could not convert audio to text.")
-        # print("Could not convert audio to text.")
-
-
+        return None
 
 def load_known_faces_from_folder(folder_path):
     """

@@ -4,7 +4,7 @@ known_faces/*
 logs
 features/audio/temp_audio/*
 .venv
-app flow
+doc/app flow
 myenv
 features/weather/__pycache__
 temp_audio/*
@@ -19,5 +19,5 @@ features/common/__pycache__/*
 *.wav
 *.mp3
 .idea
-note
+doc/note
 features/face_recognition/__pycache__/face_recognition_system.cpython-312.pyc

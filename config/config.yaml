@@ -15,3 +15,6 @@ tts :
     voice_type: zh_male_jingqiangkanye_emo_mars_bigtts
     host: openspeech.bytedance.com
   tts_baidu :
+
+llm :
+  deepseek:
