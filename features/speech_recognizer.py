@@ -6,11 +6,14 @@ import wave
 import audioop
 import socket
 from functools import lru_cache
-from dotenv import load_dotenv
 from loguru import logger
 import sys
+import yaml
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 
-load_dotenv()
 logger.remove()  # 移除默认的 handler
 logger.add(
     sys.stdout,
@@ -23,8 +26,8 @@ TAG = __name__
 class RecognizeSpeech:
     """Speech recognition class using Baidu Speech Recognition API."""
 
-    def __init__(self, app_id=os.getenv('BAIDU_APP_ID'), api_key=os.getenv('BAIDU_API_KEY'),
-                 secret_key=os.getenv('BAIDU_SECRET_KEY')):
+    def __init__(self, app_id=config['asr']['asr_baidu']['baidu_app_id'], api_key=config['asr']['asr_baidu']['baidu_api_key'],
+                 secret_key=config['asr']['asr_baidu']['baidu_secret_key']):
         """Initialize speech recognition with Baidu credentials.
 
         Args:

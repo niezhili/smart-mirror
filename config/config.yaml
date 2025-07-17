@@ -5,6 +5,9 @@ choose:
   tts: tts_huoshan
   asr: asr_paraformer
 #参数调节
+
+time:
+  timeout: 30
 #api接口配置
 
 asr :
@@ -15,8 +18,6 @@ asr :
     asr_paraformer:
       dashscope.api_key: "sk-acccd325f0f7452b935947606d5b565a"
       language_hints : ['zh','en','ja','fr','ru','yue','ko','de']
-
-
 
 
 tts :
@@ -43,3 +44,7 @@ llm :
 
 weather :
   weather_api_key: "8ff8d7c3dd9d4e3190df3931536544ef"
+
+iot :
+  tuya_api_id: ""
+  tuya_api_secret : ""

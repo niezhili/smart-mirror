@@ -33,8 +33,7 @@ APP_ID = config['tts']['tts_baidu']['baidu_app_id']
 API_KEY = config['tts']['tts_baidu']['baidu_api_key']
 SECRET_KEY = config['tts']['tts_baidu']['baidu_secret_key']
 
-# def tts_to_voice(rext: str, output_dir: str = "temp_tts"):
-#     tts_platform=
+
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
@@ -178,7 +177,7 @@ def tts_baidu(
         baidu_app_id=APP_ID,
         baidu_api_key=API_KEY,
         baidu_secret_key=SECRET_KEY,
-        temp_audio_dir='temp_audio'
+        temp_audio_dir='temp_tts'
 ):
     """
     Convert text to speech using Baidu TTS and play the audio.
@@ -245,7 +244,7 @@ def tts_baidu(
 
 
 
-def user_speech_recognition(timeout=5) -> str:
+def user_speech_recognition(timeout=30) -> str:
     # speech_recognition = RecognizeSpeech()
     # recognized_text = speech_recognition.recognize_from_microphone()
 
@@ -255,7 +254,7 @@ def user_speech_recognition(timeout=5) -> str:
 
 # Update the listening and reading of data
 
-def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒）
+def record_audio_until_silence(timeout=30):  # 添加超时参数（单位：秒）
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -269,7 +268,7 @@ def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒�
 
     # --- 新增超时逻辑 ---
     start_time = time.time()
-    max_recording_time = timeout  # 最大录音时间
+    max_recording_time = 120  # 最大录音时间
     # -------------------
 
     frames = []
@@ -283,7 +282,7 @@ def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒�
             rms = audioop.rms(data, 2)
             if rms >= SILENCE_THRESHOLD:
                 # logger.bind(tag=TAG).info("Voice detected")
-                logger.bind(tag=TAG).info("正在倾听...")
+                logger.bind(tag=TAG).info("倾听中...")
                 break
             # --- 检查超时 ---
             if time.time() - start_time > timeout:
@@ -307,7 +306,7 @@ def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒�
 
             # --- 检查最大录音时间 ---
             if time.time() - start_time > max_recording_time:
-                logger.bind(tag=TAG).warning("达到最大录音时间，强制结束")
+                logger.bind(tag=TAG).warning("达到最大录音时间120s，强制结束")
                 break
             # -------------------------
 
@@ -328,7 +327,9 @@ def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒�
         stream.stop_stream()
         stream.close()
         p.terminate()
-
+def read_text_baidu(text):
+    logger.bind(tag=TAG).warning("read_text_baidu模块更名为tts_baidu,强烈建议使用统一接口tts_speech")
+    tts_speech(text)
 def speech_to_text(audio):
     choose_asr=config['choose']['asr']
     if choose_asr=='asr_baidu':
@@ -387,7 +388,7 @@ def text_to_speech_chinese(text):
         print("✅ Done speaking.")
 
 
-def audio_to_text(timeout=5):
+def audio_to_text(timeout=30):
     """带超时的语音转文字"""
     if(is_tts_working()):
         set_recording_requested(True)
@@ -402,7 +403,6 @@ def audio_to_text(timeout=5):
         logger.bind(tag=TAG).info("Recognized text:", text)
         return text
     else:
-        logger.bind(tag=TAG).warning("Could not convert audio to text.")
         return None
 
 def load_known_faces_from_folder(folder_path):
