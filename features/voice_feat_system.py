@@ -17,12 +17,17 @@ import socket
 from functools import lru_cache
 from loguru import logger
 import sys
+import yaml
 logger.remove()  # 移除默认的 handler
 logger.add(
     sys.stdout,
     colorize=True,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
 )
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 TAG = __name__
 
 
@@ -51,8 +56,8 @@ class VoiceAssistant:
             self.speech_client = AipSpeech(baidu_app_id, baidu_api_key, baidu_secret_key)
 
         # Initialize DeepSeek API
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = os.getenv('DEEPSEEK_API_URL')
+        self.deepseek_api_key = config['llm']['deepseek']['deepseek_api_key']
+        self.deepseek_api_url = config['llm']['deepseek']['deepseek_api_url']
 
         # Initialize TTS engine
         self.voice_queue = queue.Queue()

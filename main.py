@@ -1,8 +1,7 @@
 import os
-import sys
 import time
+import yaml
 import threading
-import logging
 from flask import Flask, render_template
 import geocoder
 from loguru import logger
@@ -10,15 +9,19 @@ from features.face_recognition.face_recognition_system import FaceRecognition
 from features.common.utils import tts_speech, user_speech_recognition, audio_to_text, load_known_faces_from_folder
 from features.voice_feat_system import VoiceAssistant
 from features.weather import WeatherService
+from queue import Queue
+from features.common.globals import set_tts_state, is_recording_requested, is_tts_working, set_recording_requested
 
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 TAG = __name__
 
 # Initialize Flask app
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Global flags and variables
-# app = Flask(__name__)
 # Global flags and variables
 running = True
 face_detected = False
@@ -28,17 +31,12 @@ location_info = None  # Cache location info
 weather_service = WeatherService()
 assistant = None
 
-# Optimized wake word detection parameters
-WAKE_WORD_THRESHOLD = 0.7
-WAKE_WORD_CHECK_INTERVAL = 0.1  # Reduced from 1s
-FACE_DETECT_TIMEOUT = 30  # Reduced from 60s
-TTS_PLAYBACK_DELAY = 0.5  # For async playback coordination
-
+WAKE_WORD_CHECK_INTERVAL = 0.1  # 唤醒词检查间隔
+FACE_DETECT_TIMEOUT = 30  # 人脸检查超时
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/test')
 def test():
@@ -52,12 +50,17 @@ def preload_face_data():
         face_system.add_new_person(person_name, image_paths)
     return face_system
 
-
 def detect_face(timeout=FACE_DETECT_TIMEOUT) -> bool:
     global preloaded_face_data
     if preloaded_face_data is None:
         logger.bind(tag=TAG).error("Face data not preloaded.")
         return False
+    result_queue = Queue()
+    def recognition_wrapper():
+        result = preloaded_face_data.start_recognition()
+        result_queue.put(result)
+
+
 
     start_time = time.time()
     detection_thread = threading.Thread(target=preloaded_face_data.start_recognition)
@@ -65,8 +68,9 @@ def detect_face(timeout=FACE_DETECT_TIMEOUT) -> bool:
 
     # Wait for result with timeout
     while time.time() - start_time < timeout and detection_thread.is_alive():
-        if preloaded_face_data.recognition_result:  # Assume recognition_result is a shared flag
-            logger.bind(tag=TAG).info("Face detected")
+        if not result_queue.empty():
+            result = result_queue.get()
+            logger.bind(tag=TAG).info(f"Face detected: {result}")
             return True
         time.sleep(0.1)
 
@@ -135,7 +139,7 @@ def assistant_mode():
                 if '天气' in text:
                     threading.Thread(target=play_weather_info).start()
                 elif '几点' in text:
-                    tts_speech(f"现在是 {time.strftime('%H:%M')}")
+                    tts_speech(f"现在是 {time.strftime('%点%M分')}")
                 elif '空调' in text:
                     tts_speech("好的，正在处理空调指令。")
                 elif '拜拜' in text or '再见' in text:
@@ -148,33 +152,36 @@ def assistant_mode():
             logger.bind(tag=TAG).error(f"Speech recognition error: {e}")
             time.sleep(WAKE_WORD_CHECK_INTERVAL)
 
-
 def wake_word_detection_loop():
     global running, face_detected
 
     while running:
         if face_detected:
-            time.sleep(0.5)  # Reduced from TTS_PLAYBACK_DELAY
+            time.sleep(0.5)
             continue
 
         try:
-            # Remove timeout parameter and handle non-blocking behavior differently
             script = audio_to_text(timeout=5)  # Original function doesn't support timeout
             if script:
                 for wake_word in ["你好", "树莓派", "小", "小朋友", "朋友"]:
                     if wake_word in script:
                         logger.bind(tag=TAG).info("Wake word detected")
-                        tts_speech("唤醒成功,正在进入系统")
+                        set_tts_state(True)
+                        tts_speech("唤醒成功，请扫描您的面部以便继续互动")
+                        set_tts_state(False)
+                        # if detect_face():
                         face_detected = True
                         threading.Thread(target=assistant_mode).start()
                         break
+                        # else:
+                        #     tts_speech("未检测到您的面部，请重新尝试")
             else:
                 logger.bind(tag=TAG).debug("No speech detected")
 
         except Exception as e:
-            logger.bind(tag=TAG).error(f"Wake word detection error: {e}")
+            logger.bind(tag=TAG).warning(f"Error processing wake word: {e}")
 
-        time.sleep(0.1)  # Increased responsiveness
+        time.sleep(0.1)
 
 
 def launch_gui():
@@ -204,15 +211,15 @@ def launch_gui():
 
 
 def main():
-    global assistant, preloaded_face_data
+    global running, assistant, preloaded_face_data,config
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
 
     # Initialize voice assistant
     assistant = VoiceAssistant(
-        baidu_app_id=os.getenv("BAIDU_APP_ID"),
-        baidu_api_key=os.getenv("BAIDU_API_KEY"),
-        baidu_secret_key=os.getenv("BAIDU_SECRET_KEY"),
-        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"),
+        baidu_app_id=config['tts']['tts_baidu']['baidu_app_id'],
+        baidu_api_key=config['tts']['tts_baidu']['baidu_api_key'],
+        baidu_secret_key=config['tts']['tts_baidu']['baidu_secret_key'],
+        deepseek_api_key=config['llm']['deepseek']['deepseek_api_key'],
     )
 
     # Preload face data

@@ -9,7 +9,6 @@ import wave
 import pyaudio
 import pyttsx3
 import glob
-from dotenv import load_dotenv
 import yaml
 from features.tts.tts_huoshan import text_to_speech
 import shutil
@@ -17,16 +16,22 @@ from aip import AipSpeech
 from datetime import datetime
 from pathlib import Path
 import cv2
-from features.speech_recognizer import RecognizeSpeech
 from loguru import logger
 import pygame
+from features.asr.asr_paraformer import speech_to_text_paraformer
+from features.common.globals import is_tts_working,set_recording_requested,set_tts_state
 TAG = __name__
-load_dotenv()
+
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 
 # Baidu API credentials
-APP_ID = os.getenv('BAIDU_APP_ID')
-API_KEY = os.getenv('BAIDU_API_KEY')
-SECRET_KEY = os.getenv('BAIDU_SECRET_KEY')
+APP_ID = config['tts']['tts_baidu']['baidu_app_id']
+API_KEY = config['tts']['tts_baidu']['baidu_api_key']
+SECRET_KEY = config['tts']['tts_baidu']['baidu_secret_key']
 
 # def tts_to_voice(rext: str, output_dir: str = "temp_tts"):
 #     tts_platform=
@@ -50,6 +55,7 @@ def tts_huoshan(text: str, output_dir: str = "temp_tts"):
     合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
     使用 .wav 格式 + pygame 播放，适用于树莓派。
     """
+    set_tts_state(True)
     os.makedirs(output_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
@@ -65,9 +71,11 @@ def tts_huoshan(text: str, output_dir: str = "temp_tts"):
     try:
         play_audio_file(output_file)
         print("播放完成。")
+        set_tts_state(False)
+
     except Exception as e:
         logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
-
+        set_tts_state(False)
 
 def play_audio_file(file_path):
     """
@@ -167,9 +175,9 @@ def _draw_face_annotations(frame, top, right, bottom, left, display_text):
 
 def tts_baidu(
         text,
-        baidu_app_id=os.getenv('BAIDU_APP_ID'),
-        baidu_api_key=os.getenv('BAIDU_API_KEY'),
-        baidu_secret_key=os.getenv('BAIDU_SECRET_KEY'),
+        baidu_app_id=APP_ID,
+        baidu_api_key=API_KEY,
+        baidu_secret_key=SECRET_KEY,
         temp_audio_dir='temp_audio'
 ):
     """
@@ -187,6 +195,7 @@ def tts_baidu(
         :param text: text to be read
         :param baidu_app_id: baidu app id
     """
+    set_tts_state(True)
 
     # Check if the credentials are not None
     if not all([baidu_app_id, baidu_api_key, baidu_secret_key]):
@@ -222,10 +231,16 @@ def tts_baidu(
         try:
             play_audio_file(str(temp_file))
             logger.bind(tag=TAG).info("播放完成。")
+            set_tts_state(False)
+
         except Exception as e:
             logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
+            set_tts_state(False)
+
     else:
         logger.bind(tag=TAG).error("Error in speech synthesis",result)
+        set_tts_state(False)
+
 
 
 
@@ -314,9 +329,26 @@ def record_audio_until_silence(timeout=5):  # 添加超时参数（单位：秒�
         stream.close()
         p.terminate()
 
-
-
 def speech_to_text(audio):
+    choose_asr=config['choose']['asr']
+    if choose_asr=='asr_baidu':
+        return speech_to_text_baidu(audio)
+    elif choose_asr=="asr_paraformer":
+        result=speech_to_text_paraformer(
+            audio_file_path=audio,
+            api_key=config['asr']['asr_paraformer']['dashscope.api_key'],
+            language_hints=config['asr']['asr_paraformer']['language_hints']
+        )
+        return result
+    else:
+        logger.bind(tag=TAG).warning("No ASR selected.")
+        return None
+
+
+
+
+
+def speech_to_text_baidu(audio):
     client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 
     with open(audio, "rb") as f:
@@ -355,8 +387,12 @@ def text_to_speech_chinese(text):
         print("✅ Done speaking.")
 
 
-def audio_to_text(timeout=5):  # 添加超时参数
+def audio_to_text(timeout=5):
     """带超时的语音转文字"""
+    if(is_tts_working()):
+        set_recording_requested(True)
+        return None
+    set_recording_requested(False)
     audio_file = record_audio_until_silence(timeout=timeout)
     if not audio_file:
         return None
@@ -384,13 +420,3 @@ def load_known_faces_from_folder(folder_path):
 
     return image_paths_by_person
 
-#
-# if __name__ == "__main__":
-#     # Example usage
-#     text_to_speech_chinese("你好，世界！")
-#     audio = record_audio_until_silence()
-#     text = speech_to_text(audio)
-#     if text:
-#         print("Recognized text:", text)
-#     else:
-#         print("Could not convert audio to text.")

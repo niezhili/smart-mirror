@@ -3,7 +3,22 @@ env : dev
 #选择接口
 choose:
   tts: tts_huoshan
-#接口配置
+  asr: asr_paraformer
+#参数调节
+#api接口配置
+
+asr :
+    asr_baidu:
+      baidu_app_id: "117625416"
+      baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
+      baidu_secret_key: "ppdTdrkTqan7IDWUQhIDhBLEmR4k9SZn"
+    asr_paraformer:
+      dashscope.api_key: "sk-acccd325f0f7452b935947606d5b565a"
+      language_hints : ['zh','en','ja','fr','ru','yue','ko','de']
+
+
+
+
 tts :
   tts_huoshan :
     appid: 6082784057
@@ -12,9 +27,19 @@ tts :
     # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
     # zh_female_shuangkuaisisi_moon_bigtts 中英
     # zh_male_jingqiangkanye_emo_mars_bigtts 京腔侃爷
+    # zh_female_yingyujiaoyu_mars_bigtts tina老师
     voice_type: zh_male_jingqiangkanye_emo_mars_bigtts
     host: openspeech.bytedance.com
-  tts_baidu :
+  tts_baidu:
+    baidu_app_id: "117625416"
+    baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
+    baidu_secret_key: "ppdTdrkTqan7IDWUQhIDhBLEmR4k9SZn"
+
 
 llm :
   deepseek:
+    deepseek_api_key: sk-c845c48b0588407cafad226db8882bba
+    deepseek_api_url: https://api.deepseek.com/v1/chat/completions
+
+weather :
+  weather_api_key: "8ff8d7c3dd9d4e3190df3931536544ef"
