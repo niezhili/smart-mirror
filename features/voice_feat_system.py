@@ -1,7 +1,5 @@
-from dotenv import load_dotenv
 import os
 import speech_recognition as sr
-import json
 import wave
 import queue
 import threading
@@ -9,7 +7,6 @@ import pyttsx3
 from aip import AipSpeech
 from datetime import datetime
 from pathlib import Path
-import time
 import io
 import audioop
 import requests
@@ -18,7 +15,7 @@ from functools import lru_cache
 from loguru import logger
 import sys
 import yaml
-logger.remove()  # 移除默认的 handler
+logger.remove()
 logger.add(
     sys.stdout,
     colorize=True,
@@ -32,56 +29,56 @@ TAG = __name__
 
 
 class VoiceAssistant:
-    """Voice assistant that handles speech recognition, speech synthesis, and conversation."""
+    """处理语音识别、语音合成和对话的语音助手"""
 
     def __init__(self, log_dir="logs", baidu_app_id=None, baidu_api_key=None,
                  baidu_secret_key=None, deepseek_api_key=None):
-        """Initialize voice assistant with necessary components.
+        """使用必要的组件初始化语音助手。
 
         Args:
-            log_dir (str): Directory for logs
+            log_dir (str): 日志目录
             baidu_app_id (str): Baidu APP ID
             baidu_api_key (str): Baidu API Key
             baidu_secret_key (str): Baidu Secret Key
             deepseek_api_key (str): DeepSeek API Key
         """
-        # Initialize logging
+        # 初始化日志记录
         self.logger=logger.bind(tag=TAG)
-        # Initialize speech recognition
+        # 初始化语音识别
         self.recognizer = sr.Recognizer()
 
-        # Initialize Baidu Speech Client
+        # 初始化 Baidu Speech Client
         self.speech_client = None
         if all([baidu_app_id, baidu_api_key, baidu_secret_key]):
             self.speech_client = AipSpeech(baidu_app_id, baidu_api_key, baidu_secret_key)
 
-        # Initialize DeepSeek API
+        # 初始化 DeepSeek API
         self.deepseek_api_key = config['llm']['deepseek']['deepseek_api_key']
         self.deepseek_api_url = config['llm']['deepseek']['deepseek_api_url']
 
-        # Initialize TTS engine
+        # 初始化文本转语音引擎
         self.voice_queue = queue.Queue()
         self.engine = pyttsx3.init()
         self._setup_voice_engine()
 
-        # Start speech processing thread
+        # 启动语音处理线程
         self.voice_thread = threading.Thread(target=self._process_voice_queue, daemon=True)
         self.voice_thread.start()
 
-        # Create temp directory for audio files
+        # 创建用于存储音频文件的临时目录
         self.temp_audio_dir = Path(__file__).parent / 'temp_audio'
         self.temp_audio_dir.mkdir(exist_ok=True)
 
 
     def _setup_voice_engine(self):
-        """Configure text-to-speech engine."""
+        """配置文本转语音引擎"""
         voices = self.engine.getProperty('voices')
-        self.engine.setProperty('voice', voices[1].id)  # Female voice
-        self.engine.setProperty('rate', 150)  # Speech rate
+        self.engine.setProperty('voice', voices[1].id)  # 女性声音
+        self.engine.setProperty('rate', 150)  # 语速
         self.engine.setProperty('volume', 0.8)  # Volume
 
     def _process_voice_queue(self):
-        """Process the speech synthesis queue."""
+        """处理语音合成队列。"""
         while True:
             try:
                 message = self.voice_queue.get()
@@ -93,13 +90,11 @@ class VoiceAssistant:
 
     @lru_cache(maxsize=1)
     def _check_network_connection(self, timeout=3):
-        """Check network connection status with caching.
-
-        Args:
-            timeout (int): Connection timeout in seconds
-
-        Returns:
-            bool: True if network is available, False otherwise
+        """使用缓存检查网络连接状态。
+        参数：
+        timeout (int)：连接超时时间，单位为秒
+        返回值：
+        bool：如果网络可用则返回 True，否则返回 False
         """
         try:
             socket.create_connection(("baidu.com", 80), timeout=timeout)
@@ -108,10 +103,10 @@ class VoiceAssistant:
             return False
 
     def _setup_audio_source(self, source):
-        """Configure audio source parameters.
+        """配置音频源参数。
 
         Args:
-            source: Microphone audio source
+           来源：麦克风音频源
         """
         self.recognizer.adjust_for_ambient_noise(source, duration=1)
         self.recognizer.dynamic_energy_threshold = True
@@ -124,7 +119,7 @@ class VoiceAssistant:
         self.recognizer.non_speaking_duration = 0.5
 
     def recognize_speech(self, timeout=10, phrase_limit=5):
-        """Capture microphone input and perform speech recognition.
+        """捕获麦克风输入并执行语音识别。
 
         Args:
             timeout (int): Listening timeout in seconds
@@ -138,14 +133,14 @@ class VoiceAssistant:
                 self._setup_audio_source(source)
                 self.logger.info("Listening for speech...")
 
-                # Capture audio
+                # 捕获音频
                 audio = self.recognizer.listen(
                     source,
                     timeout=timeout,
                     phrase_time_limit=phrase_limit
                 )
 
-                # Process audio
+                # 处理音频
                 return self._process_audio_file(audio)
         except sr.WaitTimeoutError:
             self.logger.warning("Listening timed out, no speech detected")
@@ -155,7 +150,7 @@ class VoiceAssistant:
             return None
 
     def _process_audio_file(self, audio):
-        """Process audio files and perform speech recognition.
+        """处理音频文件并执行语音识别。
 
         Args:
             audio: Audio data
@@ -177,7 +172,7 @@ class VoiceAssistant:
         return None  # No online recognition successful
 
     def _get_asr_config(self):
-        """Get Baidu Speech Recognition API parameters.
+        """获取百度语音识别 API 参数。
 
         Returns:
             dict: Configuration parameters
@@ -371,19 +366,18 @@ class VoiceAssistant:
                 "Authorization": f"Bearer {self.deepseek_api_key}",
                 "Content-Type": "application/json"
             }
-
             data = {
                 "model": "deepseek-chat",
                 "messages": [
                     {"role": "system",
-                     "content": "You are a friendly, professional assistant named 小朋友 who provides concise "
-                                "responses under 30 words. For unclear or incomplete questions, "
-                                "politely ask for clarification in the user input language. Never mention your word "
-                                "count limit."},
+                     "content": "你是一个多语言汉学学习镜，你的名字是小朋友/小镜，你的回答很简洁！"
+                                "每次对话请你引经据典，就像：中国有句诗说得好……你想详细了解诗人/诗词/习俗吗？"
+                                "每次回答根据传入的语言来判断为主，但是要有中文内容，中文比较难的你要用对应的语言解释， "
+                                },
                     {"role": "user", "content": text}
                 ],
                 "temperature": 0.7,
-                "max_tokens": 100
+                "max_tokens": 200
             }
 
             response = requests.post(

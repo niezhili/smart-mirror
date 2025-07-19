@@ -39,10 +39,11 @@ with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 
 def tts_speech(text: str, output_dir: str = "temp_tts"):
-    if config["choose"]["tts"]=="tts_huoshan":
+    which_tts=config["choose"]["tts"]
+    if which_tts=="tts_huoshan":
         # logger.bind(tag=TAG).error("火山火山火山")
         tts_huoshan(text)
-    elif config["choose"]["tts"]=="tts_baidu":
+    elif which_tts=="tts_baidu":
         # logger.bind(tag=TAG).error("百度")
         tts_baidu(text)
     else:
@@ -56,20 +57,20 @@ def tts_huoshan(text: str, output_dir: str = "temp_tts"):
     """
     set_tts_state(True)
     os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("tts_huoshan_%Y%m%d_%H%M%S")
     output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
     output_file = os.path.abspath(output_file)
 
     print(f"正在合成语音：{text}")
     text_to_speech(text, output_file=output_file)
-    logger.bind(tag=TAG).info(f"已保存音频至：{output_file}")
+    # logger.bind(tag=TAG).info(f"已保存音频至：{output_file}")
 
     manage_audio_files(output_dir)
 
-    print("正在播放音频...")
+    logger.bind(tag=TAG).info("正在播放音频...")
     try:
         play_audio_file(output_file)
-        print("播放完成。")
+        logger.bind(tag=TAG).info("播放完成。")
         set_tts_state(False)
 
     except Exception as e:
@@ -92,7 +93,6 @@ def play_audio_file(file_path):
 
 def manage_audio_files(directory: str, max_files: int = 15):
     """
-    huoshan
     管理指定目录下的音频文件数量，保留最新的 max_files 个文件。
     """
     files = glob.glob(os.path.join(directory, "*.wav"))  # 改为 .wav
@@ -198,7 +198,7 @@ def tts_baidu(
 
     # Check if the credentials are not None
     if not all([baidu_app_id, baidu_api_key, baidu_secret_key]):
-        raise ValueError("Baidu API credentials are not set properly.")
+        raise ValueError("百度 API 凭证设置不正确.")
 
     # Initialize Baidu Speech Client
     client = AipSpeech(baidu_app_id.strip(), baidu_api_key.strip(), baidu_secret_key.strip())
@@ -220,11 +220,11 @@ def tts_baidu(
     if not isinstance(result, dict):
         # Save the audio to a temporary file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        temp_file = temp_audio_path / f'tts_{timestamp}.wav'
+        temp_file = temp_audio_path / f'tts_baidu_{timestamp}.wav'
         with open(temp_file, 'wb') as f:
             f.write(result)
 
-        manage_audio_files(temp_audio_dir)  # 使用已有的函数管理文件
+        manage_audio_files(temp_audio_dir)
         # play audio
         logger.bind(tag=TAG).info("正在播放音频...")
         try:
@@ -237,7 +237,7 @@ def tts_baidu(
             set_tts_state(False)
 
     else:
-        logger.bind(tag=TAG).error("Error in speech synthesis",result)
+        logger.bind(tag=TAG).error("语音合成错误。",result)
         set_tts_state(False)
 
 

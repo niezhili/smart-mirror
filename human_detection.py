@@ -1,5 +1,5 @@
 import time
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import threading
 
 
@@ -19,12 +19,12 @@ class HumanDetection:
         self.last_trigger_time = 0
         self.trigger_cooldown = 10
 
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin, GPIO.IN)
+        # GPIO.setmode(GPIO.BCM)
+        # GPIO.setup(self.pin, GPIO.IN)
 
-    def _check_presence(self):
+    def _check_presence(self, motion_detected=None):
         current_time = time.time()
-        motion_detected = GPIO.input(self.pin) == 1
+        # motion_detected = GPIO.input(self.pin) == 1
 
         if motion_detected:
             self.last_motion_time = current_time
@@ -84,4 +84,4 @@ class HumanDetection:
 
     def cleanup(self):
         self.stop_detection()
-        GPIO.cleanup()
+        # GPIO.cleanup()

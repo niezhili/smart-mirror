@@ -173,7 +173,7 @@ def wake_word_detection_loop():
                     if wake_word in script:
                         logger.bind(tag=TAG).info("Wake word detected")
                         set_tts_state(True)
-                        tts_speech("唤醒成功，请扫描您的面部以便继续互动")
+                        tts_speech("唤醒成功，暂时跳过面部扫描")
                         set_tts_state(False)
                         # if detect_face():
                         face_detected = True
@@ -215,47 +215,47 @@ def launch_gui():
         except ImportError:
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
 
-def on_human_detected():
-    global ignore_audio_until
+# def on_human_detected():
+#     global ignore_audio_until
+#
+#     if face_detection_running or face_detected:
+#         return
+#     logger.bind(tag=TAG).info("[人体检测] 触发人脸识别")
+#     ignore_audio_until = time.time() + 3
+#     tts_speech("检测到您靠近，请面向摄像头。")
+#     threading.Thread(target=run_face_detection, args=("pir",)).start()
 
-    if face_detection_running or face_detected:
-        return
-    logger.bind(tag=TAG).info("[人体检测] 触发人脸识别")
-    ignore_audio_until = time.time() + 3
-    tts_speech("检测到您靠近，请面向摄像头。")
-    threading.Thread(target=run_face_detection, args=("pir",)).start()
-
-def run_face_detection(mode):
-    global face_detection_running, face_detection_success, detection_mode
-    global human_detector, voice_detection_active
-
-    try:
-        if face_detection_running or face_detected:
-            return
-
-        face_detection_running = True
-        detection_mode = mode
-
-        if mode == "pir":
-            voice_detection_active = False
-        elif mode == "voice":
-            human_detector.stop_detection()
-
-        print(f"[人脸识别] 开始检测 (模式: {mode})")
-
-        if detect_face(timeout=60):
-            face_detection_success = True
-        else:
-            tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
-
-    except Exception as e:
-        print(f"[人脸识别] 异常: {e}")
-    finally:
-        face_detection_running = False
-        if mode == "pir":
-            voice_detection_active = True
-        elif mode == "voice":
-            human_detector.start_detection(on_human_detected)
+# def run_face_detection(mode):
+#     global face_detection_running, face_detection_success, detection_mode
+#     global human_detector, voice_detection_active
+#
+#     try:
+#         if face_detection_running or face_detected:
+#             return
+#
+#         face_detection_running = True
+#         detection_mode = mode
+#
+#         if mode == "pir":
+#             voice_detection_active = False
+#         elif mode == "voice":
+#             human_detector.stop_detection()
+#
+#         print(f"[人脸识别] 开始检测 (模式: {mode})")
+#
+#         if detect_face(timeout=60):
+#             face_detection_success = True
+#         else:
+#             tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
+#
+#     except Exception as e:
+#         print(f"[人脸识别] 异常: {e}")
+#     finally:
+#         face_detection_running = False
+#         if mode == "pir":
+#             voice_detection_active = True
+#         elif mode == "voice":
+#             human_detector.start_detection(on_human_detected)
 
 
 def main():
@@ -272,8 +272,8 @@ def main():
 
     # Preload face data
     preloaded_face_data = preload_face_data()
-    human_detector = HumanDetection()
-    human_detector.start_detection(on_human_detected)
+    # human_detector = HumanDetection()
+    # human_detector.start_detection(on_human_detected)
 
     # Start services
     gui_thread = threading.Thread(target=launch_gui)

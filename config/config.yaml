@@ -1,15 +1,19 @@
 env : dev
 
-#选择接口
+#===============角色设定===============================
+context_manager:
+  role: "你的名字是小镜/小朋友，你是一款知书达理的多语言汉学互联镜，集成摄像头、麦克风等外设，擅长引经据典。你说话很简洁精准，不失幽默。请多用口语，不用md格式。"
+#===============选择接口===============================
 choose:
-  tts: tts_huoshan
+  tts: tts_baidu
   asr: asr_paraformer
-#参数调节
+  llm: qwen
+#===============参数调节===============================
 
 time:
   timeout: 30
-#api接口配置
 
+#===============api接口配置============================
 asr :
     asr_baidu:
       baidu_app_id: "117625416"
@@ -21,6 +25,8 @@ asr :
 
 
 tts :
+  tts_aliyun:
+
   tts_huoshan :
     appid: 6082784057
     token: bF4nRpNiCcP8HDLfDJYvFupObvZxy0gq
@@ -29,7 +35,8 @@ tts :
     # zh_female_shuangkuaisisi_moon_bigtts 中英
     # zh_male_jingqiangkanye_emo_mars_bigtts 京腔侃爷
     # zh_female_yingyujiaoyu_mars_bigtts tina老师
-    voice_type: zh_male_jingqiangkanye_emo_mars_bigtts
+    # ICL_zh_female_chengshujiejie_tob 成熟姐姐
+    voice_type: ICL_zh_female_chengshujiejie_tob
     host: openspeech.bytedance.com
   tts_baidu:
     baidu_app_id: "117625416"
@@ -41,6 +48,9 @@ llm :
   deepseek:
     deepseek_api_key: sk-c845c48b0588407cafad226db8882bba
     deepseek_api_url: https://api.deepseek.com/v1/chat/completions
+  qwen:
+    qwen_api_key: "sk-acccd325f0f7452b935947606d5b565a"
+    qwen_api_url:
 
 weather :
   weather_api_key: "8ff8d7c3dd9d4e3190df3931536544ef"
