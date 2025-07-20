@@ -33,15 +33,7 @@ class VoiceAssistant:
 
     def __init__(self, log_dir="logs", baidu_app_id=None, baidu_api_key=None,
                  baidu_secret_key=None, deepseek_api_key=None):
-        """使用必要的组件初始化语音助手。
 
-        Args:
-            log_dir (str): 日志目录
-            baidu_app_id (str): Baidu APP ID
-            baidu_api_key (str): Baidu API Key
-            baidu_secret_key (str): Baidu Secret Key
-            deepseek_api_key (str): DeepSeek API Key
-        """
         # 初始化日志记录
         self.logger=logger.bind(tag=TAG)
         # 初始化语音识别
