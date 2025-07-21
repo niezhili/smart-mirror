@@ -1,4 +1,4 @@
-from logs.location import root_str
+from logs_AND_location.location import root_str
 import yaml
 import os
 CONFIG_PATH = os.path.join(root_str, "config/config.yaml")

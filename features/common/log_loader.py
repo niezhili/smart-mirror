@@ -1,6 +1,6 @@
 from loguru import logger
 import sys
-from logs.location import logs_path
+from logs_AND_location.location import logs_path
 logs_path.mkdir(exist_ok=True)
 logger.remove()
 logger.add(
@@ -10,7 +10,7 @@ logger.add(
 )
 # 文件输出（保留颜色代码）
 logger.add(
-    str(logs_path / "app_{time:YYYYMMDD}.logs"),
+    str(logs_path / "app_{time:YYYYMMDD}.logs_AND_location"),
     rotation="1 day",
     retention="7 days",
     encoding="utf-8",

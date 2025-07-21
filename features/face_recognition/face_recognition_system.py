@@ -27,7 +27,7 @@ TAG = __name__
 class FaceRecognition:
     def __init__(self,
                  known_faces_dir: str = "known_faces",
-                 log_dir: str = "logs",
+                 log_dir: str = "logs_AND_location",
                  min_face_size: int = 20,
                  recognition_threshold: float = 0.6):
         """
@@ -35,7 +35,7 @@ class FaceRecognition:
 
         Args:
             known_faces_dir: Directory for storing known face images
-            log_dir: Directory for storing logs
+            log_dir: Directory for storing logs_AND_location
             min_face_size: Minimum face size to detect (in pixels)
             recognition_threshold: Threshold for face recognition confidence
         """

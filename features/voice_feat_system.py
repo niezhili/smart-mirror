@@ -31,7 +31,7 @@ TAG = __name__
 class VoiceAssistant:
     """处理语音识别、语音合成和对话的语音助手"""
 
-    def __init__(self, log_dir="logs", baidu_app_id=None, baidu_api_key=None,
+    def __init__(self, log_dir="logs_AND_location", baidu_app_id=None, baidu_api_key=None,
                  baidu_secret_key=None, deepseek_api_key=None):
 
         # 初始化日志记录
