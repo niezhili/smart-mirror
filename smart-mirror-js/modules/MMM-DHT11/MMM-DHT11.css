@@ -1,0 +1,50 @@
+/**
+ * Magic Mirror
+ * Module: MMM-DHT11
+ * 
+ * By NTADI Marrion Joseph
+ * MIT Licensed
+ */
+
+.dht11-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.dht11-temp, .dht11-humidity {
+    margin: 5px 0;
+    font-size: 1.2em;
+    color:#fff;
+}
+
+.dht11-temp .fa, .dht11-humidity .fa {
+    margin-right: 10px;
+}/* MMM-DHT11.css */
+
+.dht11-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.dht11-temp, .dht11-humidity {
+    margin: 5px 0;
+    font-size: 1.2em;
+}
+
+.dht11-temp .fa, .dht11-humidity .fa {
+    margin-right: 10px;
+}
+
+@media (max-width: 480px) {
+    .dht11-temp, .dht11-humidity {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .dht11-temp i, .dht11-humidity i {
+        margin-bottom: 4px;
+    }
+}

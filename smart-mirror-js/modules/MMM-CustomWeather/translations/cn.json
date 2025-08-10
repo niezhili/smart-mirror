@@ -1,0 +1,9 @@
+{
+	"TEMPERATURE": "温度",
+	"DESCRIPTION": "描述",
+	"HUMIDITY": "湿度",
+	"WIND_SPEED": "风速",
+	"LOADING": "加载中...",
+	"Hangzhou":"杭州",
+	"UPDATED": "更新时间"
+}

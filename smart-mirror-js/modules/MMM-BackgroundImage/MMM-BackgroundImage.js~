@@ -1,0 +1,46 @@
+Module.register("MMM-BackgroundImage", {
+	defaults: {
+		bgName: "",         // .jpg, .gif, .png, Full screen animated gifs too!
+		videoName: "",     // your local picture files go in "images" folder of MMM-EasyBack
+		height: "100vh",   // your display's resolution in pixels. Enter in config.js
+		width: "100%",    // your display's resolution in pixels. Enter in config.js
+		animationSpeed: "0",
+		updateInterval: 60 * 60 * 1000,
+	},
+	start: function() {
+		self = this;
+		this.url = '';
+		setInterval(function (){
+			self.updateDom(self.config.animationSpeed || 0);
+		}, this.config.updateInterval);
+
+		if(this.config.bgName !== "") {
+			this.url = "modules/MMM-BackgroundImage/images/" + this.config.bgName;
+		}else if(this.config.videoName !== ""){
+			this.url = "modules/MMM-BackgroundImage/videos/" + this.config.videoName;
+		}
+	},
+	getStyles: function() {
+		return ["MMM-BackgroundImage.css"];
+	},
+	getDom: function() {
+		var wrapper = document.createElement("div");
+
+		var image = document.createElement("img");
+		if(this.config.bgName !== "") {
+			image.src = this.url;
+			image.className = "photo";
+			console.log("Background image showing now")
+			wrapper.appendChild(image);
+		}else if(this.config.videoName !== "") {
+			var video = document.createElement("null");
+		    wrapper.innerHTML = `<video autoplay loop id="video"><source src="modules/MMM-EasyBack/videos/${this.config.videoName}" type="video/mp4"></video>`;
+			wrapper.appendChild(video)
+		}else{
+			console.log("No background image or video found");
+		}
+		return wrapper;
+
+
+	}
+})

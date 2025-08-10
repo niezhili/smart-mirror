@@ -1,0 +1,238 @@
+/* MagicMirror² Custom Clock Module */
+
+Module.register("MMM-CustomClock", {
+	// Module config defaults
+	defaults: {
+		displayType: "digital", // options: digital, analog, both
+		timeFormat: 24, // 12 or 24 hour format
+		displaySeconds: true,
+		showPeriod: true,
+		showPeriodUpper: false,
+		clockBold: false,
+		showDate: true,
+		showWeek: false,
+		dateFormat: "dddd, MMMM D, YYYY", // Uses Date.toLocaleDateString format options
+		analogSize: "200px",
+		analogFace: "simple", // options: 'none', 'simple', 'face-###' (where ### is 001 to 012 inclusive)
+		analogPlacement: "bottom", // options: 'top', 'bottom', 'left', 'right'
+		secondsColor: "#888888",
+		timezone: null, // The timezone to use (e.g., "America/New_York")
+	},
+
+	// Define styles
+	getStyles: function () {
+		return ["customclock.css"];
+	},
+
+	// Start the clock
+	start: function () {
+		Log.info("Starting module: " + this.name);
+		// this.sendSocketNotification("CONFIG", config)
+		// Schedule update interval
+		var self = this;
+		// Calculate how many ms should pass until next update
+		var nextUpdate = function () {
+			var now = new Date();
+			var delay = 1000; // Update every second by default
+
+			if (!self.config.displaySeconds) {
+				// If not displaying seconds, update at the next minute
+				delay = (60 - now.getSeconds()) * 1000;
+			}
+
+			return delay;
+		};
+
+		// A recursive timeout function instead of interval to avoid drifting
+		var updateTimer = function () {
+			self.updateDom();
+			setTimeout(updateTimer, nextUpdate());
+		};
+
+		// Start the timer
+		setTimeout(updateTimer, nextUpdate());
+	},
+	// socketNotificationReceived: function (notification) {
+	// 	// Log.info("Socket notification received:", notification);
+	// 	if (notification === "HIDE_MODULE") {
+	// 		this.hide(1000);
+	// 	} else if (notification === "SHOW_MODULE") {
+	// 		this.show(1000);
+	// 	}
+	// },
+
+	// Format date according to specified format
+	formatDate: function (date, format) {
+		const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+		return date.toLocaleDateString(config.language, options);
+	},
+
+	// Format time with hours and minutes
+	formatTime: function (date) {
+		let hours = date.getHours();
+		const minutes = date.getMinutes().toString().padStart(2, "0");
+		const seconds = date.getSeconds().toString().padStart(2, "0");
+		let period = "";
+
+		// Handle 12-hour format
+		if (this.config.timeFormat !== 24) {
+			period = hours >= 12 ? " PM" : " AM";
+			hours = hours % 12;
+			hours = hours ? hours : 12; // Convert '0' to '12'
+		}
+
+		// Format the time string
+		let timeString = hours + ":" + minutes + ":" + seconds;
+
+		// Add period if in 12-hour format and showPeriod is true
+		if (this.config.timeFormat !== 24 && this.config.showPeriod) {
+			if (this.config.showPeriodUpper) {
+				timeString += period;
+			} else {
+				timeString += period.toLowerCase();
+			}
+		}
+
+		return timeString;
+	},
+
+	// Create DOM for the module
+	getDom: function () {
+		const wrapper = document.createElement("div");
+		wrapper.className = "customclock-grid";
+
+		// Get current date and time
+		const now = new Date();
+
+		// Apply timezone if specified
+		let displayDate = new Date(now);
+		if (this.config.timezone) {
+			try {
+				// Note: This only works if the browser supports the specified timezone
+				const options = {timeZone: this.config.timezone};
+				const formatter = new Intl.DateTimeFormat('en-US', options);
+				displayDate = new Date(formatter.format(now));
+			} catch (e) {
+				console.error("Error setting timezone:", e);
+			}
+		}
+
+		// Create DIGITAL clock elements
+		if (this.config.displayType !== "analog") {
+			const digitalWrapper = document.createElement("div");
+			digitalWrapper.className = "digital";
+
+			// Date display
+			if (this.config.showDate) {
+				const dateWrapper = document.createElement("div");
+				dateWrapper.className = "date normal medium";
+				dateWrapper.innerHTML = this.formatDate(displayDate, this.config.dateFormat);
+				digitalWrapper.appendChild(dateWrapper);
+			}
+
+			// Time display
+			const timeWrapper = document.createElement("div");
+			timeWrapper.className = "time bright large light";
+
+			// Basic time (hours:minutes)
+			let timeString = this.formatTime(displayDate);
+
+			// Apply bold styling if configured
+			if (this.config.clockBold) {
+				timeString = timeString.replace(
+					/(\d{1,2}):(\d{2})/,
+					"$1<span class='bold'>:$2</span>"
+				);
+			}
+
+			timeWrapper.innerHTML = timeString;
+
+			// Add seconds if configured
+			// if (this.config.displaySeconds) {
+			// 	const secondsWrapper = document.createElement("sup");
+			// 	secondsWrapper.className = "seconds dimmed";
+			// 	secondsWrapper.innerHTML = displayDate.getSeconds().toString().padStart(2, "0");
+			// 	timeWrapper.appendChild(secondsWrapper);
+			// }
+
+			digitalWrapper.appendChild(timeWrapper);
+
+			// Week number if configured
+			if (this.config.showWeek) {
+				const weekWrapper = document.createElement("div");
+				weekWrapper.className = "week dimmed medium";
+
+				// Calculate week number
+				const firstDayOfYear = new Date(displayDate.getFullYear(), 0, 1);
+				const pastDaysOfYear = (displayDate - firstDayOfYear) / 86400000;
+				const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+
+				weekWrapper.innerHTML = "Week " + weekNumber;
+				digitalWrapper.appendChild(weekWrapper);
+			}
+
+			wrapper.appendChild(digitalWrapper);
+		}
+
+		// Create ANALOG clock if configured
+		if (this.config.displayType !== "digital") {
+			const analogWrapper = document.createElement("div");
+			analogWrapper.className = "clock-circle";
+			analogWrapper.style.width = this.config.analogSize;
+			analogWrapper.style.height = this.config.analogSize;
+
+			// Set analog clock face
+			if (this.config.analogFace !== "" && this.config.analogFace !== "simple" && this.config.analogFace !== "none") {
+				analogWrapper.style.background = "url(" + this.data.path + "faces/" + this.config.analogFace + ".svg)";
+				analogWrapper.style.backgroundSize = "100%";
+				analogWrapper.style.border = "rgba(0, 0, 0, 0.1)";
+			} else if (this.config.analogFace !== "none") {
+				analogWrapper.style.border = "2px solid white";
+			}
+
+			// Create clock face and hands
+			const clockFace = document.createElement("div");
+			clockFace.className = "clock-face";
+
+			// Hour hand
+			const hours = displayDate.getHours() % 12;
+			const minutes = displayDate.getMinutes();
+			const hourDegrees = (hours * 30) + (minutes * 0.5) + 90; // 30 degrees per hour + adjustment for minutes
+
+			const clockHour = document.createElement("div");
+			clockHour.className = "clock-hour";
+			clockHour.style.transform = "rotate(" + hourDegrees + "deg)";
+
+			// Minute hand
+			const minuteDegrees = (minutes * 6) + 90; // 6 degrees per minute
+			const clockMinute = document.createElement("div");
+			clockMinute.className = "clock-minute";
+			clockMinute.style.transform = "rotate(" + minuteDegrees + "deg)";
+
+			// Add hour and minute hands to clock face
+			clockFace.appendChild(clockHour);
+			clockFace.appendChild(clockMinute);
+
+			// Second hand if configured
+			if (this.config.displaySeconds) {
+				const seconds = displayDate.getSeconds();
+				const secondDegrees = (seconds * 6) + 90; // 6 degrees per second
+				const clockSecond = document.createElement("div");
+				clockSecond.className = "clock-second";
+				clockSecond.style.transform = "rotate(" + secondDegrees + "deg)";
+				clockSecond.style.backgroundColor = this.config.secondsColor;
+				clockFace.appendChild(clockSecond);
+			}
+
+			analogWrapper.appendChild(clockFace);
+			wrapper.appendChild(analogWrapper);
+		}
+
+		// Set layout class based on configuration
+		if (this.config.displayType === "both") {
+			wrapper.classList.add("clock-grid-" + this.config.analogPlacement);
+		}
+
+		return wrapper;
+	},
+});

@@ -1,0 +1,281 @@
+:root {
+  --color-text: #999; /* 主文本颜色 */
+  --color-text-dimmed: #666; /* 暗淡文本颜色 */
+  --color-text-bright: #fff; /* 高亮文本颜色 */
+  --color-background: #000; /* 背景颜色 */
+  --font-primary: "Roboto Condensed"; /* 主字体 */
+  --font-secondary: "Roboto"; /* 次字体 */
+  --font-size: 20px; /* 基础字体大小 */
+  --font-size-xsmall: 0.75rem; /* 极小字体 */
+  --font-size-small: 1rem; /* 小字体 */
+  --font-size-medium: 1.5rem; /* 中等字体 */
+  --font-size-large: 3.25rem; /* 大字体 */
+  --font-size-xlarge: 3.75rem; /* 超大字体 */
+  --gap-body-top: 60px; /* 页面顶部间距 */
+  --gap-body-right: 60px; /* 页面右侧间距 */
+  --gap-body-bottom: 60px; /* 页面底部间距 */
+  --gap-body-left: 60px; /* 页面左侧间距 */
+  --gap-modules: 30px; /* 模块间距 */
+}
+
+/* 设置 html 元素的基础样式 */
+html {
+  cursor: grab; /* 鼠标样式为抓取 */
+  overflow: hidden; /* 隐藏滚动条 */
+  background: var(--color-background); /* 背景色 */
+  user-select: none; /* 禁止文本选择 */
+  font-size: var(--font-size); /* 基础字体大小 */
+}
+
+/* 隐藏滚动条（仅 Webkit 浏览器） */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* 设置 body 元素的基础样式 */
+body {
+  margin: var(--gap-body-top) var(--gap-body-right) var(--gap-body-bottom) var(--gap-body-left); /* 四周间距 */
+  position: absolute; /* 绝对定位 */
+  height: calc(100% - var(--gap-body-top) - var(--gap-body-bottom)); /* 高度减去上下间距 */
+  width: calc(100% - var(--gap-body-right) - var(--gap-body-left)); /* 宽度减去左右间距 */
+  background: var(--color-background); /* 背景色 */
+  color: var(--color-text); /* 文本颜色 */
+  font-family: var(--font-primary), sans-serif; /* 主字体 */
+  font-weight: 400; /* 字重 */
+  line-height: 1.5; /* 行高 */
+  -webkit-font-smoothing: antialiased; /* 字体抗锯齿优化 */
+}
+
+/**
+ * 默认样式
+ */
+
+/* 暗淡文本样式 */
+.dimmed {
+  color: var(--color-text-dimmed);
+}
+
+/* 普通文本样式 */
+.normal {
+  color: var(--color-text);
+}
+
+/* 高亮文本样式 */
+.bright {
+  color: var(--color-text-bright);
+}
+
+/* 极小字体样式 */
+.xsmall {
+  font-size: var(--font-size-xsmall);
+  line-height: 1.275;
+}
+
+/* 小字体样式 */
+.small {
+  font-size: var(--font-size-small);
+  line-height: 1.25;
+}
+
+/* 中等字体样式 */
+.medium {
+  font-size: var(--font-size-medium);
+  line-height: 1.225;
+}
+
+/* 大字体样式 */
+.large {
+  font-size: var(--font-size-large);
+  line-height: 1;
+}
+
+/* 超大字体样式 */
+.xlarge {
+  font-size: var(--font-size-xlarge);
+  line-height: 1;
+  letter-spacing: -3px; /* 字间距缩小 */
+}
+
+/* 极细字体样式 */
+.thin {
+  font-family: var(--font-secondary), sans-serif;
+  font-weight: 100;
+}
+
+/* 细字体样式 */
+.light {
+  font-family: var(--font-primary), sans-serif;
+  font-weight: 300;
+}
+
+/* 常规字体样式 */
+.regular {
+  font-family: var(--font-primary), sans-serif;
+  font-weight: 400;
+}
+
+/* 粗体样式 */
+.bold {
+  font-family: var(--font-primary), sans-serif;
+  font-weight: 700;
+}
+
+/* 右对齐样式 */
+.align-right {
+  text-align: right;
+}
+
+/* 左对齐样式 */
+.align-left {
+  text-align: left;
+}
+
+/* header 标题样式 */
+header {
+  text-transform: uppercase; /* 全部大写 */
+  font-size: var(--font-size-xsmall); /* 字体大小 */
+  font-family: var(--font-primary), Arial, Helvetica, sans-serif; /* 字体 */
+  font-weight: 400; /* 字重 */
+  border-bottom: 1px solid var(--color-text-dimmed); /* 底部边框 */
+  line-height: 15px; /* 行高 */
+  padding-bottom: 5px; /* 底部内边距 */
+  margin-bottom: 10px; /* 底部外边距 */
+  color: var(--color-text); /* 颜色 */
+}
+
+/* 上标样式 */
+sup {
+  font-size: 50%;
+  line-height: 50%;
+}
+
+/**
+ * 模块样式
+ */
+
+/* 模块基础样式 */
+.module {
+  margin-bottom: var(--gap-modules);
+}
+
+/* 隐藏模块时禁止交互 */
+.module.hidden {
+  pointer-events: none;
+}
+
+/* 显示模块时允许交互 */
+.module:not(.hidden) {
+  pointer-events: auto;
+}
+
+/* 底部区域的模块样式 */
+.region.bottom .module {
+  margin-top: var(--gap-modules);
+  margin-bottom: 0;
+}
+
+/* 不换行样式，超出部分显示省略号 */
+.no-wrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 保留换行和空格样式 */
+.pre-line {
+  white-space: pre-line;
+}
+
+/**
+ * 区域定义样式
+ */
+
+/* 区域基础样式 */
+.region {
+  position: absolute;
+}
+
+/* 全屏区域样式 */
+.region.fullscreen {
+  position: absolute;
+  inset: calc(-1 * var(--gap-body-top)) calc(-1 * var(--gap-body-right)) calc(-1 * var(--gap-body-bottom)) calc(-1 * var(--gap-body-left));
+  pointer-events: none;
+}
+
+/* 右侧区域样式 */
+.region.right {
+  right: 0;
+  text-align: right;
+}
+
+/* 顶部区域样式 */
+.region.top {
+  top: 0;
+}
+
+/* 顶部/底部居中区域样式 */
+.region.top.center,
+.region.bottom.center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 顶部右/左/居中区域样式 */
+.region.top.right,
+.region.top.left,
+.region.top.center {
+  top: 100%;
+}
+
+/* 底部区域样式 */
+.region.bottom {
+  bottom: 0;
+}
+
+/* 底部右/居中/左区域样式 */
+.region.bottom.right,
+.region.bottom.center,
+.region.bottom.left {
+  bottom: 100%;
+}
+
+/* bar 区域样式 */
+.region.bar {
+  width: 100%;
+  text-align: center;
+}
+
+/* 三分之一/中间居中区域样式 */
+.region.third,
+.region.middle.center {
+  width: 100%;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+/* 上三分之一区域样式 */
+.region.upper.third {
+  top: 33%;
+}
+
+/* 中间居中区域样式 */
+.region.middle.center {
+  top: 50%;
+}
+
+/* 下三分之一区域样式 */
+.region.lower.third {
+  top: 66%;
+}
+
+/* 左侧区域样式 */
+.region.left {
+  text-align: left;
+}
+
+/* 区域内表格样式 */
+.region table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+}

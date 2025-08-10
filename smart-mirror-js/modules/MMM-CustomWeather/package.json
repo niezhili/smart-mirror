@@ -1,0 +1,16 @@
+{
+	"name": "mmm-customizedweather",
+	"version": "1.0.0",
+	"main": "MMM-CustomizeWeather.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"axios": "^1.8.3",
+		"geoip-lite": "^1.4.10",
+		"public-ip": "^5.0.0"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "MagicMirror customized weather module"
+}
