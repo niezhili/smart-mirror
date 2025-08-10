@@ -4,22 +4,30 @@ import numpy as np
 from collections import defaultdict
 import shutil
 import pyttsx3
-from datetime import datetime
-import logging
 import threading
 import queue
 import json
 from pathlib import Path
 from typing import List
 import time
+from loguru import logger
+import sys
 
-from features.common.utils import read_text_baidu
+logger.remove()  # 移除默认的 handler
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
+)
 
+from features.common.utils import tts_speech
+
+TAG = __name__
 
 class FaceRecognition:
     def __init__(self,
                  known_faces_dir: str = "known_faces",
-                 log_dir: str = "logs",
+                 log_dir: str = "logs_AND_location",
                  min_face_size: int = 20,
                  recognition_threshold: float = 0.6):
         """
@@ -27,10 +35,11 @@ class FaceRecognition:
 
         Args:
             known_faces_dir: Directory for storing known face images
-            log_dir: Directory for storing logs
+            log_dir: Directory for storing logs_AND_location
             min_face_size: Minimum face size to detect (in pixels)
             recognition_threshold: Threshold for face recognition confidence
         """
+        self.logger = logger.bind(tag=TAG)
         self.known_faces_dir = Path(known_faces_dir)
         self.log_dir = Path(log_dir)
         self.min_face_size = min_face_size
@@ -47,9 +56,6 @@ class FaceRecognition:
         self.engine = pyttsx3.init()
         self.setup_voice_engine()
 
-        # Set up logging
-        self._setup_logging()
-
         # Load known faces
         self.load_known_faces()
 
@@ -57,22 +63,6 @@ class FaceRecognition:
         self.voice_thread = threading.Thread(target=self.
                                              _process_voice_queue, daemon=True)
         self.voice_thread.start()
-
-    def _setup_logging(self):
-        """Configure logging system"""
-        self.log_dir.mkdir(exist_ok=True)
-        log_file = self.log_dir / f"face_recognition_{datetime.now():%Y%m%d}.log"
-
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler()
-            ]
-        )
-        self.logger = logging.getLogger(__name__)
-
     def setup_voice_engine(self):
         """Configure text-to-speech engine with optimal settings"""
         voices = self.engine.getProperty('voices')
@@ -241,7 +231,8 @@ class FaceRecognition:
                             self.logger.info(f"Recognized: {name} with confidence {confidence:.1f}%")
 
                             # Voice announcement
-                            read_text_baidu(f"您好 {name}")
+                            tts_speech(f"您好 {name}")
+                            # read_text_baidu(f"您好 {name}")
                             # self.voice_queue.put(f"Hello {name}")
                             time.sleep(1)
 

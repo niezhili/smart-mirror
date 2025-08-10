@@ -1,34 +1,134 @@
 from collections import defaultdict
+from langdetect import detect
 import audioop
 import os
 import tempfile
-import sys
+import time
 import threading
 import wave
-
 import pyaudio
 import pyttsx3
-from dotenv import load_dotenv
+import glob
+import yaml
+from features.tts.tts_huoshan import text_to_speech
 import shutil
 from aip import AipSpeech
 from datetime import datetime
 from pathlib import Path
-import playsound
 import cv2
-from features.speech_recognizer import RecognizeSpeech
+from loguru import logger
+import pygame
+from features.asr.asr_paraformer import speech_to_text_paraformer
+from features.common.globals import is_tts_working,set_recording_requested,set_tts_state
+TAG = __name__
 
-load_dotenv()
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 
 # Baidu API credentials
-APP_ID = os.getenv('BAIDU_APP_ID')
-API_KEY = os.getenv('BAIDU_API_KEY')
-SECRET_KEY = os.getenv('BAIDU_SECRET_KEY')
+APP_ID = config['tts']['tts_baidu']['baidu_app_id']
+API_KEY = config['tts']['tts_baidu']['baidu_api_key']
+SECRET_KEY = config['tts']['tts_baidu']['baidu_secret_key']
+
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+def tts_speech(text: str, output_dir: str = "temp_tts"):
+    which_tts=config["choose"]["tts"]
+    if which_tts=="tts_huoshan":
+        tts_huoshan(text)
+    elif which_tts=="tts_baidu":
+        tts_baidu(text)
+    else:
+        logger.bind(tag=TAG).error("请检查yaml配置，选择正确的语音合成平台")
+def tts_huoshan(text: str, output_dir: str = "temp_tts"):
+    """
+    //qishibushi
+    huoshan_tts
+    合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
+    使用 .wav 格式 + pygame 播放，适用于树莓派。
+    """
+    # 设置 TTS 状态为 True
+    set_tts_state(True)
+    # 创建 temp_tts 文件夹,获取文件名
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("tts_huoshan_%Y%m%d_%H%M%S")
+    output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
+    output_file = os.path.abspath(output_file)
+    # 根据语言选择音色
+    language = detect(text)
+    if language == "ja":
+        # 日语
+        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["ja"])
+    elif language == "de":
+        # 德语
+        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["de"])
+    elif language == "fr":
+        # 法语
+        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["fr"])
+    else:
+        # 默认音色
+        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["default"])
+
+    manage_audio_files(output_dir)
+    logger.bind(tag=TAG).info("正在播放音频...")
+    try:
+        play_audio_file(output_file)
+        logger.bind(tag=TAG).info("播放完成。")
+        set_tts_state(False)
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
+        set_tts_state(False)
+
+def play_audio_file(file_path):
+    """
+    huoshan
+    使用 pygame 播放 .wav 音频文件（支持树莓派）
+    """
+    try:
+        pygame.mixer.init()
+        sound = pygame.mixer.Sound(file_path)
+        sound.play()
+
+        # 等待播放完成
+        while pygame.mixer.get_busy():
+            pygame.time.delay(100)
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"播放音频时出错: {str(e)}")
+    finally:
+        # 确保pygame资源被正确释放
+        try:
+            pygame.mixer.quit()
+        except:
+            pass
+
+
+def manage_audio_files(directory: str, max_files: int = 15):
+    """
+    管理指定目录下的音频文件数量，保留最新的 max_files 个文件。
+    """
+    files = glob.glob(os.path.join(directory, "*.wav"))  # 改为 .wav
+    if len(files) > max_files:
+        files.sort(key=os.path.getmtime)
+        for file in files[:len(files) - max_files]:
+            try:
+                os.remove(file)
+                logger.bind(tag=TAG).info(f"已删除旧音频：{file}")
+
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"无法删除 {file}: {str(e)}")
+
 
 
 def create_directory_if_not_exists(directory: str):
     if not os.path.exists(directory):
         os.makedirs(directory)
-        print(f"Created directory: {directory}")
+        logger.bind(tag=TAG).info(f"Created directory: {directory}")
 
 
 def copy_image_to_directory(image_path: str, target_dir: str):
@@ -38,7 +138,7 @@ def copy_image_to_directory(image_path: str, target_dir: str):
         shutil.copy2(image_path, new_path)
         return new_path
     except Exception as e:
-        print(f"Error copying {image_path}: {str(e)}")
+        logger.bind(tag=TAG).error(f"Error copying {image_path}: {str(e)}")
         return None
 
 
@@ -89,12 +189,12 @@ def _draw_face_annotations(frame, top, right, bottom, left, display_text):
     )
 
 
-def read_text_baidu(
+def tts_baidu(
         text,
-        baidu_app_id=os.getenv('BAIDU_APP_ID'),
-        baidu_api_key=os.getenv('BAIDU_API_KEY'),
-        baidu_secret_key=os.getenv('BAIDU_SECRET_KEY'),
-        temp_audio_dir='temp_audio'
+        baidu_app_id=APP_ID,
+        baidu_api_key=API_KEY,
+        baidu_secret_key=SECRET_KEY,
+        temp_audio_dir='temp_tts'
 ):
     """
     Convert text to speech using Baidu TTS and play the audio.
@@ -111,10 +211,11 @@ def read_text_baidu(
         :param text: text to be read
         :param baidu_app_id: baidu app id
     """
+    set_tts_state(True)
 
     # Check if the credentials are not None
     if not all([baidu_app_id, baidu_api_key, baidu_secret_key]):
-        raise ValueError("Baidu API credentials are not set properly.")
+        raise ValueError("百度 API 凭证设置不正确.")
 
     # Initialize Baidu Speech Client
     client = AipSpeech(baidu_app_id.strip(), baidu_api_key.strip(), baidu_secret_key.strip())
@@ -128,100 +229,141 @@ def read_text_baidu(
         'spd': 5,  # Speed
         'pit': 5,  # Pitch
         'vol': 5,  # Volume
-        'per': 4  # Voice type
+        'per': 4,  # Voice type
+        'aue': 6   # Audio format : 6 for WAV
     })
 
     # Check if synthesis was successful
     if not isinstance(result, dict):
         # Save the audio to a temporary file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        temp_file = temp_audio_path / f'tts_{timestamp}.mp3'
+        temp_file = temp_audio_path / f'tts_baidu_{timestamp}.wav'
         with open(temp_file, 'wb') as f:
             f.write(result)
 
-        # Play the audio
-        playsound.playsound(str(temp_file), True)
+        manage_audio_files(temp_audio_dir)
+        # play audio
+        logger.bind(tag=TAG).info("正在播放音频...")
+        try:
+            play_audio_file(str(temp_file))
+            logger.bind(tag=TAG).info("播放完成。")
+            set_tts_state(False)
 
-        # Remove the temporary file
-        os.remove(temp_file)
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
+            set_tts_state(False)
+
     else:
-        print("Error in speech synthesis:", result)
+        logger.bind(tag=TAG).error("语音合成错误。",result)
+        set_tts_state(False)
 
 
-def user_speech_recognition() -> str:
-    speech_recognition = RecognizeSpeech()
-    recognized_text = speech_recognition.recognize_from_microphone()
+
+
+
+def user_speech_recognition(timeout=30) -> str:
+    # speech_recognition = RecognizeSpeech()
+    # recognized_text = speech_recognition.recognize_from_microphone()
+
+    recognized_text=audio_to_text(timeout)
     return recognized_text
 
 
 # Update the listening and reading of data
 
-def record_audio_until_silence():
-        CHUNK = 1024
-        FORMAT = pyaudio.paInt16
-        CHANNELS = 1
-        RATE = 16000
-        SILENCE_THRESHOLD = 500
-        SILENCE_DURATION = 2  # seconds
-        p = pyaudio.PyAudio()
+def record_audio_until_silence(timeout=30):  # 添加超时参数（单位：秒）
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 16000
+    SILENCE_THRESHOLD = 300  # 静音阈值（根据实际环境调整）
+    SILENCE_DURATION = 1.5  # 检测到静默后停止录音的持续时间
+    p = pyaudio.PyAudio()
 
-        stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+    print("等待语音输入...")
 
-        print("Listening for voice...")
+    # --- 新增超时逻辑 ---
+    start_time = time.time()
+    max_recording_time = 120  # 最大录音时间
+    # -------------------
 
-        # Pre-listening phase: Wait until a voice is detected
+    frames = []
+    silent_chunks = 0
+    max_silent_chunks = int(SILENCE_DURATION * RATE / CHUNK)
+
+    try:
+        # 第一阶段：等待语音开始
         while True:
             data = stream.read(CHUNK)
             rms = audioop.rms(data, 2)
             if rms >= SILENCE_THRESHOLD:
-                print("Voice detected, starting recording...")
+                # logger.bind(tag=TAG).info("Voice detected")
+                logger.bind(tag=TAG).info("倾听中...")
                 break
+            # --- 检查超时 ---
+            if time.time() - start_time > timeout:
+                logger.bind(tag=TAG).warning("录音超时：未检测到语音输入")
+                return None
+            # -----------------
 
-        print("Recording... Press Ctrl+C to stop.")
-        frames = []
-        silent_chunks = 0
-        max_silent_chunks = int(SILENCE_DURATION * RATE / CHUNK)
+        # 第二阶段：录音直到静默
+        while True:
+            data = stream.read(CHUNK)
+            frames.append(data)
+            rms = audioop.rms(data, 2)
 
-        try:
-            while True:
-                data = stream.read(CHUNK)
-                frames.append(data)
-                rms = audioop.rms(data, 2)
+            if rms < SILENCE_THRESHOLD:
+                silent_chunks += 1
+                if silent_chunks > max_silent_chunks:
+                    # 静默足够长，结束录音
+                    break
+            else:
+                silent_chunks = 0
 
-                if rms < SILENCE_THRESHOLD:
-                    silent_chunks += 1
-                    if silent_chunks > max_silent_chunks:
-                        # Silence detected, save current segment
-                        if frames:
-                            # Save to temporary file
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmpfile:
-                                filename = tmpfile.name
-                                with wave.open(filename, "wb") as wf:
-                                    wf.setnchannels(CHANNELS)
-                                    wf.setsampwidth(p.get_sample_size(FORMAT))
-                                    wf.setframerate(RATE)
-                                    wf.writeframes(b"".join(frames))
-                                print(f"Speech segment stored at: {filename}")
+            # --- 检查最大录音时间 ---
+            if time.time() - start_time > max_recording_time:
+                logger.bind(tag=TAG).warning("达到最大录音时间120s，强制结束")
+                break
+            # -------------------------
 
-                                # Clear frames for next detection
-                            frames = []
+        # 保存临时文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmpfile:
+            filename = tmpfile.name
+            with wave.open(filename, "wb") as wf:
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(p.get_sample_size(FORMAT))
+                wf.setframerate(RATE)
+                wf.writeframes(b"".join(frames))
+            # logger.bind(tag=TAG).info(f"Speech segment saved to: {filename}")
+            return filename
 
-                            # Return filename for processing (or directly pass to STT)
-                            return filename
-
-                else:
-                    silent_chunks = 0
-
-        except KeyboardInterrupt:
-            print("Stopped listening.")
-
-        finally:
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
-
-
+    except KeyboardInterrupt:
+        logger.bind(tag=TAG).info("Stopped listening.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+def read_text_baidu(text):
+    logger.bind(tag=TAG).warning("read_text_baidu模块更名为tts_baidu,强烈建议使用统一接口tts_speech")
+    tts_speech(text)
 def speech_to_text(audio):
+    choose_asr=config['choose']['asr']
+    if choose_asr=='asr_baidu':
+        return speech_to_text_baidu(audio)
+    elif choose_asr=="asr_paraformer":
+        result=speech_to_text_paraformer(
+            audio_file_path=audio,
+            api_key=config['asr']['asr_paraformer']['dashscope.api_key'],
+            language_hints=config['asr']['asr_paraformer']['language_hints'],
+            model=config['asr']['asr_paraformer']['model']
+        )
+        return result
+    else:
+        logger.bind(tag=TAG).warning("请检测yaml配置，asr名称错误")
+        return None
+
+def speech_to_text_baidu(audio):
     client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
 
     with open(audio, "rb") as f:
@@ -230,7 +372,8 @@ def speech_to_text(audio):
     if "result" in result:
         return result["result"][0]
     else:
-        print("Error in STT:", result)
+        logger.bind(tag=TAG).warning("Could not convert audio to text.")
+        # print("Error in STT:", result)
         return None
 
 
@@ -250,23 +393,35 @@ def text_to_speech_chinese(text):
     t.join(timeout=10)  # Wait 10 seconds max
 
     if t.is_alive():
-        print("⚠️ Speech timed out. Something went wrong.")
+        logger.bind(tag=TAG).warning("Speech timed out. Something went wrong.")
+        # print("⚠️ Speech timed out. Something went wrong.")
         # Optional: Kill or cleanup logic here
         return True
     else:
+        logger.bind(tag=TAG).info("Text:", text)
         print("✅ Done speaking.")
 
 
-def audio_to_text():
-    audio = record_audio_until_silence()
-    text = speech_to_text(audio)
+def audio_to_text(timeout=30):
+    # 带超时的语音转文字
+    # 判断tts是否正在工作
+    while is_tts_working():
+        time.sleep(0.1)
+
+    # if(is_tts_working()):
+    #     set_recording_requested(True)
+    #     return ""
+
+    audio_file = record_audio_until_silence(timeout=timeout)
+    if not audio_file:
+        return ""
+
+    text = speech_to_text(audio_file)
     if text:
-        print("Recognized text:", text)
+        logger.bind(tag=TAG).info("识别到文本:", text)
         return text
     else:
-        print("Could not convert audio to text.")
-
-
+        return ""
 
 def load_known_faces_from_folder(folder_path):
     """
@@ -283,13 +438,3 @@ def load_known_faces_from_folder(folder_path):
 
     return image_paths_by_person
 
-#
-# if __name__ == "__main__":
-#     # Example usage
-#     text_to_speech_chinese("你好，世界！")
-#     audio = record_audio_until_silence()
-#     text = speech_to_text(audio)
-#     if text:
-#         print("Recognized text:", text)
-#     else:
-#         print("Could not convert audio to text.")

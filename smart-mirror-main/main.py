@@ -1,211 +1,198 @@
-import os
-import sys
+import time
+from features.common.config_loader import config
+import threading
 from flask import Flask, render_template
 import geocoder
+from features.llm.llm_qwen import chat_llm
+from human_detection import HumanDetection
 from features.face_recognition.face_recognition_system import FaceRecognition
-from features.common.utils import read_text_baidu, user_speech_recognition, record_audio_until_silence, audio_to_text, \
-    text_to_speech_chinese, load_known_faces_from_folder
+from features.common.utils import tts_speech, audio_to_text, load_known_faces_from_folder
 from features.voice_feat_system import VoiceAssistant
 from features.weather import WeatherService
-import time
-import threading
+from queue import Queue
+from features.common.globals import set_tts_state
+from features.common.log_loader import logger
+TAG = __name__
 
-# Initialize Flask app
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-# Global flags and variables
-app = Flask(__name__)
-
-# Global flags and variables
 running = True
 face_detected = False
-wake_words = ["小", "小朋友", "朋友"]  # Example wake words in Chinese (adjust as needed)
-WAKE_WORD_THRESHOLD = 0.7  # Adjust based on your speech recognition sensitivity
-assistant = None  # Initialize VoiceAssistant globally
+face_detection_active = False
+preloaded_face_data = None
+location_info = None
+weather_service = WeatherService()
+assistant = None
 face_detection_running = False
+ignore_audio_until = False
 face_detection_success = False
+detection_mode = None
+human_detector = None
+voice_detection_active = True
+# 全局线程锁
+global_lock=threading.Lock()
 
+WAKE_WORD_CHECK_INTERVAL = 0.1  # 唤醒词检查间隔
+FACE_DETECT_TIMEOUT = 30  # 人脸检查超时
 
 @app.route('/')
 def index():
-    """Serve the main interface"""
     return render_template('index.html')
-
 
 @app.route('/test')
 def test():
-    """Test endpoint to verify Flask is running"""
     return "Flask server is working!"
 
 
-# Global variable to store preloaded face data
-preloaded_face_data = None
-
-
 def preload_face_data():
-    """Preload face data into memory."""
     face_system = FaceRecognition()
     image_paths_by_person = load_known_faces_from_folder("known_faces")
     for person_name, image_paths in image_paths_by_person.items():
         face_system.add_new_person(person_name, image_paths)
     return face_system
 
-
-def detect_face(timeout=60) -> bool:
-    """Detect a face using preloaded face data."""
+def detect_face(timeout=FACE_DETECT_TIMEOUT) -> bool:
     global preloaded_face_data
     if preloaded_face_data is None:
-        print("Error: Face data not preloaded.")
+        logger.bind(tag=TAG).error("Face data not preloaded.")
         return False
+    result_queue = Queue()
+    def recognition_wrapper():
+        result = preloaded_face_data.start_recognition()
+        result_queue.put(result)
+
+
 
     start_time = time.time()
+    detection_thread = threading.Thread(target=preloaded_face_data.start_recognition)
+    detection_thread.start()
 
-    while time.time() - start_time < timeout and running:
-        try:
-            recognized = preloaded_face_data.start_recognition()
-            if recognized:
-                print("Face detected")
-                return True
-            else:
-                print("No face detected (during activation)")
-                time.sleep(0.5)
-        except Exception as e:
-            print(f"Error during recognition: {e}")
-            time.sleep(0.5)
+    # Wait for result with timeout
+    while time.time() - start_time < timeout and detection_thread.is_alive():
+        if not result_queue.empty():
+            result = result_queue.get()
+            logger.bind(tag=TAG).info(f"Face detected: {result}")
+            return True
+        time.sleep(0.1)
 
     return False
 
 
 def get_user_location():
-    """Get the user's location using geocoder"""
+    global location_info
+    if location_info is None:
+        try:
+            location_info = geocoder.ip("me")
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"Error getting location: {e}")
+            return None
+    return location_info
+
+
+def play_weather_info():
+    location = get_user_location()
+    if not location:
+        tts_speech("无法获取位置信息")
+        return
+
     try:
-        return geocoder.ip("me")
+        weather_info = weather_service.get_weather_info(location.lng, location.lat)
+        # Single TTS call with combined information
+        message = (
+            f"今天的天气状况如下，位置：{location.city}。"
+            f"天气：{weather_info['weather_condition']}，"
+            f"温度：{weather_info['temperature']}，"
+            f"体感温度：{weather_info['feels_like']}，"
+            f"湿度：{weather_info['humidity']}，"
+            f"风向：{weather_info['wind_direction']}，"
+            f"风速：{weather_info['wind_speed']}，"
+            f"气压：{weather_info['pressure']}，"
+            f"能见度：{weather_info['visibility']}，"
+            f"云量：{weather_info['cloud_coverage']}"
+        )
+        tts_speech(message)
     except Exception as e:
-        print(f"Error getting location: {e}")
-        return None
+        logger.bind(tag=TAG).error(f"Weather playback error: {e}")
 
 
 def assistant_mode():
-    global running, face_detected, assistant
-    if assistant is None:
-        print("Error: Assistant not initialized.")
-        return
+    # 助手模式
+    global face_detected,running
+    # if assistant is None:
+    #     logger.bind(tag=TAG).error("Assistant没有初始化")
+    #     return
 
-    location = get_user_location()
-    weather = WeatherService()
-    longitude = get_user_location().lng
-    latitude = get_user_location().lat
-    response = weather.get_weather_info(longitude, latitude)
-    listening_duration = 60  # 1 minute in seconds
-    last_interaction_time = time.time()
-
-    read_text_baidu("你好！有什么我可以帮您？")
+    listening_duration = 60
+    last_interaction = time.time()
+    # tts_speech("你好！有什么我可以帮您？")
+    tts_speech(chat_llm('你好！'))
     while running and face_detected:
-        if time.time() - last_interaction_time > listening_duration:
-            read_text_baidu("等待唤醒...")
+        if time.time() - last_interaction > listening_duration:
+            tts_speech("等待唤醒...")
             face_detected = False
             break
 
-        text = user_speech_recognition()
-        if text:
-            print(f"User said: {text}")
-            last_interaction_time = time.time()  # Reset the timer
+        try:
+            text = audio_to_text(timeout=30)  # Add timeout to non-blocking
+            if text:
+                logger.bind(tag=TAG).info(f"User said: {text}")
+                last_interaction = time.time()
 
-            if '天气' in text:
-                print("Weather query detected")
-                print("Response: " + response['weather_condition'])
-                read_text_baidu(f"今天的天气状况如下,  位置:{location.city}")
-                read_text_baidu(f"天气：{response['weather_condition']}")
-                read_text_baidu(f"温度：{response['temperature']}")
-                read_text_baidu(f"体感温度：{response['feels_like']}")
-                read_text_baidu(f"湿度：{response['humidity']}")
-                read_text_baidu(f"风向：{response['wind_direction']}")
-                read_text_baidu(f"风速：{response['wind_speed']}")
-                read_text_baidu(f"气压：{response['pressure']}")
-                read_text_baidu(f"能见度：{response['visibility']}")
-                read_text_baidu(f"云量：{response['cloud_coverage']}")
-                continue
-            elif '几点' in text:
-                print("Time query detected")
-                read_text_baidu(f"现在是 {time.strftime('%H:%M')}")
-                continue
-            elif '空调' in text:
-                print("AC query detected")
-                # Add your AC control logic here
-                read_text_baidu("好的，正在处理空调指令。")
-                continue
-            elif '拜拜' in text or '再见' in text:
-                read_text_baidu("拜拜，下次再见！")
-                face_detected = False
-                continue
-            else:
-                print("Deepseek request")
-                print(f"Heard: {text}, processing with DeepSeek...")
-                response = assistant.chat(text)
-                print(f"DeepSeek response: {response}")
-                read_text_baidu(response)
-                continue
-        else:
-            print("Listening for command...")
-            time.sleep(1)  # Small delay while actively listening
-
-    if face_detected:
-        read_text_baidu("等待唤醒...")
-        face_detected = False
-
-
-def run_face_detection():
-    global face_detection_running, face_detection_success
-    face_detection_running = True
-    if detect_face(timeout=60):
-        face_detection_success = True
-    else:
-        text_to_speech_chinese("我无法识别您的面部。如果需要我，请随时叫我。")
-    face_detection_running = False
-
+                if '天气' in text:
+                    threading.Thread(target=play_weather_info).start()
+                elif '几点' in text:
+                    tts_speech(f"现在是 {time.strftime('%H:%M')}")
+                elif '空调' in text:
+                    tts_speech("好的，正在处理空调指令。")
+                elif '拜拜' in text or '再见' in text or "bye" in text:
+                    tts_speech("拜拜，下次再见！")
+                    with global_lock:
+                        face_detected = False
+                        running = False
+                else:
+                    response = chat_llm(text)
+                    # response = assistant.chat(text)
+                    # threading.Thread(target=tts_speech, args=(response,)).start()
+                    tts_speech(response)
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"语音识别错误: {e}")
+            time.sleep(0.1)
 
 def wake_word_detection_loop():
-    global running, face_detected, assistant
-    global face_detection_running, face_detection_success
+    # 唤醒词监听
+    global running, face_detected
 
-    if assistant is None:
-        print("Error: Assistant not initialized.")
-        return
+    while True:
+        with global_lock:
+            if not running:
+                break
+            if face_detected:
+                time.sleep(0.5)
+                continue
 
-    while running:
-        if face_detected:
-            time.sleep(2)
-            continue
-
-        if face_detection_success:
-            face_detected = True
-            face_detection_success = False  # Reset
-            assistant_thread = threading.Thread(target=assistant_mode)
-            assistant_thread.start()
-            continue
-
-        if not face_detection_running:
-            print("Listening for wake word...")
-            script = audio_to_text()
+        try:
+            script = audio_to_text(timeout=30)
             if script:
-                for wake_word in wake_words:
+                logger.bind(tag=TAG).info(f"Script: {script}")
+                for wake_word in config['wakeup_words']:
                     if wake_word in script:
-                        text_to_speech_chinese("唤醒成功，请靠近并扫描您的面部以继续互动。这是为了您的安全。")
-                        threading.Thread(target=run_face_detection).start()
+                        with global_lock:
+                            set_tts_state(True)
+                            tts_speech("唤醒成功，暂时跳过面部扫描")
+                            set_tts_state(False)
+                            # if detect_face():
+                            face_detected = True
+                        threading.Thread(target=assistant_mode).start()
                         break
-                else:
-                    print("Wake word not detected.")
-            else:
-                print("No speech detected.")
-
-        time.sleep(1)  # Small delay to avoid busy loop
-
+                            # else:
+                            #     tts_speech("未检测到您的面部，请重新尝试")
+        except Exception as e:
+            logger.bind(tag=TAG).warning(f"处理唤醒词出错: {e}")
+        time.sleep(0.1)
 
 def launch_gui():
-    """Try Kivy first, fall back to console mode"""
     try:
-        # PyQt5 implementation
         from PyQt5.QtWebEngineWidgets import QWebEngineView
         from PyQt5.QtWidgets import QApplication
         from PyQt5.QtCore import QUrl
@@ -216,10 +203,8 @@ def launch_gui():
         web.load(QUrl("http://localhost:8080"))
         web.show()
         sys.exit(app.exec_())
-
     except ImportError:
         try:
-            # Fallback to Kivy implementation
             from kivy.app import App
             from kivy.uix.label import Label
 
@@ -228,46 +213,81 @@ def launch_gui():
                     return Label(text='Display Error, your Smart Mirror is Running\nhttp://localhost:8080')
 
             SimpleApp().run()
-
         except ImportError:
-            # Final fallback to console mode
-            print("GUI frameworks not available - running in console mode")
-            print("Access the mirror at http://localhost:8080")
-            import time
-            while True:
-                time.sleep(1)
+            logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
 
 
-def main() -> None:
+# def on_human_detected():
+#     global ignore_audio_until
+#
+#     if face_detection_running or face_detected:
+#         return
+#     logger.bind(tag=TAG).info("[人体检测] 触发人脸识别")
+#     ignore_audio_until = time.time() + 3
+#     tts_speech("检测到您靠近，请面向摄像头。")
+#     threading.Thread(target=run_face_detection, args=("pir",)).start()
+
+# def run_face_detection(mode):
+#     global face_detection_running, face_detection_success, detection_mode
+#     global human_detector, voice_detection_active
+#
+#     try:
+#         if face_detection_running or face_detected:
+#             return
+#
+#         face_detection_running = True
+#         detection_mode = mode
+#
+#         if mode == "pir":
+#             voice_detection_active = False
+#         elif mode == "voice":
+#             human_detector.stop_detection()
+#
+#         print(f"[人脸识别] 开始检测 (模式: {mode})")
+#
+#         if detect_face(timeout=60):
+#             face_detection_success = True
+#         else:
+#             tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
+#
+#     except Exception as e:
+#         print(f"[人脸识别] 异常: {e}")
+#     finally:
+#         face_detection_running = False
+#         if mode == "pir":
+#             voice_detection_active = True
+#         elif mode == "voice":
+#             human_detector.start_detection(on_human_detected)
+
+def main():
     global running, assistant, preloaded_face_data
-    print("Smart Mirror started.")
+    logger.bind(tag=TAG).info("Starting Smart Mirror...")
 
-    # Initialize the voice assistant
-    assistant = VoiceAssistant(
-        baidu_app_id=os.getenv("BAIDU_APP_ID"),
-        baidu_api_key=os.getenv("BAIDU_API_KEY"),
-        baidu_secret_key=os.getenv("BAIDU_SECRET_KEY"),
-        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"),
-    )
-
-    # Preload face data
-    preloaded_face_data = preload_face_data()
-    gui_thread = threading.Thread(target=launch_gui)
-
-    # Start voice processing
-    voice_thread = threading.Thread(target=wake_word_detection_loop, daemon=True)
-    voice_thread.start()
-    gui_thread.start()
-
-
+    # assistant = VoiceAssistant(
+    #     baidu_app_id=config['tts']['tts_baidu']['baidu_app_id'],
+    #     baidu_api_key=config['tts']['tts_baidu']['baidu_api_key'],
+    #     baidu_secret_key=config['tts']['tts_baidu']['baidu_secret_key'],
+    #     deepseek_api_key=config['llm']['deepseek']['deepseek_api_key'],
+    # )
     try:
+        preloaded_face_data = preload_face_data()
+        # human_detector = HumanDetection()
+        # human_detector.start_detection(on_human_detected)
+        gui_thread = threading.Thread(target=launch_gui)
+        voice_thread = threading.Thread(target=wake_word_detection_loop)
+
+        gui_thread.start()
+        voice_thread.start()
+
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Exiting...")
-        running = False
-        voice_thread.join()
-        # GUI thread will exit when the Qt application is closed
+        logger.bind(tag=TAG).info("正在释放资源，请耐心等待...")
+        with global_lock:
+            running = False
+        logger.bind(tag=TAG).info("程序已终止")
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"程序异常: {e}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@ import RPi.GPIO as GPIO
 import requests
 import time
 from voice_feat.voice_feat_system import VoiceAssistant
+import yaml
 
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 class ACController:
     """空调控制器类，支持语音控制空调。
     提供两种控制方式：
@@ -24,8 +29,8 @@ class ACController:
         self.voice_assistant = VoiceAssistant()
         
         # 涂鸦API配置
-        self.tuya_api_id =  os.getenv('TUYA_API_ID')
-        self.tuya_api_secret =  os.getenv('TUYA_API_SECRET')
+        self.tuya_api_id =  config['iot']["tuya_api_id"]
+        self.tuya_api_secret =  config['iot']["yuya_api_secret"]
         self.tuya_api_endpoint = 'https://openapi.tuyacn.com/v1.0/infrareds'
         
         # GPIO配置

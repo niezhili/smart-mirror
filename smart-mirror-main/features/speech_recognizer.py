@@ -5,31 +5,39 @@ import io
 import wave
 import audioop
 import socket
-import logging
 from functools import lru_cache
-from datetime import datetime
-from pathlib import Path
-from dotenv import load_dotenv
+from loguru import logger
+import sys
+import yaml
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../config/config.yaml")
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    Config = yaml.safe_load(f)
+config=Config
 
-load_dotenv()
+logger.remove()  # 移除默认的 handler
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>[{extra[tag]}]</cyan> | {message}"
+)
 
+TAG = __name__
 
 class RecognizeSpeech:
     """Speech recognition class using Baidu Speech Recognition API."""
 
-    def __init__(self, app_id=os.getenv('BAIDU_APP_ID'), api_key=os.getenv('BAIDU_API_KEY'),
-                 secret_key=os.getenv('BAIDU_SECRET_KEY'), log_dir="logs"):
+    def __init__(self, app_id=config['asr']['asr_baidu']['baidu_app_id'], api_key=config['asr']['asr_baidu']['baidu_api_key'],
+                 secret_key=config['asr']['asr_baidu']['baidu_secret_key']):
         """Initialize speech recognition with Baidu credentials.
 
         Args:
             app_id (str): Baidu APP ID
             api_key (str): Baidu API Key
             secret_key (str): Baidu Secret Key
-            log_dir (str): Directory for logs
         """
         # Initialize logging
-        self.logger = self._setup_logger('baidu_recognizer', log_dir)
-
+        # self.logger = self._setup_logger('baidu_recognizer')
+        self.logger = logger.bind(tag=TAG)
         # Initialize speech recognizer
         self.recognizer = sr.Recognizer()
 
@@ -39,43 +47,6 @@ class RecognizeSpeech:
         # Configure speech recognition parameters
         self.configure_recognizer()
 
-    def _setup_logger(self, name, log_dir):
-        """Set up logger configuration.
-
-        Args:
-            name (str): Logger name
-            log_dir (str): Directory for logs
-
-        Returns:
-            logging.Logger: Configured logger
-        """
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
-
-        # Create log directory if it doesn't exist
-        log_path = Path(log_dir)
-        log_path.mkdir(exist_ok=True)
-
-        # File handler
-        file_handler = logging.FileHandler(
-            log_path / f"{name}_{datetime.now().strftime('%Y%m%d')}.log"
-        )
-        file_handler.setLevel(logging.INFO)
-
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-
-        # Create formatter
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
-
-        # Add handlers to logger
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
-
-        return logger
 
     def configure_recognizer(self):
         """Configure speech recognizer parameters."""
@@ -83,7 +54,7 @@ class RecognizeSpeech:
         self.recognizer.dynamic_energy_adjustment_damping = 0.15
         self.recognizer.dynamic_energy_ratio = 1.5
         self.recognizer.energy_threshold = 1500
-        self.recognizer.pause_threshold = 0.5
+        self.recognizer.pause_threshold = 2
         self.recognizer.operation_timeout = None
         self.recognizer.phrase_threshold = 0.3
         self.recognizer.non_speaking_duration = 0.5
