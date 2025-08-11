@@ -4,14 +4,15 @@ import threading
 from flask import Flask, render_template
 import geocoder
 from features.llm.llm_qwen import chat_llm
-from human_detection import HumanDetection
 from features.face_recognition.face_recognition_system import FaceRecognition
-from features.common.utils import tts_speech, audio_to_text, load_known_faces_from_folder
-from features.voice_feat_system import VoiceAssistant
+from features.common.utils import audio_to_text, load_known_faces_from_folder
 from features.weather import WeatherService
 from queue import Queue
-from features.common.globals import set_tts_state
+from features.common.globals import set_tts_state, is_tts_working
 from features.common.log_loader import logger
+from features.tts.tts_speech import tts_speech
+from human_detection import HumanDetection  # 导入人体检测模块
+
 TAG = __name__
 
 app = Flask(__name__)
@@ -31,14 +32,16 @@ detection_mode = None
 human_detector = None
 voice_detection_active = True
 # 全局线程锁
-global_lock=threading.Lock()
+global_lock = threading.Lock()
 
 WAKE_WORD_CHECK_INTERVAL = 0.1  # 唤醒词检查间隔
 FACE_DETECT_TIMEOUT = 30  # 人脸检查超时
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/test')
 def test():
@@ -52,30 +55,30 @@ def preload_face_data():
         face_system.add_new_person(person_name, image_paths)
     return face_system
 
+
 def detect_face(timeout=FACE_DETECT_TIMEOUT) -> bool:
     global preloaded_face_data
     if preloaded_face_data is None:
         logger.bind(tag=TAG).error("Face data not preloaded.")
         return False
+
     result_queue = Queue()
+
     def recognition_wrapper():
         result = preloaded_face_data.start_recognition()
         result_queue.put(result)
 
-
-
-    start_time = time.time()
-    detection_thread = threading.Thread(target=preloaded_face_data.start_recognition)
+    detection_thread = threading.Thread(target=recognition_wrapper)
     detection_thread.start()
+    detection_thread.join(timeout=timeout)
 
-    # Wait for result with timeout
-    while time.time() - start_time < timeout and detection_thread.is_alive():
-        if not result_queue.empty():
-            result = result_queue.get()
-            logger.bind(tag=TAG).info(f"Face detected: {result}")
+    if not result_queue.empty():
+        result = result_queue.get()
+        if result:  # 只有识别成功才返回True
+            logger.bind(tag=TAG).info(f"Face recognized: {result}")
             return True
-        time.sleep(0.1)
 
+    logger.bind(tag=TAG).info("Face recognition failed or timed out")
     return False
 
 
@@ -118,26 +121,28 @@ def play_weather_info():
 
 def assistant_mode():
     # 助手模式
-    global face_detected,running
-    # if assistant is None:
-    #     logger.bind(tag=TAG).error("Assistant没有初始化")
-    #     return
-
-    listening_duration = 60
+    global face_detected, running
+    listening_duration = 600
     last_interaction = time.time()
-    # tts_speech("你好！有什么我可以帮您？")
-    tts_speech(chat_llm('你好！'))
+
+    # 移除了初始问候语，因为在人脸识别成功后已经播放
     while running and face_detected:
+        if is_tts_working():
+            time.sleep(0.1)
+            continue
+
         if time.time() - last_interaction > listening_duration:
             tts_speech("等待唤醒...")
-            face_detected = False
+            with global_lock:
+                face_detected = False
             break
 
         try:
-            text = audio_to_text(timeout=30)  # Add timeout to non-blocking
+            text = audio_to_text(timeout=30)
             if text:
                 logger.bind(tag=TAG).info(f"User said: {text}")
                 last_interaction = time.time()
+                set_tts_state(True)
 
                 if '天气' in text:
                     threading.Thread(target=play_weather_info).start()
@@ -149,47 +154,108 @@ def assistant_mode():
                     tts_speech("拜拜，下次再见！")
                     with global_lock:
                         face_detected = False
+                elif '关闭系统' in text:
+                    tts_speech("好的，正在关闭系统。")
+                    with global_lock:
                         running = False
                 else:
                     response = chat_llm(text)
-                    # response = assistant.chat(text)
-                    # threading.Thread(target=tts_speech, args=(response,)).start()
                     tts_speech(response)
         except Exception as e:
             logger.bind(tag=TAG).error(f"语音识别错误: {e}")
+            set_tts_state(False)
             time.sleep(0.1)
 
+
+def on_human_detected():
+    global ignore_audio_until, face_detected, face_detection_running
+
+    if face_detection_running or face_detected:
+        return
+
+    logger.bind(tag=TAG).info("[人体检测] 红外感应触发")
+    ignore_audio_until = time.time() + 3
+    tts_speech("检测到您靠近，请面向摄像头。")
+    threading.Thread(target=run_face_detection, args=("pir",)).start()
+
+
+def run_face_detection(mode):
+    global face_detection_running, face_detection_success, detection_mode
+    global human_detector, voice_detection_active, face_detected
+
+    try:
+        if face_detection_running or face_detected:
+            return
+
+        face_detection_running = True
+        detection_mode = mode
+
+        if mode == "pir":
+            voice_detection_active = False
+        elif mode == "voice":
+            human_detector.stop_detection()
+
+        logger.bind(tag=TAG).info(f"[人脸识别] 开始检测 (模式: {mode})")
+
+        # 真正进行人脸识别，不再直接设置成功
+        if detect_face(timeout=60):
+            logger.bind(tag=TAG).info("人脸识别成功")
+            with global_lock:
+                face_detected = True
+            threading.Thread(target=assistant_mode).start()
+        else:
+            tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
+            # 人脸识别失败后重新启用对应检测
+            if mode == "pir":
+                human_detector.start_detection(on_human_detected)
+            elif mode == "voice":
+                voice_detection_active = True
+
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"[人脸识别] 异常: {e}")
+        # 异常情况下也重新启用检测
+        if mode == "pir":
+            human_detector.start_detection(on_human_detected)
+        elif mode == "voice":
+            voice_detection_active = True
+    finally:
+        face_detection_running = False
+        # 无论成功与否，都重新启用检测机制
+        if mode == "pir":
+            voice_detection_active = True
+        elif mode == "voice":
+            human_detector.start_detection(on_human_detected)
+
+
 def wake_word_detection_loop():
-    # 唤醒词监听
-    global running, face_detected
+    global running, face_detected, voice_detection_active
 
     while True:
         with global_lock:
             if not running:
                 break
-            if face_detected:
+            if face_detected or not voice_detection_active:
                 time.sleep(0.5)
                 continue
+        if is_tts_working():
+            time.sleep(0.5)
+            continue
 
         try:
             script = audio_to_text(timeout=30)
             if script:
-                logger.bind(tag=TAG).info(f"Script: {script}")
+                logger.bind(tag=TAG).info(f"检测到语音: {script}")
                 for wake_word in config['wakeup_words']:
                     if wake_word in script:
                         with global_lock:
                             set_tts_state(True)
-                            tts_speech("唤醒成功，暂时跳过面部扫描")
-                            set_tts_state(False)
-                            # if detect_face():
-                            face_detected = True
-                        threading.Thread(target=assistant_mode).start()
+                            tts_speech("唤醒成功，请面向摄像头。")
+                        threading.Thread(target=run_face_detection, args=("voice",)).start()
                         break
-                            # else:
-                            #     tts_speech("未检测到您的面部，请重新尝试")
         except Exception as e:
             logger.bind(tag=TAG).warning(f"处理唤醒词出错: {e}")
         time.sleep(0.1)
+
 
 def launch_gui():
     try:
@@ -217,74 +283,44 @@ def launch_gui():
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
 
 
-# def on_human_detected():
-#     global ignore_audio_until
-#
-#     if face_detection_running or face_detected:
-#         return
-#     logger.bind(tag=TAG).info("[人体检测] 触发人脸识别")
-#     ignore_audio_until = time.time() + 3
-#     tts_speech("检测到您靠近，请面向摄像头。")
-#     threading.Thread(target=run_face_detection, args=("pir",)).start()
-
-# def run_face_detection(mode):
-#     global face_detection_running, face_detection_success, detection_mode
-#     global human_detector, voice_detection_active
-#
-#     try:
-#         if face_detection_running or face_detected:
-#             return
-#
-#         face_detection_running = True
-#         detection_mode = mode
-#
-#         if mode == "pir":
-#             voice_detection_active = False
-#         elif mode == "voice":
-#             human_detector.stop_detection()
-#
-#         print(f"[人脸识别] 开始检测 (模式: {mode})")
-#
-#         if detect_face(timeout=60):
-#             face_detection_success = True
-#         else:
-#             tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
-#
-#     except Exception as e:
-#         print(f"[人脸识别] 异常: {e}")
-#     finally:
-#         face_detection_running = False
-#         if mode == "pir":
-#             voice_detection_active = True
-#         elif mode == "voice":
-#             human_detector.start_detection(on_human_detected)
-
 def main():
-    global running, assistant, preloaded_face_data
+    global running, assistant, preloaded_face_data, human_detector
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
 
-    # assistant = VoiceAssistant(
-    #     baidu_app_id=config['tts']['tts_baidu']['baidu_app_id'],
-    #     baidu_api_key=config['tts']['tts_baidu']['baidu_api_key'],
-    #     baidu_secret_key=config['tts']['tts_baidu']['baidu_secret_key'],
-    #     deepseek_api_key=config['llm']['deepseek']['deepseek_api_key'],
-    # )
     try:
+        # 预加载人脸数据
         preloaded_face_data = preload_face_data()
-        # human_detector = HumanDetection()
-        # human_detector.start_detection(on_human_detected)
-        gui_thread = threading.Thread(target=launch_gui)
-        voice_thread = threading.Thread(target=wake_word_detection_loop)
+        logger.bind(tag=TAG).info("人脸数据预加载完成")
 
+        # 初始化并启动人体检测模块
+        human_detector = HumanDetection()
+        human_detector.start_detection(on_human_detected)
+        logger.bind(tag=TAG).info("人体检测模块已启动")
+
+        # 启动GUI界面
+        gui_thread = threading.Thread(target=launch_gui)
+        gui_thread.daemon = True
         gui_thread.start()
+
+        # 启动唤醒词检测
+        voice_thread = threading.Thread(target=wake_word_detection_loop)
+        voice_thread.daemon = True
         voice_thread.start()
 
-        while True:
+        logger.bind(tag=TAG).info("系统启动完成，等待唤醒...")
+
+        # 主循环
+        while running:
             time.sleep(1)
+
     except KeyboardInterrupt:
         logger.bind(tag=TAG).info("正在释放资源，请耐心等待...")
         with global_lock:
             running = False
+        # 清理人体检测资源
+        if human_detector:
+            human_detector.stop_detection()
+            human_detector.cleanup()
         logger.bind(tag=TAG).info("程序已终止")
     except Exception as e:
         logger.bind(tag=TAG).error(f"程序异常: {e}")

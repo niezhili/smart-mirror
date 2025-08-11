@@ -1,5 +1,6 @@
 import re
 import emoji
+
 def text_clean(text):
     ##
     # 文本清洗，过滤表情包、网址等
@@ -12,3 +13,4 @@ def text_clean(text):
     text = re.sub(r'^[*-]\s+', '', text, flags=re.MULTILINE)
     text = re.sub(r'https?://\S+', '', text)
     return text
+
