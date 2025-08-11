@@ -1,5 +1,7 @@
 env : dev
-
+#===============系统设定===============================
+# 是否启动人体检测，win平台设置False
+human_detection: False
 #===============角色设定===============================
 context_manager:
   role: "你的名字是小镜/小朋友，你是一款知书达理的多语言汉学互联镜，你能够说中英日三国语言，集成摄像头、麦克风等外设，擅长引经据典。你说话很简洁精准，不失幽默。请多用口语，不用md格式。你的每次回复尽量不超过100字，如果是讲故事的是可以适当超出。"
@@ -7,7 +9,7 @@ wakeup_words : ["你好", "树莓派", "小", "小朋友", "朋友","小镜子"]
 #===============选择接口===============================
 choose:
   tts: tts_huoshan
-  asr: asr_paraformer
+  asr: paraformer
   llm: "qwen"
 #===============参数调节===============================
 time:
@@ -22,6 +24,11 @@ asr :
       dashscope.api_key: "sk-acccd325f0f7452b935947606d5b565a"
       # ['zh','en','ja','fr','ru','yue','ko','de'] 中文是：zh_cn, 英语是：en_us, 日语是：ja_jp, 法语是：fr_fr, 俄语是：ru
       language_hints : ['zh','en','ja']
+      model: "paraformer-realtime-v2"
+    paraformer:
+      api_key: "sk-acccd325f0f7452b935947606d5b565a"
+      # ['zh','en','ja','fr','ru','yue','ko','de'] 中文是：zh_cn, 英语是：en_us, 日语是：ja_jp, 法语是：fr_fr, 俄语是：ru
+      language: [ 'zh','en','ja' ]
       model: "paraformer-realtime-v2"
 
 tts :
@@ -40,7 +47,7 @@ tts :
     # BV700_streaming 普通
     voice_type:
       # default包含中英文，如果en单独设置，那么en就会是对应音色
-      default: "multi_male_jingqiangkanye_moon_bigtts"
+      default: "zh_female_yingyujiaoyu_mars_bigtts"
       ja: "multi_male_jingqiangkanye_moon_bigtts"
       de: "zh_male_tiancaitongsheng_mars_bigtts"
       fr: "zh_male_tiancaitongsheng_mars_bigtts"

@@ -20,9 +20,10 @@ import pygame
 from features.common.text_cutter import text_cutter
 from features.asr.asr_paraformer import speech_to_text_paraformer
 from features.common.globals import is_tts_working,set_recording_requested,set_tts_state
+from features.asr.paraformer import ASR
 TAG = __name__
 
-
+asr=ASR()
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     Config = yaml.safe_load(f)
@@ -496,20 +497,22 @@ def audio_to_text(timeout=30):
     while is_tts_working():
         time.sleep(0.1)
 
+    return asr.audio_to_text()
+
     # if(is_tts_working()):
     #     set_recording_requested(True)
     #     return ""
-
-    audio_file = record_audio_until_silence(timeout=timeout)
-    if not audio_file:
-        return ""
-
-    text = speech_to_text(audio_file)
-    if text:
-        logger.bind(tag=TAG).info("识别到文本:", text)
-        return text
-    else:
-        return ""
+    #
+    # audio_file = record_audio_until_silence(timeout=timeout)
+    # if not audio_file:
+    #     return ""
+    #
+    # text = speech_to_text(audio_file)
+    # if text:
+    #     logger.bind(tag=TAG).info("识别到文本:", text)
+    #     return text
+    # else:
+    #     return ""
 
 def load_known_faces_from_folder(folder_path):
     """
