@@ -1,5 +1,4 @@
 from collections import defaultdict
-from langdetect import detect
 import audioop
 import os
 import tempfile
@@ -18,6 +17,7 @@ from pathlib import Path
 import cv2
 from loguru import logger
 import pygame
+from features.common.text_cutter import text_cutter
 from features.asr.asr_paraformer import speech_to_text_paraformer
 from features.common.globals import is_tts_working,set_recording_requested,set_tts_state
 TAG = __name__
@@ -38,74 +38,161 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml"
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 
-def tts_speech(text: str, output_dir: str = "temp_tts"):
-    which_tts=config["choose"]["tts"]
-    if which_tts=="tts_huoshan":
-        tts_huoshan(text)
-    elif which_tts=="tts_baidu":
-        tts_baidu(text)
-    else:
-        logger.bind(tag=TAG).error("请检查yaml配置，选择正确的语音合成平台")
+
+# def tts_speech(text: str, output_dir: str = "temp_tts"):
+#     which_tts=config["choose"]["tts"]
+#     text_cutted=text_cutter(text)
+#     if text_cutted==[]:
+#         return ""
+#     for text_i in text_cutted:
+#         if which_tts=="tts_huoshan":
+#             tts_huoshan(text_i)
+#         elif which_tts=="tts_baidu":
+#             tts_baidu(text_i)
+#         else:
+#             logger.bind(tag=TAG).error("请检查yaml配置，选择正确的语音合成平台")
+
+
 def tts_huoshan(text: str, output_dir: str = "temp_tts"):
-    """
-    //qishibushi
-    huoshan_tts
-    合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
-    使用 .wav 格式 + pygame 播放，适用于树莓派。
-    """
-    # 设置 TTS 状态为 True
-    set_tts_state(True)
-    # 创建 temp_tts 文件夹,获取文件名
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("tts_huoshan_%Y%m%d_%H%M%S")
-    output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
-    output_file = os.path.abspath(output_file)
-    # 根据语言选择音色
-    language = detect(text)
-    if language == "ja":
-        # 日语
-        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["ja"])
-    elif language == "de":
-        # 德语
-        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["de"])
-    elif language == "fr":
-        # 法语
-        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["fr"])
-    else:
-        # 默认音色
-        text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["default"])
-
-    manage_audio_files(output_dir)
-    logger.bind(tag=TAG).info("正在播放音频...")
     try:
-        play_audio_file(output_file)
-        logger.bind(tag=TAG).info("播放完成。")
-        set_tts_state(False)
-    except Exception as e:
-        logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
-        set_tts_state(False)
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, f"tts_{int(time.time())}.wav")
 
-def play_audio_file(file_path):
+        # 增加调试日志
+        logger.info(f"开始合成语音，文本长度：{len(text)}")
+        result = text_to_speech(text, output_file=output_file, voice_type="default")
+
+        if not os.path.exists(output_file):
+            logger.error("火山引擎未生成有效音频文件")
+            return None
+
+        logger.success(f"音频文件已生成：{output_file} ({os.path.getsize(output_file)} bytes)")
+        return output_file
+
+    except Exception as e:
+        logger.error(f"语音合成失败：{str(e)}")
+        return None
+
+
+# def tts_huoshan(text: str, output_dir: str = "temp_tts"):
+#     """
+#     //qishibushi
+#     huoshan_tts
+#     合成语音、保存并播放，同时维护 temp_tts 文件夹中的文件数量不超过 15 个。
+#     使用 .wav 格式 + pygame 播放，适用于树莓派。
+#     """
+#     # 设置 TTS 状态为 True
+#     # set_tts_state(True)
+#     # 创建 temp_tts 文件夹,获取文件名
+#     os.makedirs(output_dir, exist_ok=True)
+#     timestamp = datetime.now().strftime("tts_huoshan_%Y%m%d_%H%M%S")
+#     output_file = os.path.join(output_dir, f"{timestamp}.wav")  # 确保输出为 WAV 格式
+#     output_file = os.path.abspath(output_file)
+#     # 根据语言选择音色
+#     language = detect(text)
+#     if language == "ja":
+#         # 日语
+#         text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["ja"])
+#     elif language == "de":
+#         # 德语
+#         text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["de"])
+#     elif language == "fr":
+#         # 法语
+#         text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["fr"])
+#     else:
+#         # 默认音色
+#         text_to_speech(text, output_file=output_file,voice_type=config['tts']['tts_huoshan']['voice_type']["default"])
+#
+#     return output_file
+    # manage_audio_files(output_dir)
+    # logger.bind(tag=TAG).info("正在播放音频...")
+    # try:
+    #     play_audio_file(output_file)
+    #     logger.bind(tag=TAG).info("播放完成。")
+    #     set_tts_state(False)
+    # except Exception as e:
+    #     logger.bind(tag=TAG).error(f"播放失败: {str(e)}")
+    #     set_tts_state(False)
+
+
+def play_audio_file(file_paths, skip_last_frames=0):
     """
-    huoshan
     使用 pygame 播放 .wav 音频文件（支持树莓派）
-    """
-    try:
-        pygame.mixer.init()
-        sound = pygame.mixer.Sound(file_path)
-        sound.play()
+    支持跳过最后几帧的播放
 
-        # 等待播放完成
-        while pygame.mixer.get_busy():
-            pygame.time.delay(100)
+    参数:
+        file_paths: 可以是字符串（单个文件路径）或列表（多个文件路径）
+        skip_last_frames: 要跳过的最后帧数（默认为0）
+    """
+    if isinstance(file_paths, str):
+        file_paths = [file_paths]  # 转换为列表统一处理
+
+    try:
+        pygame.mixer.init(frequency=24000, size=-16, channels=2, buffer=4096)
+
+        for file_path in file_paths:
+            try:
+                # 加载音频文件并获取信息
+                sound = pygame.mixer.Sound(file_path)
+                length = sound.get_length()  # 获取音频总长度（秒）
+
+                if skip_last_frames > 0:
+                    # 计算要跳过的秒数（假设44100Hz采样率）
+                    skip_seconds = skip_last_frames / 24000.0
+                    # 确保不会跳过整个音频
+                    play_length = max(0.1, length - skip_seconds)
+                else:
+                    play_length = length
+
+                logger.bind(tag=TAG).info(
+                    f"正在播放: {file_path} (总长度: {length:.2f}s, 实际播放: {play_length:.2f}s)")
+
+                # 播放音频
+                channel = sound.play()
+
+                # 等待播放完成（减去跳过的部分）
+                start_time = time.time()
+                while time.time() - start_time < play_length and channel.get_busy():
+                    pygame.time.delay(10)
+
+                # 立即停止播放（确保跳过最后部分）
+                channel.stop()
+
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"播放 {file_path} 时出错: {str(e)}")
+                continue  # 继续播放下一个文件
+
     except Exception as e:
-        logger.bind(tag=TAG).error(f"播放音频时出错: {str(e)}")
+        logger.bind(tag=TAG).error(f"音频播放初始化失败: {str(e)}")
     finally:
         # 确保pygame资源被正确释放
         try:
             pygame.mixer.quit()
         except:
             pass
+
+
+# def play_audio_file(file_path):
+#     """
+#     huoshan
+#     使用 pygame 播放 .wav 音频文件（支持树莓派）
+#     """
+#     try:
+#         pygame.mixer.init()
+#         sound = pygame.mixer.Sound(file_path)
+#         sound.play()
+#
+#         # 等待播放完成
+#         while pygame.mixer.get_busy():
+#             pygame.time.delay(1)
+#     except Exception as e:
+#         logger.bind(tag=TAG).error(f"播放音频时出错: {str(e)}")
+#     finally:
+#         # 确保pygame资源被正确释放
+#         try:
+#             pygame.mixer.quit()
+#         except:
+#             pass
 
 
 def manage_audio_files(directory: str, max_files: int = 15):
@@ -346,7 +433,8 @@ def record_audio_until_silence(timeout=30):  # 添加超时参数（单位：秒
         p.terminate()
 def read_text_baidu(text):
     logger.bind(tag=TAG).warning("read_text_baidu模块更名为tts_baidu,强烈建议使用统一接口tts_speech")
-    tts_speech(text)
+    tts_baidu(text)
+    # tts_speech(text)
 def speech_to_text(audio):
     choose_asr=config['choose']['asr']
     if choose_asr=='asr_baidu':

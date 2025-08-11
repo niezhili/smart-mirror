@@ -5,7 +5,8 @@ import uuid
 import json
 import gzip
 import copy
-import re
+from path_hub import temp_tts_path_abs
+
 from features.common.config_loader import config
 huoshan_config = config['tts']['tts_huoshan']
 TAG =__name__
@@ -101,14 +102,41 @@ def _parse_response(res, file):
         # print("未知消息类型:", message_type)
         logger.bind(tag=TAG).warning(f"未知消息类型: {message_type}")
         return True
-
-
-def text_to_speech(text: str, output_file: str = "output.mp3",voice_type=huoshan_config['voice_type']['default']):
+async def text_to_speech_huoshan_async(text: str, output_file: str = "tts_huoshan_output.wav",voice_type=huoshan_config['voice_type']['default'],language='zh'):
     """
-    公共函数：将指定文本合成语音并保存为 MP3 文件
+    异步版本
+    :param text:
+    :param output_file:
+    :param voice_type:
+    :return:
+    """
+    if language=='ja':
+        voice_type=huoshan_config['voice_type']['ja']
+    elif language=='de':
+        voice_type=huoshan_config['voice_type']['de']
+    elif language=='fr':
+        voice_type=huoshan_config['voice_type']['fr']
+    elif language=='en':
+        voice_type=huoshan_config['voice_type']['en']
+    else:
+        voice_type=huoshan_config['voice_type']['default']
+
+    await _synthesize(text, output_file,voice_typer=voice_type)
+
+
+def text_to_speech_huoshan(text: str, output_file: str = "output.wav",voice_type=huoshan_config['voice_type']['default']):
+    """
+    同步函数：将指定文本合成语音并保存为 wav 文件
+    :param text: 要合成的文本内容
+    :param output_file: 输出的 wav 文件路径
+    """
+    asyncio.run(_synthesize(text, output_file,voice_typer=voice_type))
+def text_to_speech(text: str, output_file: str = "output.wav",voice_type=huoshan_config['voice_type']['default']):
+    """
+    公共函数：将指定文本合成语音并保存为 wav 文件
 
     :param text: 要合成的文本内容
-    :param output_file: 输出的 MP3 文件路径
+    :param output_file: 输出的 wav 文件路径
     """
     asyncio.run(_synthesize(text, output_file,voice_typer=voice_type))
 
