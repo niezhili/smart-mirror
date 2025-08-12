@@ -7,6 +7,7 @@ from http import HTTPStatus
 import os
 from features.vad.vad import VAD
 import uuid
+import dashscope
 TAG=__name__
 
 class ASR:
@@ -30,6 +31,10 @@ class ASR:
         if self.vad:
             self.vad.close()
         if self.recognition:
+            try:
+                self.recognition.close()
+            except Exception as e:
+                self.logger.error(f"关闭asr失败: {str(e)}")
             self.recognition= None
     def audio_to_text(self,input_audio_path:str=""):
         # 用户接口,传入音频路径则读取音频文件，否则则录制
@@ -66,9 +71,9 @@ class ASR:
 
     @staticmethod
     def generate_filename():
-        return str({uuid.uuid4().hex})
+        return str(uuid.uuid4().hex)
 
-    def _record_audio(self)->str or "":
+    def _record_audio(self)->str:
         # 录音人声片段，人声静默1秒结束并且写入音频wav
         # 注意这的filename是文件名，默认路径是【VAD】TEMP_PATH
         filename=f"record_audio_{self.generate_filename()}.wav"
@@ -94,7 +99,8 @@ class ASR:
         self.api_key=config.get("asr",None).get("paraformer",None).get("api_key",None)
         self.model=config.get("asr",None).get("paraformer",None).get("model",None)
         self.language=config.get("asr",None).get("paraformer",None).get("language",None)
-
+        if self.api_key:
+            dashscope.api_key = self.api_key
     async def _request_paraformer(self, audio_path):
         try:
             if self.recognition is None:
@@ -135,5 +141,3 @@ class ASR:
         self.logger.info(f"language:{self.language}")
         self.logger.info(f"is_loaded:{self._is_loaded}")
 
-asr=ASR()
-asr.audio_to_text()
