@@ -15,7 +15,7 @@ choose:
 time:
   timeout: 300
 #===============api接口配置============================
-asr :
+asr :  # anto speech recognition
     asr_baidu:
       baidu_app_id: "117625416"
       baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
@@ -31,7 +31,7 @@ asr :
       language: [ 'zh','en','ja' ]
       model: "paraformer-realtime-v2"
 
-tts :
+tts :  # text to speech
   tts_aliyun:
 
   tts_huoshan :
@@ -66,7 +66,7 @@ tts :
     baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
     baidu_secret_key: "ppdTdrkTqan7IDWUQhIDhBLEmR4k9SZn"
 
-llm :
+llm :  large language model
   deepseek:
     deepseek_api_key: sk-c845c48b0588407cafad226db8882bba
     deepseek_api_url: https://api.deepseek.com/v1/chat/completions
