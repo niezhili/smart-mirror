@@ -53,6 +53,7 @@ class VAD:
         self.silence=config.get("vad",{"silence":1}).get("silence",1)
         self.timeout=config.get("vad",{"timeout":60}).get("timeout",60)
         self.max_temp_num=config.get("vad",{"max_temp_num":15}).get("max_temp_num",15)
+        self.min_cont_frames=int(config.get("vad",{"min_cont_frames":5}).get("min_cont_frames",5))
 
         self.p=None
         self.stream=None
@@ -115,7 +116,7 @@ class VAD:
                     if speech_frames>0:
                        silent_frames+=1
 
-                if silent_frames>=max_silent_frames and speech_frames>5:
+                if silent_frames>=max_silent_frames and speech_frames>self.min_cont_frames:
                     self.logger.success(
                         f"录音结束，已录制 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒 ,录音文件: {output_file}")
                     break
