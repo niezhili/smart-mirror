@@ -1,0 +1,5 @@
+2025-08-14 21:42:17 | WARNING | [__main__] | Running in console mode. GUI frameworks not available
+2025-08-14 21:42:50 | WARNING | [__main__] | Running in console mode. GUI frameworks not available
+2025-08-14 21:46:00 | WARNING | [__main__] | Running in console mode. GUI frameworks not available
+2025-08-14 21:46:31 | ERROR | [features.llm.llm_qwen] | 模型调用错误：HTTPSConnectionPool(host='dashscope.aliyuncs.com', port=443): Max retries exceeded with url: /api/v1/services/aigc/text-generation/generation (Caused by ProxyError('Unable to connect to proxy', SSLError(SSLZeroReturnError(6, 'TLS/SSL connection has been closed (EOF) (_ssl.c:1149)'))))
+2025-08-14 21:47:28 | WARNING | [__main__] | Running in console mode. GUI frameworks not available

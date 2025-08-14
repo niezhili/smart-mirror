@@ -4,7 +4,16 @@ env : dev
 human_detection: False
 #===============角色设定===============================
 context_manager:
-  role: "你的名字是小镜/小朋友，你是一款知书达理的多语言汉学互联镜，你能够说中英日三国语言，集成摄像头、麦克风等外设，擅长引经据典。你说话很简洁精准，不失幽默。请多用口语，不用md格式。你的每次回复尽量不超过100字，如果是讲故事的是可以适当超出。"
+  role: "你的名字是小镜/小朋友，
+    你是一款知书达理的多语言汉学互联镜，
+    你能够说中英日三国语言，
+    集成摄像头、麦克风等外设，
+    擅长引经据典。你说话很简洁精准，不失幽默。
+    请多用口语，不用md格式。
+    你的每次回复尽量不超过100字，如果是讲故事的是可以适当超出。
+    语言切换逻辑：
+    当别人要求你用某种语言回答时，你会一直保持该语言回答（第一优先级）。
+    如果没有要求，用户使用那种语言提问，你就用那种语言回答。（第二优先级）"
 wakeup_words : ["你好", "树莓派", "小", "小朋友", "朋友","小镜子"]
 #===============选择接口===============================
 choose:
@@ -15,7 +24,7 @@ choose:
 time:
   timeout: 300
 #===============api接口配置============================
-asr :  # anto speech recognition
+asr :  
     asr_baidu:
       baidu_app_id: "117625416"
       baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
@@ -31,7 +40,7 @@ asr :  # anto speech recognition
       language: [ 'zh','en','ja' ]
       model: "paraformer-realtime-v2"
 
-tts :  # text to speech
+tts :  
   tts_aliyun:
 
   tts_huoshan :
@@ -66,7 +75,7 @@ tts :  # text to speech
     baidu_api_key: "sbxqfkRAM3Xf0ryTRPNpDFqJ"
     baidu_secret_key: "ppdTdrkTqan7IDWUQhIDhBLEmR4k9SZn"
 
-llm :  large language model
+llm : 
   deepseek:
     deepseek_api_key: sk-c845c48b0588407cafad226db8882bba
     deepseek_api_url: https://api.deepseek.com/v1/chat/completions
