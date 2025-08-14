@@ -120,25 +120,25 @@ class HumanDetection:
         except Exception as e:
             logger.warning("清理GPIO资源时出错: %s", e)
 
-
-# 如果直接运行此文件，可用于测试
-if __name__ == "__main__":
-    import logging
-
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-
-    def test_callback():
-        logger.info("人体检测回调被触发")
-
-
-    logger.info("启动人体检测测试...")
-    detector = HumanDetection()
-    try:
-        detector.start_detection(test_callback)
-        logger.info("按 Ctrl+C 停止测试")
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logger.info("停止测试...")
-        detector.cleanup()
+#
+# # 如果直接运行此文件，可用于测试
+# if __name__ == "__main__":
+#     import logging
+#
+#     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#
+#
+#     def test_callback():
+#         logger.info("人体检测回调被触发")
+#
+#
+#     logger.info("启动人体检测测试...")
+#     detector = HumanDetection()
+#     try:
+#         detector.start_detection(test_callback)
+#         logger.info("按 Ctrl+C 停止测试")
+#         while True:
+#             time.sleep(1)
+#     except KeyboardInterrupt:
+#         logger.info("停止测试...")
+#         detector.cleanup()

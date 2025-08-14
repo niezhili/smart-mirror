@@ -11,7 +11,7 @@ from queue import Queue
 from features.common.globals import set_tts_state, is_tts_working
 from features.common.log_loader import logger
 from features.tts.tts_speech import tts_speech
-from human_detection import HumanDetection  # 导入人体检测模块
+
 
 TAG = __name__
 
@@ -183,48 +183,53 @@ def run_face_detection(mode):
     global face_detection_running, face_detection_success, detection_mode
     global human_detector, voice_detection_active, face_detected
 
-    try:
-        if face_detection_running or face_detected:
-            return
+    human_detect_bool = config.get("human_detection", False)
+    if not human_detect_bool:
+        face_detected=True
+        threading.Thread(target=assistant_mode).start()
+    else:
+        try:
+            if face_detection_running or face_detected:
+                return
 
-        face_detection_running = True
-        detection_mode = mode
+            face_detection_running = True
+            detection_mode = mode
 
-        if mode == "pir":
-            voice_detection_active = False
-        elif mode == "voice":
-            human_detector.stop_detection()
+            if mode == "pir":
+                voice_detection_active = False
+            elif mode == "voice":
+                human_detector.stop_detection()
 
-        logger.bind(tag=TAG).info(f"[人脸识别] 开始检测 (模式: {mode})")
+            logger.bind(tag=TAG).info(f"[人脸识别] 开始检测 (模式: {mode})")
 
-        # 真正进行人脸识别，不再直接设置成功
-        if detect_face(timeout=60):
-            logger.bind(tag=TAG).info("人脸识别成功")
-            with global_lock:
-                face_detected = True
-            threading.Thread(target=assistant_mode).start()
-        else:
-            tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
-            # 人脸识别失败后重新启用对应检测
+            # 真正进行人脸识别，不再直接设置成功
+            if detect_face(timeout=60):
+                logger.bind(tag=TAG).info("人脸识别成功")
+                with global_lock:
+                    face_detected = True
+                threading.Thread(target=assistant_mode).start()
+            else:
+                tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
+                # 人脸识别失败后重新启用对应检测
+                if mode == "pir":
+                    human_detector.start_detection(on_human_detected)
+                elif mode == "voice":
+                    voice_detection_active = True
+
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"[人脸识别] 异常: {e}")
+            # 异常情况下也重新启用检测
             if mode == "pir":
                 human_detector.start_detection(on_human_detected)
             elif mode == "voice":
                 voice_detection_active = True
-
-    except Exception as e:
-        logger.bind(tag=TAG).error(f"[人脸识别] 异常: {e}")
-        # 异常情况下也重新启用检测
-        if mode == "pir":
-            human_detector.start_detection(on_human_detected)
-        elif mode == "voice":
-            voice_detection_active = True
-    finally:
-        face_detection_running = False
-        # 无论成功与否，都重新启用检测机制
-        if mode == "pir":
-            voice_detection_active = True
-        elif mode == "voice":
-            human_detector.start_detection(on_human_detected)
+        finally:
+            face_detection_running = False
+            # 无论成功与否，都重新启用检测机制
+            if mode == "pir":
+                voice_detection_active = True
+            elif mode == "voice":
+                human_detector.start_detection(on_human_detected)
 
 
 def wake_word_detection_loop():
@@ -293,9 +298,16 @@ def main():
         logger.bind(tag=TAG).info("人脸数据预加载完成")
 
         # 初始化并启动人体检测模块
-        human_detector = HumanDetection()
-        human_detector.start_detection(on_human_detected)
-        logger.bind(tag=TAG).info("人体检测模块已启动")
+        human_detect_bool = config.get('human_detection', False)
+        if human_detect_bool:
+            from human_detection import HumanDetection  # 导入人体检测模块
+            logger.bind(tag=TAG).info("已启用人体检测")
+            human_detector = HumanDetection()
+            human_detector.start_detection(on_human_detected)
+        else:
+            logger.bind(tag=TAG).info("已禁用人体检测")
+        # human_detector = HumanDetection()
+        # human_detector.start_detection(on_human_detected)
 
         # 启动GUI界面
         gui_thread = threading.Thread(target=launch_gui)
