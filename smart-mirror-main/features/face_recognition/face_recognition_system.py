@@ -63,13 +63,14 @@ class FaceRecognition:
         self.voice_thread = threading.Thread(target=self.
                                              _process_voice_queue, daemon=True)
         self.voice_thread.start()
+    # 为什么要设置语音引擎？
     def setup_voice_engine(self):
         """Configure text-to-speech engine with optimal settings"""
         voices = self.engine.getProperty('voices')
         self.engine.setProperty('voice', voices[1].id)  # Female voice
         self.engine.setProperty('rate', 150)  # Slightly faster than default
         self.engine.setProperty('volume', 0.8)  # 80% volume
-
+    # ???
     def _process_voice_queue(self):
         """Process voice messages in a separate thread"""
         while True:
@@ -80,7 +81,7 @@ class FaceRecognition:
                 self.voice_queue.task_done()
             except Exception as e:
                 self.logger.error(f"Voice processing error: {e}")
-
+    
     def load_known_faces(self):
         """Load known faces with improved error handling and validation"""
         self.known_faces_dir.mkdir(exist_ok=True)

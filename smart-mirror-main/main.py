@@ -18,19 +18,19 @@ TAG = __name__
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-running = True
-face_detected = False
-face_detection_active = False
-preloaded_face_data = None
-location_info = None
-weather_service = WeatherService()
-assistant = None
-face_detection_running = False
-ignore_audio_until = False
-face_detection_success = False
-detection_mode = None
-human_detector = None
-voice_detection_active = True
+running = True  # 程序主运行状态标志，控制主循环及各线程是否继续运行
+face_detected = False  # 标记是否成功检测到人脸（用于进入/退出助手模式）
+face_detection_active = False # 标记人脸识别功能是否处于激活状态
+face_detection_running = False # 标记人脸识别是否正在进行中
+face_detection_success = False # 标记人脸识别是否成功
+preloaded_face_data = None  # 预加载的人脸数据
+location_info = None # 用户位置信息
+weather_service = WeatherService() # 天气服务实例
+assistant = None    # 助手模式实例
+ignore_audio_until = False # 忽略音频输入的时间戳
+detection_mode = None # 当前检测模式（人脸识别或语音唤醒）
+human_detector = None # 人体检测实例
+voice_detection_active = True   # 标记语音检测是否处于激活状态
 # 全局线程锁
 global_lock = threading.Lock()
 
@@ -50,7 +50,8 @@ def test():
 
 def preload_face_data():
     face_system = FaceRecognition()
-    image_paths_by_person = load_known_faces_from_folder("known_faces")
+    image_paths_by_person = load_known_faces_from_folder("known_faces") 
+    # 返回值是一个字典，格式为：{人名: [该人名对应的所有图片路径列表]}
     for person_name, image_paths in image_paths_by_person.items():
         face_system.add_new_person(person_name, image_paths)
     return face_system
@@ -286,7 +287,7 @@ def launch_gui():
 def main():
     global running, assistant, preloaded_face_data, human_detector
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
-
+    
     try:
         # 预加载人脸数据
         preloaded_face_data = preload_face_data()
