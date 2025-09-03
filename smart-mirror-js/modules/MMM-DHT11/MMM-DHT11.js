@@ -32,7 +32,7 @@ Module.register("MMM-DHT11", {
 
     // Override start method
     start: function() {
-        this.config.quoteLanguage = this.config.language || "En";
+        this.config.quoteLanguage = config.language;
         Log.info("Starting module: " + this.name);
         
         this.temperature = null;
@@ -72,8 +72,7 @@ Module.register("MMM-DHT11", {
         // Check for stale data
         var now = new Date();
         var dataAge = (now - this.lastUpdate) / 1000; // Age in seconds
-        var isStale = !this.lastUpdate || ((now - this.lastUpdate) / 1000 > this.config.maxAgeSeconds);
-
+        var isStale = dataAge > this.config.maxAgeSeconds;
 
         // Create temperature display
         // Temperature Display
