@@ -1,0 +1,23 @@
+{
+  "name": "mmm-quotes",
+  "version": "0.1.0",
+  "description": "Quotes module for MagicMirror",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javiergayala/MMM-quotes.git"
+  },
+  "keywords": [
+    "MagicMirror",
+    "quotes"
+  ],
+  "author": "Javier Ayala",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/javiergayala/MMM-quotes/issues"
+  },
+  "homepage": "https://github.com/javiergayala/MMM-quotes#readme"
+}
