@@ -1,6 +1,5 @@
 import time
 from features.common.config_loader import config
-import threading
 from flask import Flask, render_template
 import geocoder
 from features.llm.qwen import LLM
@@ -11,6 +10,8 @@ from queue import Queue
 from features.common.globals import set_tts_state, is_tts_working
 from features.tts.tts_speech import tts_speech
 from log.load_log import logger
+import uvicorn
+import threading
 
 
 
@@ -133,10 +134,7 @@ def assistant_mode():
             last_interaction = time.time()
             continue
 
-        if cali:
-            time.sleep(0.1)
-            last_interaction = time.time()
-            continue
+
 
         if float(time.time()) - last_interaction > listening_duration:
             tts_speech("等待唤醒...")
@@ -159,10 +157,6 @@ def assistant_mode():
                     tts_speech("好的，正在关闭系统。")
                     with global_lock:
                         running = False
-                elif "字帖模式" in text:
-                    tts_speech(llm.chat(text))
-                    with global_lock:
-                        cali = True
                 else:
                     response = llm.chat(text)
                     tts_speech(response)
@@ -291,6 +285,7 @@ def launch_gui():
             SimpleApp().run()
         except ImportError:
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
+
 
 
 def main():

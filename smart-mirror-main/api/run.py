@@ -1,8 +1,10 @@
 import os
+import sys
 import uuid
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from features.asr.paraformer import ASR
 from features.llm.qwen import LLM
@@ -397,8 +399,8 @@ async def asr_llm_tts_endpoint():
 if __name__ == "__main__":
     print("正在启动 ASR-LLM-TTS 服务...")
     print("请在浏览器中打开以下地址访问前端界面:")
-    print("  http://localhost:8000")
-    print("  http://127.0.0.1:8000")
+    print("  http://localhost:8001")
+    print("  http://127.0.0.1:8001")
     print("按 Ctrl+C 停止服务")
     print("-" * 50)
 
@@ -406,7 +408,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "api.run:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,
         reload=False
     )
 
