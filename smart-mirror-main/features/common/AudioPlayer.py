@@ -31,7 +31,7 @@ class AsyncAudioPlayer:
             pygame.mixer.init()
             self._pygame_initialized = True
 
-        # 延迟初始化 channel，确保 mixer 已经初始化
+         # 延迟初始化 channel，确保 mixer 已经初始化
         if self.channel is None:
             self.channel = pygame.mixer.Channel(0)
 

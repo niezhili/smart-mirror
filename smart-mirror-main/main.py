@@ -1,23 +1,24 @@
 import time
 from features.common.config_loader import config
-import threading
 from flask import Flask, render_template
 import geocoder
-from features.llm.llm_qwen import chat_llm
+from features.llm.qwen import LLM
 from features.face_recognition.face_recognition_system import FaceRecognition
 from features.common.utils import audio_to_text, load_known_faces_from_folder
 from features.weather import WeatherService
 from queue import Queue
 from features.common.globals import set_tts_state, is_tts_working
-from features.common.log_loader import logger
 from features.tts.tts_speech import tts_speech
+from log.load_log import logger
+import uvicorn
+import threading
+
 
 
 TAG = __name__
-
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-
+llm=LLM()
 running = True
 face_detected = False
 face_detection_active = False
@@ -31,6 +32,7 @@ face_detection_success = False
 detection_mode = None
 human_detector = None
 voice_detection_active = True
+cali=False
 # 全局线程锁
 global_lock = threading.Lock()
 
@@ -121,7 +123,7 @@ def play_weather_info():
 
 def assistant_mode():
     # 助手模式
-    global face_detected, running
+    global face_detected, running,cali
     listening_duration = 600
     last_interaction = time.time()
 
@@ -129,9 +131,12 @@ def assistant_mode():
     while running and face_detected:
         if is_tts_working():
             time.sleep(0.1)
+            last_interaction = time.time()
             continue
 
-        if time.time() - last_interaction > listening_duration:
+
+
+        if float(time.time()) - last_interaction > listening_duration:
             tts_speech("等待唤醒...")
             with global_lock:
                 face_detected = False
@@ -144,13 +149,7 @@ def assistant_mode():
                 last_interaction = time.time()
                 set_tts_state(True)
 
-                if '天气' in text:
-                    threading.Thread(target=play_weather_info).start()
-                elif '几点' in text:
-                    tts_speech(f"现在是 {time.strftime('%H:%M')}")
-                elif '空调' in text:
-                    tts_speech("好的，正在处理空调指令。")
-                elif '拜拜' in text or '再见' in text or "bye" in text:
+                if len(text)<20 and ('拜拜' in text or '再见' in text or "bye" in text):
                     tts_speech("拜拜，下次再见！")
                     with global_lock:
                         face_detected = False
@@ -159,7 +158,7 @@ def assistant_mode():
                     with global_lock:
                         running = False
                 else:
-                    response = chat_llm(text)
+                    response = llm.chat(text)
                     tts_speech(response)
         except Exception as e:
             logger.bind(tag=TAG).error(f"语音识别错误: {e}")
@@ -286,6 +285,7 @@ def launch_gui():
             SimpleApp().run()
         except ImportError:
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
+
 
 
 def main():
