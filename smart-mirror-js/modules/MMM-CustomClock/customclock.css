@@ -53,6 +53,7 @@
   line-height: 60px;
   position: relative;
   mix-blend-mode: difference;
+  font-weight: normal;
    text-shadow:
     1px 1px 2px rgba(0,0,0,0.6),
     -1px 1px 2px rgba(0,0,0,0.2),
@@ -75,7 +76,7 @@
 }
 
 .customclock-grid .bold {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 /* 模拟时钟样式 */

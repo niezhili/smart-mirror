@@ -2,9 +2,9 @@
 CSS for MMM-quotes
 */
 .MMM-quotes{
-  height: 5rem;
-    color: white;
-  mix-blend-mode: difference;
+  height: 1.5rem;
+    color: black !important;
+  mix-blend-mode: normal;
   transform:translateY(-2rem);
 
 }

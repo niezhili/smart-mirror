@@ -1,7 +1,7 @@
 :root {
   --color-text: #999; /* 主文本颜色 */
   --color-text-dimmed: #666; /* 暗淡文本颜色 */
-  --color-text-bright: #fff; /* 高亮文本颜色 */
+  --color-text-bright: #110b0b; /* 高亮文本颜色 */
   --color-background: #000; /* 背景颜色 */
   --font-primary: "Roboto Condensed"; /* 主字体 */
   --font-secondary: "Roboto"; /* 次字体 */
