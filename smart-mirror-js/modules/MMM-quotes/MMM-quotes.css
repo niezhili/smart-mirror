@@ -1,0 +1,14 @@
+/*
+CSS for MMM-quotes
+*/
+.MMM-quotes{
+  height: 5rem;
+    color: white;
+  mix-blend-mode: difference;
+  transform:translateY(-2rem);
+
+}
+.quotes.quotes-author {
+  font-style: italic;
+  /*margin-right: -25%;*/
+}
