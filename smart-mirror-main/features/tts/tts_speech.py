@@ -24,3 +24,21 @@ def tts_speech(text,which_tts=config['choose']['tts']):
             logger.bind(tag=TAG).error("请检查yaml配置，选择正确的语音合成平台")
     finally:
         set_tts_state(False)
+
+async def tts_speech_sync(text,which_tts=config['choose']['tts']):
+    manage_audio_files(temp_tts_path_abs)
+    set_tts_state(True)
+    try:
+        if which_tts=='tts_baidu':
+            read_text_baidu(text)
+        elif which_tts=="tts_huoshan":
+            audio_player =AsyncAudioPlayer()
+            try:
+                result=await (audio_player.speak(text))
+
+            finally:
+                audio_player.cleanup()
+        else:
+            logger.bind(tag=TAG).error("请检查yaml配置，选择正确的语音合成平台")
+    finally:
+        set_tts_state(False)
