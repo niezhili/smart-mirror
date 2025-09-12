@@ -1,4 +1,5 @@
 // 等待DOM加载完成后执行（确保能获取到页面元素）
+const server="http://localhost:8081"
 document.addEventListener('DOMContentLoaded', function() {
     // 获取页面元素
     const fontBtns = document.querySelectorAll('.font-btn');
@@ -19,12 +20,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 语音输入逻辑（后续对接语音识别API）
-    voiceBtn.addEventListener('click', function() {
-        alert('语音输入功能待开发（需对接语音识别API）');
-        // 模拟：假设识别结果填入输入框
-        contentInput.value = '床前明月光，疑是地上霜。举头望明月，低头思故乡。';
-    });
+  // 语音输入逻辑（对接后端ASR接口）
+voiceBtn.addEventListener('click', async function() {
+    // 显示加载状态
+    const originalText = this.innerHTML;
+    this.innerHTML = '正在录音...';
+    this.disabled = true; // 防止重复点击
+
+    try {
+        // 调用后端语音识别接口（对应run.py中的/asr端点）
+        const response = await fetch(`${server}/asr`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // 识别成功：将结果填入输入框
+            contentInput.value = data.text || '识别结果为空';
+            alert('语音识别成功！');
+        } else {
+            // 识别失败：显示错误信息
+            alert(`语音识别失败：${data.detail || '未知错误'}`);
+        }
+    } catch (error) {
+        // 网络错误等异常
+        alert(`请求失败：${error.message}，请检查后端是否启动`);
+    } finally {
+        // 恢复按钮状态
+        this.innerHTML = originalText;
+        this.disabled = false;
+    }
+});
 
     // 生成书法逻辑（对接后端接口）
     generateBtn.addEventListener('click', async function() {
@@ -41,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // 调用后端接口
-            const response = await fetch('http://localhost:8001/calligraphy', {
+            const response = await fetch(`${server}/calligraphy`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -56,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.ok && data.image_path) {
                 // 显示生成的书法图片（点击可查看大图）
-                resultArea.innerHTML = `<img src="${data.image_path}" alt="书法作品" data-src="${data.image_path}">`;
+                resultArea.innerHTML = `<img src="${server}${data.image_path}">`;
                 
                 // 绑定“查看大图”事件
                 resultArea.querySelector('img').addEventListener('click', function() {
