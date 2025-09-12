@@ -10,5 +10,10 @@ CSS for MMM-quotes
 }
 .quotes.quotes-author {
   font-style: italic;
+  font-weight: bold; 
   /*margin-right: -25%;*/
+}
+/* 以下是对名言本身的css修改 */
+.quotes.medium.bright.light {
+  font-weight: bold; 
 }

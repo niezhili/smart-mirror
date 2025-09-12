@@ -66,7 +66,7 @@ Module.register('MMM-quotes',{
 			{
 				quote: 'You can not open a book without learning something.',
 				zh: '开卷有益。',
-				author: 'Confucius'
+				author: '《论语》'
 			},
 			{
 				quote: 'Attitude is a little thing that makes a big difference.',
