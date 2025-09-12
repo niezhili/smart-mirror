@@ -71,6 +71,16 @@
   margin-bottom: 10px;
 }
 
+/* 日期切换动画样式 */
+.date.fade-animation {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.date.fade-animation.active {
+  opacity: 1;
+}
+
 .customclock-grid .week {
   margin-top: 10px;
 }
@@ -125,3 +135,4 @@
   transform-origin: 0% 0%;
   margin-top: -0.5px;
 }
+    

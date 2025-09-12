@@ -2,7 +2,17 @@
   height: 20vh;
   background-color: transparent;
   backdrop-filter: blur(5px);
+  /* 动画过渡（控制淡入淡出的时长和节奏） */
+  transition: opacity 0.5s ease-in-out;
+  /* 初始状态：透明（避免首次加载突兀） */
+  opacity: 0;
 }
+
+/* 动画激活状态（语言切换/更新时显示） */
+.MMM-MonthlyCalendar.fade-active {
+  opacity: 1;
+}
+
 .MMM-MonthlyCalendar .wrapper {
   width: 100%;
   table-layout: fixed;

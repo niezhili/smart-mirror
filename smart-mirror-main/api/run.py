@@ -345,6 +345,7 @@ async def calligraphy_endpoint(request: dict):
         title = request.get("title", "书法作品")
         text = request.get("text", "")
         signature = request.get("signature", "智能助手")
+        font = request.get("font", "楷书")
 
         if not text:
             return {"detail": "没有提供文本内容"}

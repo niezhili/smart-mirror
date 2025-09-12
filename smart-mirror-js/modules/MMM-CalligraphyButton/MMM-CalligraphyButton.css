@@ -1,0 +1,34 @@
+.calligraphy-btn {
+    padding: 10px 20px;
+    /* 模糊透明背景 */
+    background-color: rgba(86, 85, 85, 0.2); /* 半透明灰 */
+    color: white;             
+    border: none;              
+    border-radius: 15px;       /* 圆角，值大角大*/
+    cursor: pointer;           /* 鼠标悬浮时显示“手”形状 */
+    font-size: 16px;           /* 文字大小 */
+    /* 合并过渡效果：保留hover+天气模块同款hover动画 */
+    transition: background-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease-in-out; 
+    
+    position: fixed;   /* 相对于浏览器视口固定位置，滚动时不移动 */
+    bottom: 150px;      /* 距离底部的高度（值越大越靠上） */
+    left: 120px;        /* 距离左侧的宽度（值越大越靠右） */
+    z-index: 10;       /* 确保按钮在其他元素上方显示，避免被遮挡 */
+    /* 容器模糊和阴影效果 */
+    backdrop-filter: blur(5px); /* 背景模糊*/
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* 阴影*/
+
+    /* 渐入渐出动画 */
+    opacity: 0; /* 初始透明 */
+}
+
+/* 动画激活状态（显示） */
+.calligraphy-btn.btn-fade-active {
+    opacity: 1; /* 完全显示 */
+}
+
+/* hover */
+.calligraphy-btn:hover {
+    background-color: rgba(0, 0, 0, 0.3); /* hover时加深背景 */
+    transform: translateY(-3px); /* hover时上移 */
+}
