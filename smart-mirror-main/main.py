@@ -10,9 +10,7 @@ from queue import Queue
 from features.common.globals import set_tts_state, is_tts_working
 from features.tts.tts_speech import tts_speech
 from log.load_log import logger
-import uvicorn
 import threading
-
 
 
 TAG = __name__

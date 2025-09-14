@@ -51,10 +51,8 @@ async def asr_llm_tts():
 
 
 app = FastAPI()
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-@app.get("/", response_class=HTMLResponse)
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     return HTMLResponse("""
@@ -326,18 +324,6 @@ async def read_root():
 </body>
 </html>
 """)
-@app.post("/asr_llm_tts")
-async def asr_llm_tts_endpoint():
-    try:
-        # 直接调用asr_llm_tts函数执行完整流程
-        asr_o,llm_o=await asr_llm_tts()
-        return {
-            "asr_text": f"ASR处理:{asr_o}",
-            "llm_response": f"LLM-TTS处理:{llm_o}"
-        }
-    except Exception as e:
-        return {"detail": str(e)}
-
 
 @app.post("/calligraphy")
 async def calligraphy_endpoint(request: dict):

@@ -65,8 +65,8 @@ tts :
     # 音频缓存数量限制【不建议小于50，否则会导致音频缺失】
     max_temp_num: 200
   tts_huoshan :
-    appid: 6082784057
-    token: bF4nRpNiCcP8HDLfDJYvFupObvZxy0gq
+    appid: "7216763375"
+    token: "BI4i32uDCONZF0EIO0uvnUP5Vc1NYL3D"
     cluster: volcano_tts
     # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
     # zh_female_shuangkuaisisi_moon_bigtts 中英
@@ -77,7 +77,7 @@ tts :
     # BV700_streaming 普通
     voice_type:
       # default包含中英文，如果en单独设置，那么en就会是对应音色
-      default: "zh_female_yingyujiaoyu_mars_bigtts"
+      default: "multi_male_jingqiangkanye_moon_bigtts"
       ja: "multi_male_jingqiangkanye_moon_bigtts"
       de: "zh_male_tiancaitongsheng_mars_bigtts"
       fr: "zh_male_tiancaitongsheng_mars_bigtts"
