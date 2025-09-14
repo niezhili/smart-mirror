@@ -1,44 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-图片文字拼接工具模块
-
-该模块提供了一个函数接口，可以根据输入的文字内容生成拼接图片。
-支持从指定图片库加载字符图片进行拼接，对于图片库中没有的字符，
-可以使用指定字体生成替代图片。
-
-主要功能:
-1. 从指定文件夹加载字符图片
-2. 将字符图片拼接成完整文本图像
-3. 对于缺少的字符，使用字体生成替代图像
-4. 当完全没有图片时，完全使用字体生成图像
-
-使用示例:
-    from features.calligraphy.utli import compose_image_from_text
-
-    # 基本用法
-    image = compose_image_from_text("示例文字")
-
-    # 指定图片库路径
-    image = compose_image_from_text("示例文字", image_folder="/path/to/image/folder")
-
-    # 指定字体文件路径和字体大小
-    image = compose_image_from_text("示例文字", 
-                                   image_folder="/path/to/image/folder",
-                                   font_path="/path/to/font.ttf", 
-                                   font_size=60)
-
-    # 保存图片
-    image.save("output.jpg")
-"""
-
 from PIL import Image, ImageDraw, ImageFont
 import os
 from pathlib import Path
 
 
-def compose_image_from_text(text, image_folder="save11", font_path=None, font_size=50):
+def compose_image_from_text(text, image_folder="save11", font_path=None, font_size=50,mask_path=None):
     """
     根据输入文字生成拼接图片
     
@@ -56,7 +21,9 @@ def compose_image_from_text(text, image_folder="save11", font_path=None, font_si
     """
     if not text:
         raise ValueError("输入文字不能为空")
-    
+
+    if mask_path==None:
+        mask_path=Path(__file__).parent / "mask.jpg"
     # 加载字符图片
     images = {}
     if os.path.exists(image_folder):
@@ -79,7 +46,7 @@ def compose_image_from_text(text, image_folder="save11", font_path=None, font_si
     
     # 如果没有可用的字符图片，直接创建纯字体图片
     if not images:
-        return create_font_based_image(text, font_path, font_size)
+        return create_font_based_image(text, font_path, font_size,mask_path=mask_path)
     
     # 计算每张图片的尺寸（以第一张图片为基准）
     sample_image = next(iter(images.values()))
@@ -106,7 +73,7 @@ def compose_image_from_text(text, image_folder="save11", font_path=None, font_si
                 composed_image.paste(char_image, (x_offset, y_offset))
             else:
                 # 否则使用字体生成字符图片
-                char_image = create_single_char_image(char, img_width, img_height, font_path, font_size)
+                char_image = create_single_char_image(char, img_width, img_height, font_path, font_size,mask_path)
                 composed_image.paste(char_image, (x_offset, y_offset))
     
     return composed_image
@@ -139,7 +106,7 @@ def wrap_text(text, max_chars_per_line):
     return lines
 
 
-def create_single_char_image(char, width, height, font_path=None, font_size=50):
+def create_single_char_image(char, width, height, font_path=None, font_size=50,mask_path=None):
     """
     创建单个字符的图片
     
@@ -153,8 +120,14 @@ def create_single_char_image(char, width, height, font_path=None, font_size=50):
     Returns:
         PIL.Image: 字符图片
     """
-    # 创建空白图片
-    image = Image.new('RGB', (width, height), (255, 255, 255))
+    if mask_path==None:
+        mask_path=Path(__file__).parent / "mask.jpg"
+    try:
+        image= Image.open(mask_path)
+        image = image.resize((width, height))
+    except Exception:
+        image = Image.new('RGB', (width, height), (255, 255, 255))
+
     draw = ImageDraw.Draw(image)
     
     # 尝试使用指定字体，如果不可用则使用默认字体
@@ -179,12 +152,12 @@ def create_single_char_image(char, width, height, font_path=None, font_size=50):
     y = (height - text_height) // 2
     
     # 绘制文字
-    draw.text((x, y), char, font=font, fill=(0, 0, 0))
+    draw.text((x, y-80), char, font=font, fill=(250, 250, 210))
     
     return image
 
 
-def create_font_based_image(text, font_path=None, font_size=50):
+def create_font_based_image(text, font_path=None, font_size=50,mask_path=None):
     """
     当没有图片库时，完全使用字体生成图片
     
@@ -195,7 +168,11 @@ def create_font_based_image(text, font_path=None, font_size=50):
     
     Returns:
         PIL.Image: 生成的图片
+
     """
+    if mask_path==None:
+        mask_path=Path(__file__).parent / "mask.jpg"
+
     lines = wrap_text(text, 8)
     
     # 创建足够大的画布
@@ -204,9 +181,15 @@ def create_font_based_image(text, font_path=None, font_size=50):
     
     width = char_width * max(len(line) for line in lines)
     height = char_height * len(lines)
-    
-    # 创建图片
-    image = Image.new('RGB', (width, height), (255, 255, 255))
+
+    try:
+        mask_image=Image.open(mask_path)
+        mask_image=mask_image.resize((width,height))
+        image=mask_image.convert("RGB")
+    except Exception as e:
+        print(f"无法加载图片 {mask_path}: {e}")
+        image = Image.new('RGB', (width, height), (255, 255, 255))
+
     draw = ImageDraw.Draw(image)
     
     # 尝试使用指定字体
@@ -224,7 +207,7 @@ def create_font_based_image(text, font_path=None, font_size=50):
             x = char_idx * char_width
             y = line_idx * char_height
             
-            draw.text((x, y), char, font=font, fill=(0, 0, 0))
+            draw.text((x, y-80), char, font=font, fill=(250, 250, 210))
     
     return image
 
@@ -235,10 +218,11 @@ def main():
     """
     # 示例：使用图片库生成拼接图片
     image = compose_image_from_text(
-        text="智慧之镜，照见未来",
+        text="智慧镜，照见未来，窗前明月光",
         image_folder=Path(os.path.join(os.path.dirname(__file__),"pic")),  # 确保这个目录存在并包含字符图片
         font_size=250,
-        font_path=Path(os.path.join(os.path.dirname(__file__), '../common/calli/yanshi.ttf')).resolve()
+        font_path=Path(os.path.join(os.path.dirname(__file__), '../common/calli/yanshi.ttf')).resolve(),
+        mask_path=Path(os.path.join(os.path.dirname(__file__), 'mask.jpg')).resolve()
     )
     
     # 保存结果
