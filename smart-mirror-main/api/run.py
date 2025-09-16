@@ -71,6 +71,7 @@ async def read_root():
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin: 5px;
         }
         button:hover {
             background-color: #45a049;
@@ -78,7 +79,7 @@ async def read_root():
         button:disabled {
             background-color: #cccccc;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -106,6 +107,12 @@ async def read_root():
             text-align: center;
             font-weight: bold;
         }
+        .status-info {
+            background-color: #d1ecf1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
         audio {
             width: 100%;
             margin: 10px 0;
@@ -119,6 +126,20 @@ async def read_root():
 <body>
     <div class="container">
         <h1>ASR-LLM-TTS Pipeline</h1>
+
+        <!-- Status Control Section -->
+        <div class="section">
+            <h2>5. 状态控制</h2>
+            <div id="statusInfo" class="status-info">
+                <p><strong>当前状态:</strong> <span id="currentStatus">未知</span></p>
+                <p><strong>当前模式:</strong> <span id="currentMode">未知</span></p>
+            </div>
+            <button onclick="getStatus()">获取当前状态</button>
+            <h3>设置模式:</h3>
+            <button onclick="setMode('cali')">设置为字帖模式 (cali)</button>
+            <button onclick="setMode('talking')">取消字帖模式 (talking)</button>
+            <div id="statusResult"></div>
+        </div>
 
         <!-- ASR Section -->
         <div class="section">
@@ -330,6 +351,56 @@ async def read_root():
                 resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
             }
         }
+
+        // 获取当前状态
+        async function getStatus() {
+            const statusResultDiv = document.getElementById('statusResult');
+            statusResultDiv.innerHTML = '<div class="processing">正在获取状态...</div>';
+
+            try {
+                const response = await fetch('/get_status');
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('currentStatus').textContent = data.status || '未知';
+                    document.getElementById('currentMode').textContent = data.mode || '未知';
+                    statusResultDiv.innerHTML = '<div class="result">状态获取成功</div>';
+                } else {
+                    statusResultDiv.innerHTML = `<div class="error">获取状态失败: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                statusResultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            }
+        }
+
+        // 设置模式
+        async function setMode(mode) {
+            const statusResultDiv = document.getElementById('statusResult');
+            statusResultDiv.innerHTML = '<div class="processing">正在设置模式...</div>';
+
+            try {
+                const response = await fetch(`/set_status?mode=${mode}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('currentMode').textContent = mode;
+                    statusResultDiv.innerHTML = '<div class="result">模式设置成功</div>';
+                } else {
+                    statusResultDiv.innerHTML = `<div class="error">设置失败: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                statusResultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            }
+        }
+
+        // 页面加载完成后自动获取一次状态
+        window.onload = function() {
+            getStatus();
+        };
+
     </script>
 </body>
 </html>
