@@ -41,9 +41,9 @@ class ASR:
             self.recognition= None
     def audio_to_text(self,input_audio_path:str=""):
         # 用户接口,传入音频路径则读取音频文件，否则则录制
-        record_mood=False
+        record_mode=False
         if input_audio_path=="":
-            record_mood=True
+            record_mode=True
 
         if not self._is_loaded:
             if self.platform=="paraformer":
@@ -54,7 +54,7 @@ class ASR:
             else:
                 self._is_loaded=True
         if self._is_loaded:
-            if record_mood:
+            if record_mode:
                 audio_path=self._record_audio()
             else:
                 audio_path=input_audio_path
