@@ -242,14 +242,15 @@ class Calli:
             draw.text((x, y), char, font=font, fill=gold_color)
 
 
-if __name__ == "__main__":
+
+def ca():
     calli = Calli()
-    # img=calli.create("举头望明月，低头思故乡")
-    # img.show()
     result = calli.create_zitie('''大江东去，浪淘尽，千古风流人物。故垒西边，人道是，三国周郎赤壁。''', font_size=88)
     if result:
         for r in result:
             r.show()
             r.save("zitie_gold.png")
             print("烫金字帖已生成！")
+if __name__ == "__main__":
+    ca()
 
