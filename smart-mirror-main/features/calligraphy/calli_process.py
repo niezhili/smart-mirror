@@ -146,8 +146,6 @@ class Calli:
         image = Image.open(template_path).convert('RGB')
         draw = ImageDraw.Draw(image)
 
-        # 使用楷书字体
-        font_path = self.style.get("楷书", FONT_Path_kaishu)
         try:
             font = ImageFont.truetype(str(font_path), font_size)
         except OSError:

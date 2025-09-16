@@ -31,278 +31,309 @@ if not os.path.exists(STATIC_DIR):
 
 app=FastAPI()
 app.mount("/static",StaticFiles(directory=STATIC_DIR),name="static")
-
-@app.get("/",response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def read_root():
     return HTMLResponse("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>ASR-LLM-TTS Pipeline</title>
-        <meta charset="utf-8">
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #f5f5f5;
-            }
-            .container {
-                background-color: white;
-                padding: 30px;
-                border-radius: 10px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            }
-            h1 {
-                color: #333;
-                text-align: center;
-            }
-            .section {
-                margin: 20px 0;
-                padding: 20px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-            }
-            button {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 16px;
-            }
-            button:hover {
-                background-color: #45a049;
-            }
-            button:disabled {
-                background-color: #cccccc;
-            }
-            input, textarea {
-                width: 100%;
-                padding: 10px;
-                margin: 10px 0;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                box-sizing: border-box;
-            }
-            .result {
-                background-color: #e9f7ef;
-                padding: 15px;
-                border-radius: 4px;
-                margin: 10px 0;
-            }
-            .error {
-                background-color: #fce4e4;
-                padding: 15px;
-                border-radius: 4px;
-                margin: 10px 0;
-            }
-            .processing {
-                background-color: #fff3cd;
-                padding: 15px;
-                border-radius: 4px;
-                margin: 10px 0;
-                text-align: center;
-                font-weight: bold;
-            }
-            audio {
-                width: 100%;
-                margin: 10px 0;
-            }
-            img {
-                max-width: 100%;
-                margin: 10px 0;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>ASR-LLM-TTS Pipeline</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASR-LLM-TTS Pipeline</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .result {
+            background-color: #e9f7ef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #fce4e4;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .processing {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+        img {
+            max-width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ASR-LLM-TTS Pipeline</h1>
 
-            <!-- ASR Section -->
-            <div class="section">
-                <h2>1. 语音识别 (ASR)</h2>
-                <button onclick="triggerASR()">开始语音识别</button>
-                <div id="asrResult"></div>
-            </div>
-
-            <!-- LLM-TTS Section -->
-            <div class="section">
-                <h2>2. 语言模型+语音合成 (LLM-TTS)</h2>
-                <textarea id="llmTtsInput" placeholder="输入要处理并转换为语音的文本..." rows="4"></textarea>
-                <button onclick="triggerLLMTTS()">处理并播放</button>
-                <div id="llmTtsResult"></div>
-            </div>
-
-            <!-- Calligraphy Section -->
-            <div class="section">
-                <h2>3. 书法生成</h2>
-                <input type="text" id="calliTitle" placeholder="书法标题">
-                <textarea id="calliText" placeholder="要生成书法的文本内容..." rows="4"></textarea>
-                <input type="text" id="calliSignature" placeholder="签名">
-                <button onclick="generateCalligraphy()">生成书法</button>
-                <div id="calliResult"></div>
-            </div>
-
-            <!-- Full Pipeline Section -->
-            <div class="section">
-                <h2>4. 完整流程 (ASR->LLM->TTS)</h2>
-                <button onclick="triggerFullPipeline()">开始完整流程</button>
-                <div id="pipelineResult"></div>
-            </div>
+        <!-- ASR Section -->
+        <div class="section">
+            <h2>1. 语音识别 (ASR)</h2>
+            <button onclick="triggerASR()">开始语音识别</button>
+            <div id="asrResult"></div>
         </div>
 
-        <script>
-            // ASR功能
-            async function triggerASR() {
-                const resultDiv = document.getElementById('asrResult');
+        <!-- LLM-TTS Section -->
+        <div class="section">
+            <h2>2. 语言模型+语音合成 (LLM-TTS)</h2>
+            <textarea id="llmTtsInput" placeholder="输入要处理并转换为语音的文本..." rows="4"></textarea>
+            <button onclick="triggerLLMTTS()">处理并播放</button>
+            <div id="llmTtsResult"></div>
+        </div>
 
-                resultDiv.innerHTML = '<div class="processing">正在录音并识别，请说话...</div>';
+        <!-- Calligraphy Section -->
+        <div class="section">
+            <h2>3. 书法生成</h2>
+            <textarea id="calliText" placeholder="要生成书法的文本内容..." rows="4" required></textarea>
+            
+            <label for="calliStyle">选择样式:</label>
+            <select id="calliStyle">
+                <option value="1">经典(需要标题和签名)</option>
+                <option value="2">书本(只需要文本)</option>
+                <option value="3">拼图(只需要文本)</option>
+            </select>
+            
+            <input type="text" id="calliTitle" placeholder="书法标题(样式1需要)">
+            <input type="text" id="calliSignature" placeholder="签名(样式1需要)">
+            
+            <label for="calliFont">选择字体:</label>
+            <select id="calliFont">
+                <option value="楷书">楷书</option>
+                <option value="鹤体">鹤体</option>
+                <option value="行书">行书</option>
+                <option value="金文">金文</option>
+            </select>
+            
+            <button onclick="generateCalligraphy()">生成书法</button>
+            <div id="calliResult"></div>
+        </div>
 
-                try {
-                    const response = await fetch('/asr', {
-                        method: 'POST'
-                    });
+        <!-- Full Pipeline Section -->
+        <div class="section">
+            <h2>4. 完整流程 (ASR->LLM->TTS)</h2>
+            <button onclick="triggerFullPipeline()">开始完整流程</button>
+            <div id="pipelineResult"></div>
+        </div>
+    </div>
 
-                    const data = await response.json();
+    <script>
+        // ASR功能
+        async function triggerASR() {
+            const resultDiv = document.getElementById('asrResult');
 
-                    if (response.ok) {
-                        resultDiv.innerHTML = `
-                            <div class="result">
-                                <strong>识别结果:</strong>
-                                <p>${data.text}</p>
-                            </div>
-                        `;
-                        // 将结果填充到LLM-TTS输入框
-                        document.getElementById('llmTtsInput').value = data.text;
-                    } else {
-                        resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
-                    }
-                } catch (error) {
-                    resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            resultDiv.innerHTML = '<div class="processing">正在录音并识别，请说话...</div>';
+
+            try {
+                const response = await fetch('/asr', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <strong>识别结果:</strong>
+                            <p>${data.text}</p>
+                        </div>
+                    `;
+                    // 将结果填充到LLM-TTS输入框
+                    document.getElementById('llmTtsInput').value = data.text;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
                 }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            }
+        }
+
+        // LLM-TTS功能
+        async function triggerLLMTTS() {
+            const textInput = document.getElementById('llmTtsInput');
+            const resultDiv = document.getElementById('llmTtsResult');
+
+            if (!textInput.value.trim()) {
+                resultDiv.innerHTML = '<div class="error">请输入文本</div>';
+                return;
             }
 
-            // LLM-TTS功能
-            async function triggerLLMTTS() {
-                const textInput = document.getElementById('llmTtsInput');
-                const resultDiv = document.getElementById('llmTtsResult');
+            resultDiv.innerHTML = '<div class="processing">正在处理并合成语音...</div>';
 
-                if (!textInput.value.trim()) {
-                    resultDiv.innerHTML = '<div class="error">请输入文本</div>';
-                    return;
+            try {
+                const response = await fetch('/llm_tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({text: textInput.value})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <strong>处理结果:</strong>
+                            <p>${data.response}</p>
+                            <p>语音播放已完成</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
                 }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            }
+        }
 
-                resultDiv.innerHTML = '<div class="processing">正在处理并合成语音...</div>';
+        // 书法生成功能
+        async function generateCalligraphy() {
+            const titleInput = document.getElementById('calliTitle');
+            const textInput = document.getElementById('calliText');
+            const signatureInput = document.getElementById('calliSignature');
+            const fontSelect = document.getElementById('calliFont');
+            const styleSelect = document.getElementById('calliStyle');
+            const resultDiv = document.getElementById('calliResult');
 
-                try {
-                    const response = await fetch('/llm_tts', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({text: textInput.value})
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        resultDiv.innerHTML = `
-                            <div class="result">
-                                <strong>处理结果:</strong>
-                                <p>${data.response}</p>
-                                <p>语音播放已完成</p>
-                            </div>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
-                    }
-                } catch (error) {
-                    resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
-                }
+            if (!textInput.value.trim()) {
+                resultDiv.innerHTML = '<div class="error">请输入文本</div>';
+                return;
             }
 
-            // 书法生成功能
-            async function generateCalligraphy() {
-                const titleInput = document.getElementById('calliTitle');
-                const textInput = document.getElementById('calliText');
-                const signatureInput = document.getElementById('calliSignature');
-                const resultDiv = document.getElementById('calliResult');
-
-                if (!textInput.value.trim()) {
-                    resultDiv.innerHTML = '<div class="error">请输入文本</div>';
-                    return;
-                }
-
-                resultDiv.innerHTML = '<div class="processing">正在生成书法...</div>';
-
-                try {
-                    const response = await fetch('/calligraphy', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            title: titleInput.value || '书法作品',
-                            text: textInput.value,
-                            signature: signatureInput.value || '智能助手'
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.image_path) {
-                        resultDiv.innerHTML = `
-                            <div class="result">
-                                <strong>书法生成成功:</strong>
-                                <img src="${data.image_path}" alt="书法作品">
-                                <p><a href="${data.image_path}" target="_blank">点击查看原图</a></p>
-                            </div>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `<div class="error">生成失败: ${data.detail || '未知错误'}</div>`;
-                    }
-                } catch (error) {
-                    resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
-                }
+            // 根据选择的样式决定是否需要标题和签名
+            const style = styleSelect.value;
+            let title = titleInput.value || '书法作品';
+            let signature = signatureInput.value || '智能助手';
+            
+            if (style !== "1") {
+                // 样式2和3不需要标题和签名
+                title = '';
+                signature = '';
             }
 
-            // 完整流程
-            async function triggerFullPipeline() {
-                const resultDiv = document.getElementById('pipelineResult');
+            resultDiv.innerHTML = '<div class="processing">正在生成书法...</div>';
 
-                resultDiv.innerHTML = '<div class="processing">正在录音并处理完整流程，请说话...</div>';
+            try {
+                const response = await fetch('/calligraphy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        text: textInput.value,
+                        signature: signature,
+                        choose: fontSelect.value,
+                        style: style
+                    })
+                });
 
-                try {
-                    const response = await fetch('/asr_llm_tts', {
-                        method: 'POST'
-                    });
+                const data = await response.json();
 
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        resultDiv.innerHTML = `
-                            <div class="result">
-                                <strong>ASR结果:</strong>
-                                <p>${data.asr_text}</p>
-                                <strong>LLM结果:</strong>
-                                <p>${data.llm_response}</p>
-                                <p>语音播放已完成</p>
-                            </div>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
-                    }
-                } catch (error) {
-                    resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+                if (response.ok && data.image_path) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <strong>书法生成成功:</strong>
+                            <img src="${data.image_path}" alt="书法作品">
+                            <p><a href="${data.image_path}" target="_blank">点击查看原图</a></p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">生成失败: ${data.detail || '未知错误'}</div>`;
                 }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
             }
-        </script>
-    </body>
-    </html>
-    """)
+        }
+
+        // 完整流程
+        async function triggerFullPipeline() {
+            const resultDiv = document.getElementById('pipelineResult');
+
+            resultDiv.innerHTML = '<div class="processing">正在录音并处理完整流程，请说话...</div>';
+
+            try {
+                const response = await fetch('/asr_llm_tts', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <strong>ASR结果:</strong>
+                            <p>${data.asr_text}</p>
+                            <strong>LLM结果:</strong>
+                            <p>${data.llm_response}</p>
+                            <p>语音播放已完成</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">错误: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">请求失败: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+""")
 
 @app.post("/calligraphy")
 async def calligraphy_endpoint(request: dict):
@@ -322,12 +353,15 @@ async def calligraphy_endpoint(request: dict):
             if style=="1":
                 image = cali.create(text, title=f"{title}", signature=f"--{signature}", font_size=60,choose=choose)
             elif style=="2":
-                image=cali.create_zitie(text,font_size=88)
+                image=cali.create_zitie(text,font_size=88,choose=choose)
             elif style=='3':
                 image=compose_image_from_text(text,font_size=250)
             else:
                 image = cali.create(text, title=f"{title}", signature=f"--{signature}", font_size=60, choose=choose)
             if image:
+                if isinstance(image, list):
+                    # 对于返回列表的情况（如create_zitie），只取第一张图片
+                    image = image[0]
                 filename = f"{uuid.uuid4()}.png"
                 file_path = os.path.join(STATIC_DIR, filename)
                 image.save(file_path)
