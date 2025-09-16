@@ -73,13 +73,10 @@ Module.register("MMM-CustomWeather", {
 
 	getTranslations: function () {
 		// const language = config.language.toLowerCase(); // Ensure case-insensitivity
-		const savedLanguage = localStorage.getItem("mm_language");
-
-		if(savedLanguage === "En-us"){
-			return {en: "translations/en.json"}
-		}else if(savedLanguage === "Zh-cn"){
-			return {cn: "translations/cn.json"}
-		}
+		return {
+        en: "translations/en.json", // 声明英文翻译文件
+        cn: "translations/cn.json"  // 声明中文翻译文件
+    };
 	},
 
 	getStyles: function () {
@@ -155,6 +152,20 @@ Module.register("MMM-CustomWeather", {
 		return `<span class="${colorClass}">${temp}°${this.config.units === "imperial" ? "F" : "C"}</span>`;
 	},
 
+	// 监听器，响应翻译更新
+	notificationReceived: function (notification, payload) {
+		// 监听语言切换通知
+		if (notification === "LANGUAGE_CHANGED") {
+			Log.info(`[MMM-CustomWeather] 语言切换为: ${payload}`);
+			// 更新当前语言记录
+			this.currentLanguage = payload;
+			// 重新加载对应语言的翻译文件
+			this.loadTranslations();
+			// 触发DOM更新，刷新翻译内容
+			this.updateDom();
+		}
+	},
+
 	getDom: function () {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'weather-container';
@@ -183,7 +194,8 @@ Module.register("MMM-CustomWeather", {
 			wrapper.appendChild(cityDiv);
 
 			// Current weather conditions with emoji
-			const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase()) ?
+			// 修改：使用this.currentLanguage替代config.language，确保语言切换后立即生效
+			const weatherCondition = ["en", "En-us"].includes(this.currentLanguage.toLowerCase()) ?
 				this.translate(this.weatherData.now.text) : this.weatherData.now.text;
 
 			const weatherEmoji = this.getWeatherEmoji(weatherCondition);
@@ -257,3 +269,4 @@ Module.register("MMM-CustomWeather", {
 		return wrapper;
 	}
 });
+    

@@ -3,6 +3,7 @@ import sys
 import uuid
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 from features.asr.paraformer import ASR
 from features.llm.qwen import LLM
@@ -24,6 +25,7 @@ cali=Calli()
 STATIC_DIR = "static"
 LOCK_FILE = Path(os.path.join(os.path.dirname(__file__), "status.json.lock"))
 DATA_FILE = Path(os.path.join(os.path.dirname(__file__), "status.json"))
+
 
 
 if not os.path.exists(STATIC_DIR):
@@ -406,6 +408,7 @@ async def read_root():
 </html>
 """)
 
+
 @app.post("/calligraphy")
 async def calligraphy_endpoint(request: dict):
     try:
@@ -419,6 +422,7 @@ async def calligraphy_endpoint(request: dict):
 
         if not text:
             return {"detail": "没有提供文本内容"}
+
 
         async def generate_cali(title, text, signature, choose):
             if style=="1":
@@ -508,6 +512,7 @@ async def asr_llm_tts_endpoint():
     except Exception as e:
         return {"detail": str(e)}
 
+
 @app.get("/get_status")
 async def get_status():
     with FileLock(LOCK_FILE, timeout=10):
@@ -548,6 +553,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "api.run:app",
         host="0.0.0.0",
-        port=8001,
+        port=8081,
         reload=False
     )

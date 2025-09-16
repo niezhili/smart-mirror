@@ -21,3 +21,5 @@ features/common/__pycache__/*
 doc/note
 features/face_recognition/__pycache__/face_recognition_system.cpython-312.pyc
 log/*
+
+api/static

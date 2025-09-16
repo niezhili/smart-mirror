@@ -21,7 +21,7 @@ Module.register("MMM-CustomClock", {
 		// 日期设置
 		dateFormat: "default", // 日期格式，默认按语言自适应
 		showWeek: false, // 是否显示周数
-		// 新增配置：自动检测背景
+		// 自动检测背景
 		autoDetectBackground: true, // 是否自动检测背景色
 		fallbackTextColor: null, // 手动指定文本颜色（覆盖自动检测）
 	},
@@ -352,8 +352,9 @@ Module.register("MMM-CustomClock", {
 			// 显示日期
 			if (this.config.showDate) {
 				const dateElement = document.createElement("div");
-				dateElement.className = "date normal medium";
+				dateElement.className = "date normal medium fade-animation active";
 				dateElement.textContent = this.formatDateByLanguage(displayDate);
+				dateElement.style.transition = "opacity 1s ease-in-out";
 				digitalContainer.appendChild(dateElement);
 			}
 
@@ -468,4 +469,25 @@ Module.register("MMM-CustomClock", {
 		return container;
 	},
 
+	/**
+	 * 监听语言切换通知，触发日期动画更新
+	 */
+	notificationReceived: function (notification, payload) {
+		if (notification === "LANGUAGE_CHANGED") {
+			Log.info(`[MMM-CustomClock] 收到语言切换通知，新语言: ${payload}`);
+			// 找到日期元素，触发动画
+			const dateElement = document.querySelector('.customclock-grid .date');
+			if (dateElement) {
+				dateElement.classList.remove('active'); // 开始淡出
+				setTimeout(() => {
+					// 延迟后更新日期内容
+					dateElement.textContent = this.formatDateByLanguage(new Date());
+					dateElement.classList.add('active'); // 淡入
+				}, 500);
+			}
+			this.updateDom(1000); // 同步更新DOM，带动画
+		}
+	},
+
 });
+    

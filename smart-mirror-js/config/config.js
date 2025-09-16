@@ -58,6 +58,14 @@ let config = {
 				// Add any other options you want to customize
 			}
 		},
+		{
+        module: "MMM-CalligraphyButton", // 模块名称（要和模块文件夹名一致）
+        position: "top_left", // 按钮显示的位置（如 top_left、bottom_center 等）
+        config: {
+            buttonText: "生成书法作品", // 自定义按钮文字（可选，也可留空用模块默认值）
+            targetPage: "calligraphy.html" // 二级界面的HTML路径（需确保文件存在）
+        	}
+    	},
 			{
 				module: "MMM-LanguageSwitch",
 				position: "bottom_right",
@@ -65,15 +73,15 @@ let config = {
 					language: "en"
 				}
 			},
-// 		{
-// 			module: "MMM-CustomWeather",
-// 			position: "top_left",
-// 			config: {
-// 				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
-// 				debug: true,
-// //				updateInterval: 60000
-// 			}
-// 		},
+		{
+			module: "MMM-CustomWeather",
+			position: "top_left",
+			config: {
+				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
+				debug: true,
+				updateInterval: 60000
+			}
+		},
 		{
 
 			module: "MMM-DHT11",

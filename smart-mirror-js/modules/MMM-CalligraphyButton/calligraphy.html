@@ -1,0 +1,40 @@
+<!-- 看这里，这个calligraphy.html还有coli.css以及coli.js文件放这里是因为要和botton响应，懒得写绝对路径了，放同一个文件夹里省太多事了，虽然乱了点 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>魔镜</title>
+    <!-- 引入外部CSS文件 -->
+    <link rel="stylesheet" href="coli.css">
+</head>
+<body>
+    <div class="container">
+        <h3>魔镜</h3>
+        
+        <!-- 顶部操作栏 -->
+        <div class="toolbar">
+            <button class="font-btn active" data-font="kaishu">楷书</button>
+            <button class="font-btn" data-font="outi">欧体</button>
+            <input type="text" class="content-input" placeholder="请输入内容...">
+            <button class="voice-btn">语音输入</button>
+            <button class="generate-btn">生成字帖</button> <!-- 生成按钮 -->
+        </div>
+
+        <!-- 书法结果展示区 -->
+        <div class="result-area" id="calligraphyResult">
+            生成的书法字帖将展示于此
+        </div>
+    </div>
+
+    <!-- 模态框（查看大图） -->
+    <div id="calligraphyModal">
+        <div class="modal-content">
+            <button id="closeModal">×</button>
+            <img id="modalImage" src="" alt="书法作品大图">
+        </div>
+    </div>
+
+    <!-- 引入外部JS文件 -->
+    <script src="coli.js"></script>
+</body>
+</html>
