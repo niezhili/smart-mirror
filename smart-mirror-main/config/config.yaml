@@ -20,7 +20,6 @@ wakeup_words : ["你好", "树莓派", "小", "小朋友", "朋友","小镜子"]
 #===============选择接口===============================
 choose:
   tts: tts_huoshan
-  tts_v2: huoshan
   asr: paraformer
   llm: qwen
 #===============参数调节===============================
@@ -43,30 +42,10 @@ asr :
       language: [ 'zh','en','ja' ]
       model: "paraformer-realtime-v2"
 
-tts :  
-  tts_aliyun:
-  huoshan:
-    app_id: "7216763375"
-    token: "BI4i32uDCONZF0EIO0uvnUP5Vc1NYL3D"
-    cluster: "volcano_tts"
-    # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
-    # zh_female_shuangkuaisisi_moon_bigtts 中英
-    # zh_male_jingqiangkanye_emo_mars_bigtts 京腔侃爷
-    # zh_female_yingyujiaoyu_mars_bigtts tina老师
-    # ICL_zh_female_chengshujiejie_tob 成熟姐姐
-    # zh_male_tiancaitongsheng_mars_bigtts天才童声
-    # zh_male_yangguangqingnian_emo_v2_mars_bigtts 阳光青年
-    # zh_male_linjiananhai_moon_bigtts 邻家男孩
-    voice_type: "zh_male_linjiananhai_moon_bigtts"
-    speed_ratio: 1.0
-    volume_ratio: 1.0
-    pitch_ratio: 1.2
-    emotion: "neutral"
-    # 音频缓存数量限制【不建议小于50，否则会导致音频缺失】
-    max_temp_num: 200
+tts :
   tts_huoshan :
-    appid: 6082784057
-    token: bF4nRpNiCcP8HDLfDJYvFupObvZxy0gq
+    appid: "7216763375"
+    token: "BI4i32uDCONZF0EIO0uvnUP5Vc1NYL3D"
     cluster: volcano_tts
     # zh_male_yuanboxiaoshu_moon_bigtts 渊博小叔
     # zh_female_shuangkuaisisi_moon_bigtts 中英
@@ -77,10 +56,10 @@ tts :
     # BV700_streaming 普通
     voice_type:
       # default包含中英文，如果en单独设置，那么en就会是对应音色
-      default: "zh_female_yingyujiaoyu_mars_bigtts"
+      default: "multi_male_jingqiangkanye_moon_bigtts"
       ja: "multi_male_jingqiangkanye_moon_bigtts"
-      de: "zh_male_tiancaitongsheng_mars_bigtts"
-      fr: "zh_male_tiancaitongsheng_mars_bigtts"
+      de: "multi_male_jingqiangkanye_moon_bigtts"
+      fr: "multi_male_jingqiangkanye_moon_bigtts"
       en : "multi_male_jingqiangkanye_moon_bigtts"
     #中文音色：开心（happy），悲伤（sad），生气（angry），惊讶（surprised），恐惧（fear），厌恶（hate），激动（excited），冷漠（coldness），中性（neutral），沮丧（depressed），撒娇（lovey-dovey），害羞（shy），安慰鼓励（comfort），咆哮/焦急（tension），温柔（tender），讲故事 / 自然讲述（storytelling），情感电台（radio），磁性（magnetic），广告营销（advertising），气泡音（vocal - fry），低语 (ASMR)，新闻播报（news），娱乐八卦（entertainment），方言（dialect）
     #英文音色：中性（neutral），愉悦（happy），愤怒（angry），悲伤（sad），兴奋（excited），对话 / 闲聊（chat），低语 (ASMR)，温暖（warm），深情（affectionate），权威（authoritative）
