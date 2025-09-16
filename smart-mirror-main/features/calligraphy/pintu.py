@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 
-def compose_image_from_text(text, image_folder="save11", font_path=None, font_size=50,mask_path=None):
+def compose_image_from_text(text, image_folder="pic", font_path=None, font_size=50,mask_path=None):
     """
     根据输入文字生成拼接图片
     
@@ -42,7 +42,7 @@ def compose_image_from_text(text, image_folder="save11", font_path=None, font_si
                 print(f"无法加载图片 {filename}: {e}")
     
     # 将文字按行分割（处理过长文本）
-    lines = wrap_text(text, 8)  # 每行最多8个字符
+    lines = wrap_text(text, 7)  # 每行最多8个字符
     
     # 如果没有可用的字符图片，直接创建纯字体图片
     if not images:
@@ -218,7 +218,7 @@ def main():
     """
     # 示例：使用图片库生成拼接图片
     image = compose_image_from_text(
-        text="智慧镜，照见未来，窗前明月光",
+        text="usdvguysgbaduoygweoyugdoy gweoygdhoy f大江东去撒vuv啊是绿茶丽萨办理的身份访，。，//，。，问英国完工于i的还好我还我一个单一哦我给i哦对工艺哦啊还是iu等你下班司法部微博反扑i我国覅偶遇跟iowg哦好7ioh佛给分工给",
         image_folder=Path(os.path.join(os.path.dirname(__file__),"pic")),  # 确保这个目录存在并包含字符图片
         font_size=250,
         font_path=Path(os.path.join(os.path.dirname(__file__), '../common/calli/yanshi.ttf')).resolve(),

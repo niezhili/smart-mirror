@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
+from features.calligraphy.pintu import compose_image_from_text
 from log.load_log import logger
 from pathlib import Path
 import re
@@ -11,13 +12,18 @@ FONT_Path_jinwen = Path(os.path.join(os.path.dirname(__file__), '../common/calli
 FONT_Path_heti = Path(os.path.join(os.path.dirname(__file__), '../common/calli/heti.ttf')).resolve()
 FONT_Path_xingshu = Path(os.path.join(os.path.dirname(__file__), '../common/calli/xingshu.ttf')).resolve()
 
+
+Muban_path=Path(os.path.join(os.path.dirname(__file__), 'muban.jpg')).resolve()
+
+
 class Calli:
     def __init__(self):
         self.logger = logger.bind(tag=TAG)
-        self.style={'楷书': FONT_Path_kaishu,'拼音':FONT_Path_pinyin,'金文':FONT_Path_jinwen,'鹤体':FONT_Path_heti}
+        self.style={'楷书': FONT_Path_kaishu,'拼音':FONT_Path_pinyin,'金文':FONT_Path_jinwen,'鹤体':FONT_Path_heti,'行书':FONT_Path_xingshu}
+        self.Muban_path=Muban_path
 
-    def create(self, raw_text, title="书法字帖", signature="——这是一个测试",
-                                             font_size=60,choose="行书"):
+    def create(self, raw_text, title="书法字帖", signature="——佚名",
+                                             font_size=60,choose="楷书"):
 
 
         font_path=self.style.get(choose,FONT_Path_kaishu)
@@ -115,7 +121,7 @@ class Calli:
 
         return image_res
 
-    def create_zitie(self, text, gold_color=(255, 215, 0), shadow_color=(139, 87, 42), font_size=60):
+    def create_zitie(self, text, gold_color=(255, 250, 210), shadow_color=(139, 87, 42), font_size=88,choose="楷书"):
         """
         在模板 muban.jpg 上生成烫金书法字帖，文字写在中部黑色石板区域，每列不超过6个字，从右往左书写
 
@@ -126,13 +132,14 @@ class Calli:
             font_size (int): 字体大小
 
         Returns:
-            PIL.Image: 带有烫金文字的图像
+            list: 包含PIL.Image对象的列表，每个对象代表一张图片
         """
         # 加载模板图像
         # 去标点
-        text=re.sub('[，。！？；：,.!?;:]', '', text)
+        font_path = self.style.get(choose, FONT_Path_kaishu)
+        text = re.sub('[，。！？；：,.!?;:]', '', text)
 
-        template_path = Path(os.path.join(os.path.dirname(__file__), 'muban.jpg')).resolve()
+        template_path = self.Muban_path
         if not template_path.exists():
             raise FileNotFoundError(f"模板文件未找到: {template_path}")
 
@@ -147,20 +154,18 @@ class Calli:
             self.logger.warning("字体文件未找到，使用默认字体")
             font = ImageFont.load_default()
 
-
         # 黑色石板区域位置
-        sep=209
-        # right2=(570+sep*2, 220, 900, 800)
-        # right1=(570+sep, 220, 900, 800)
-        # right0=(570, 220, 900, 800)
-        # left0 = (470, 220, 520, 800)
-        # left1 = (470-sep, 220, 520, 800)
-        # left2= (470-sep*2, 220, 520, 800)
+        r1 = (988, 225, 900, 800)
+        r2 = (779, 225, 900, 800)
+        r3 = (570, 225, 900, 800)
+        l1 = (470, 210, 520, 800)
+        l2 = (275, 210, 520, 800)
+        l3 = (57, 210, 520, 800)
 
-        left_board = (470, 220, 520, 800)
-        right_board = (570, 220, 900, 800)
+        # 定义石板区域顺序
+        boards = [r1, r2, r3, l1, l2, l3]
 
-        # 分割文本为两列，每列最多6个字，从右往左
+        # 分割文本为多列，每列最多6个字
         max_chars_per_col = 6
         cols = []
         current_col = []
@@ -174,19 +179,29 @@ class Calli:
         if current_col:
             cols.append(current_col)
 
-        # 如果只有1列，则放在右侧；否则左右各一列
-        if len(cols) == 1:
-            col_text = ''.join(cols[0])
-            # 放在右侧石板，从右往左书写
-            self._draw_gold_text(draw, col_text, right_board, font, gold_color, shadow_color)
-        else:
-            # 左右各一列，从右往左书写
-            right_text = ''.join(cols[0])  # 第一列放右边
-            left_text = ''.join(cols[1])  # 第二列放左边
-            self._draw_gold_text(draw, right_text, right_board, font, gold_color, shadow_color)
-            self._draw_gold_text(draw, left_text, left_board, font, gold_color, shadow_color)
+        # 创建结果图片列表
+        images = []
+        current_col_index = 0
 
-        return image
+        # 当还有列未处理时继续
+        while current_col_index < len(cols):
+            # 加载新的模板图像
+            image = Image.open(template_path).convert('RGB')
+            draw = ImageDraw.Draw(image)
+
+            # 在当前图片上绘制尽可能多的列（最多6列）
+            for board_index in range(len(boards)):
+                if current_col_index < len(cols):
+                    col_text = ''.join(cols[current_col_index])
+                    self._draw_gold_text(draw, col_text, boards[board_index], font, gold_color, shadow_color)
+                    current_col_index += 1
+                else:
+                    break
+
+            # 添加当前图片到结果列表
+            images.append(image)
+
+        return images
 
     def _draw_gold_text(self, draw, text, board_rect, font, gold_color, shadow_color):
         """
@@ -207,7 +222,8 @@ class Calli:
         # 计算字符高度和行间距
         bbox = draw.textbbox((0, 0), text, font=font)
         char_height = bbox[3] - bbox[1]
-        line_spacing = int(char_height * 1.2)
+        # print(char_height)
+        line_spacing = int(76 * 1.3)
 
         # 从右往左书写，逐行排列
         lines = [text[i:i + 1] for i in range(0, len(text))]
@@ -228,9 +244,12 @@ class Calli:
 
 if __name__ == "__main__":
     calli = Calli()
-    result = calli.create_zitie("床前明月光，疑是地上霜，举头望明月，低头思故乡", font_size=92)
+    # img=calli.create("举头望明月，低头思故乡")
+    # img.show()
+    result = calli.create_zitie('''大江东去，浪淘尽，千古风流人物。故垒西边，人道是，三国周郎赤壁。''', font_size=88)
     if result:
-        result.show()
-        result.save("zitie_gold.png")
-        print("烫金字帖已生成！")
+        for r in result:
+            r.show()
+            r.save("zitie_gold.png")
+            print("烫金字帖已生成！")
 

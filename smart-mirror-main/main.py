@@ -132,8 +132,6 @@ def assistant_mode():
             last_interaction = time.time()
             continue
 
-
-
         if float(time.time()) - last_interaction > listening_duration:
             tts_speech("等待唤醒...")
             with global_lock:
