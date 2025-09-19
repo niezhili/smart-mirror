@@ -17,7 +17,9 @@
   --gap-body-left: 60px; /* 页面左侧间距 */
   --gap-modules: 30px; /* 模块间距 */
 }
-
+*{
+  user-select: none;
+}
 /* 设置 html 元素的基础样式 */
 html {
   cursor: grab; /* 鼠标样式为抓取 */
