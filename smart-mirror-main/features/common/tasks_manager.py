@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Callable, Any, Dict
+from typing import List, Callable, Any, Dict, Optional
 from features.common.log_loader import logger
 import uuid
 TAG=__name__
@@ -39,7 +39,7 @@ class TasksManager:
         self.consumer_task = asyncio.create_task(self._consumer())
         self.waiting = waiting
 
-    async def add_group(self, items: List[Any]) -> str:
+    async def add_group(self, items: List[Any]) -> Optional[str]:
         """添加一个任务块，返回 group_id"""
         if not items:
             return None

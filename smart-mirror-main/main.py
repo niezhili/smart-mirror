@@ -1,42 +1,50 @@
 import time
 from features.common.config_loader import config
-import threading
 from flask import Flask, render_template
 import geocoder
-from features.llm.llm_qwen import chat_llm
+from features.llm.qwen import LLM
 from features.face_recognition.face_recognition_system import FaceRecognition
 from features.common.utils import audio_to_text, load_known_faces_from_folder
 from features.weather import WeatherService
 from queue import Queue
 from features.common.globals import set_tts_state, is_tts_working
-from features.common.log_loader import logger
 from features.tts.tts_speech import tts_speech
-from human_detection import HumanDetection  # 导入人体检测模块
+from log.load_log import logger
+from pathlib import Path
+from filelock import FileLock
+import threading
+import json
+import os
+
 
 TAG = __name__
-
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+llm=LLM()
+running = True
+face_detected = False
+face_detection_active = False
+preloaded_face_data = None
+location_info = None
+weather_service = WeatherService()
+assistant = None
+face_detection_running = False
+ignore_audio_until = False
+face_detection_success = False
+detection_mode = None
+human_detector = None
+voice_detection_active = True
+cali=False
 
-running = True  # 程序主运行状态标志，控制主循环及各线程是否继续运行
-face_detected = False  # 标记是否成功检测到人脸（用于进入/退出助手模式）
-face_detection_active = False # 标记人脸识别功能是否处于激活状态
-face_detection_running = False # 标记人脸识别是否正在进行中
-face_detection_success = False # 标记人脸识别是否成功
-preloaded_face_data = None  # 预加载的人脸数据
-location_info = None # 用户位置信息
-weather_service = WeatherService() # 天气服务实例
-assistant = None    # 助手模式实例
-ignore_audio_until = False # 忽略音频输入的时间戳
-detection_mode = None # 当前检测模式（人脸识别或语音唤醒）
-human_detector = None # 人体检测实例
-voice_detection_active = True   # 标记语音检测是否处于激活状态
 # 全局线程锁
 global_lock = threading.Lock()
 
 WAKE_WORD_CHECK_INTERVAL = 0.1  # 唤醒词检查间隔
 FACE_DETECT_TIMEOUT = 30  # 人脸检查超时
 
+# 正确设置文件路径和锁路径
+LOCK_FILE = Path(os.path.join(os.path.dirname(__file__), "api", "status.json.lock"))
+DATA_FILE = Path(os.path.join(os.path.dirname(__file__), "api", "status.json"))
 
 @app.route('/')
 def index():
@@ -46,6 +54,27 @@ def index():
 @app.route('/test')
 def test():
     return "Flask server is working!"
+
+
+def init_status_json():
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    
+    initial_status = {
+      "main_py": {
+        "status": "off",
+        "mode": ""
+      }
+    }
+
+    with FileLock(LOCK_FILE, timeout=10):
+        try:
+            tmp_file = str(DATA_FILE) + ".tmp"
+            with open(tmp_file, 'w', encoding='utf-8') as f:
+                json.dump(initial_status, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_file, DATA_FILE)
+            logger.bind(tag=TAG).info("状态JSON文件初始化成功")
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"初始化状态JSON文件失败: {e}")
 
 
 def preload_face_data():
@@ -122,46 +151,115 @@ def play_weather_info():
 
 def assistant_mode():
     # 助手模式
-    global face_detected, running
+    global face_detected, running,cali
     listening_duration = 600
     last_interaction = time.time()
+    with FileLock(LOCK_FILE, timeout=10):
+        running_status = {
+            "main_py": {
+                "status": "running",
+                "mode": "talking"
+            }
+        }
+        try:
+            tmp_file = str(DATA_FILE) + ".tmp"
+            with open(tmp_file, 'w', encoding='utf-8') as f:
+                json.dump(running_status, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_file, DATA_FILE)
+            logger.bind(tag=TAG).info("talking mode")
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"json书写失败: {e}")
 
-    # 移除了初始问候语，因为在人脸识别成功后已经播放
     while running and face_detected:
         if is_tts_working():
             time.sleep(0.1)
+            last_interaction = time.time()
             continue
 
-        if time.time() - last_interaction > listening_duration:
+        if float(time.time()) - last_interaction > listening_duration:
             tts_speech("等待唤醒...")
             with global_lock:
                 face_detected = False
             break
 
         try:
+            with FileLock(LOCK_FILE, timeout=10):
+                try:
+                    with open(DATA_FILE, 'r', encoding='utf-8') as f:
+
+                        data = json.load(f)
+                        status=data.get('main_py').get('status')
+                        mode = data.get('main_py').get('mode')
+                except Exception as e:
+                    logger.bind(tag=TAG).error(f"json读取失败: {e}")
+            if status=="running" and mode=="cali":
+                tts_speech("您已进入字帖模式，请点击界面语音图标与我继续互动！")
+                while True:
+                    with FileLock(LOCK_FILE, timeout=10):
+                        try:
+                            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+
+                                data = json.load(f)
+                                status = data.get('main_py').get('status')
+                                mode = data.get('main_py').get('mode')
+                        except Exception as e:
+                            logger.bind(tag=TAG).error(f"json读取失败: {e}")
+                    if mode!='cali':
+                        break
+                    time.sleep(1)
+
             text = audio_to_text(timeout=30)
+
             if text:
                 logger.bind(tag=TAG).info(f"User said: {text}")
                 last_interaction = time.time()
                 set_tts_state(True)
 
-                if '天气' in text:
-                    threading.Thread(target=play_weather_info).start()
-                elif '几点' in text:
-                    tts_speech(f"现在是 {time.strftime('%H:%M')}")
-                elif '空调' in text:
-                    tts_speech("好的，正在处理空调指令。")
-                elif '拜拜' in text or '再见' in text or "bye" in text:
+                if len(text)<20 and ('拜拜' in text or '再见' in text or "bye" in text):
                     tts_speech("拜拜，下次再见！")
+                    with FileLock(LOCK_FILE, timeout=10):
+                        running_status = {
+                            "main_py": {
+                                "status": "sleep",
+                                "mode": ""
+                            }
+                        }
+                        try:
+                            tmp_file = str(DATA_FILE) + ".tmp"
+                            with open(tmp_file, 'w', encoding='utf-8') as f:
+                                json.dump(running_status, f, ensure_ascii=False, indent=2)
+                            os.replace(tmp_file, DATA_FILE)
+                            logger.bind(tag=TAG).info("sleep mode")
+                        except Exception as e:
+                            logger.bind(tag=TAG).error(f"json书写失败: {e}")
                     with global_lock:
                         face_detected = False
                 elif '关闭系统' in text:
                     tts_speech("好的，正在关闭系统。")
+                    with FileLock(LOCK_FILE, timeout=10):
+                        running_status = {
+                            "main_py": {
+                                "status": "off",
+                                "mode": ""
+                            }
+                        }
+                        try:
+                            tmp_file = str(DATA_FILE) + ".tmp"
+                            with open(tmp_file, 'w', encoding='utf-8') as f:
+                                json.dump(running_status, f, ensure_ascii=False, indent=2)
+                            os.replace(tmp_file, DATA_FILE)
+                            logger.bind(tag=TAG).info("off mode")
+                        except Exception as e:
+                            logger.bind(tag=TAG).error(f"json书写失败: {e}")
                     with global_lock:
                         running = False
                 else:
-                    response = chat_llm(text)
-                    tts_speech(response)
+                    response = llm.chat(text)
+                    if status == "running" and mode == "cali":
+                        logger.info("您在字帖模式")
+                    else:
+                        tts_speech(response)
+
         except Exception as e:
             logger.bind(tag=TAG).error(f"语音识别错误: {e}")
             set_tts_state(False)
@@ -184,48 +282,54 @@ def run_face_detection(mode):
     global face_detection_running, face_detection_success, detection_mode
     global human_detector, voice_detection_active, face_detected
 
-    try:
-        if face_detection_running or face_detected:
-            return
+    human_detect_bool = config.get("human_detection", False)
+    if not human_detect_bool:
+        face_detected=True
+        threading.Thread(target=assistant_mode).start()
+    else:
+        try:
+            if face_detection_running or face_detected:
+                return
 
-        face_detection_running = True
-        detection_mode = mode
+            face_detection_running = True
+            detection_mode = mode
 
-        if mode == "pir":
-            voice_detection_active = False
-        elif mode == "voice":
-            human_detector.stop_detection()
+            if mode == "pir":
+                voice_detection_active = False
+            elif mode == "voice":
+                human_detector.stop_detection()
 
-        logger.bind(tag=TAG).info(f"[人脸识别] 开始检测 (模式: {mode})")
+            logger.bind(tag=TAG).info(f"[人脸识别] 开始检测 (模式: {mode})")
 
-        # 真正进行人脸识别，不再直接设置成功
-        if detect_face(timeout=60):
-            logger.bind(tag=TAG).info("人脸识别成功")
-            with global_lock:
-                face_detected = True
-            threading.Thread(target=assistant_mode).start()
-        else:
-            tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
-            # 人脸识别失败后重新启用对应检测
+            # 真正进行人脸识别，不再直接设置成功
+            if detect_face(timeout=60):
+                logger.bind(tag=TAG).info("人脸识别成功")
+                tts_speech("人脸识别成功！")
+                with global_lock:
+                    face_detected = True
+                threading.Thread(target=assistant_mode).start()
+            else:
+                tts_speech("我无法识别您的面部。如果需要我，请随时叫我。")
+                # 人脸识别失败后重新启用对应检测
+                if mode == "pir":
+                    human_detector.start_detection(on_human_detected)
+                elif mode == "voice":
+                    voice_detection_active = True
+
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"[人脸识别] 异常: {e}")
+            # 异常情况下也重新启用检测
             if mode == "pir":
                 human_detector.start_detection(on_human_detected)
             elif mode == "voice":
                 voice_detection_active = True
-
-    except Exception as e:
-        logger.bind(tag=TAG).error(f"[人脸识别] 异常: {e}")
-        # 异常情况下也重新启用检测
-        if mode == "pir":
-            human_detector.start_detection(on_human_detected)
-        elif mode == "voice":
-            voice_detection_active = True
-    finally:
-        face_detection_running = False
-        # 无论成功与否，都重新启用检测机制
-        if mode == "pir":
-            voice_detection_active = True
-        elif mode == "voice":
-            human_detector.start_detection(on_human_detected)
+        finally:
+            face_detection_running = False
+            # 无论成功与否，都重新启用检测机制
+            if mode == "pir":
+                voice_detection_active = True
+            elif mode == "voice":
+                human_detector.start_detection(on_human_detected)
 
 
 def wake_word_detection_loop():
@@ -284,19 +388,27 @@ def launch_gui():
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
 
 
+
 def main():
     global running, assistant, preloaded_face_data, human_detector
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
-    
+    init_status_json()
+
+
     try:
         # 预加载人脸数据
         preloaded_face_data = preload_face_data()
         logger.bind(tag=TAG).info("人脸数据预加载完成")
 
         # 初始化并启动人体检测模块
-        human_detector = HumanDetection()
-        human_detector.start_detection(on_human_detected)
-        logger.bind(tag=TAG).info("人体检测模块已启动")
+        human_detect_bool = config.get('human_detection', False)
+        if human_detect_bool:
+            from human_detection import HumanDetection  # 导入人体检测模块
+            logger.bind(tag=TAG).info("已启用人体检测")
+            human_detector = HumanDetection()
+            human_detector.start_detection(on_human_detected)
+        else:
+            logger.bind(tag=TAG).info("已禁用人体检测")
 
         # 启动GUI界面
         gui_thread = threading.Thread(target=launch_gui)

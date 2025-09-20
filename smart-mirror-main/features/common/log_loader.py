@@ -1,6 +1,6 @@
 from loguru import logger
 import sys
-from logs_AND_location.location import logs_path
+from log.location import logs_path
 
 # 确保日志目录存在
 logs_path.mkdir(exist_ok=True)

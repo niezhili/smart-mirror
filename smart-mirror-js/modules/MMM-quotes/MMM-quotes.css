@@ -1,0 +1,19 @@
+/*
+CSS for MMM-quotes
+*/
+.MMM-quotes{
+  height: 1.5rem;
+    color: black !important;
+  mix-blend-mode: normal;
+  transform:translateY(-2rem);
+
+}
+.quotes.quotes-author {
+  font-style: italic;
+  font-weight: bold; 
+  /*margin-right: -25%;*/
+}
+/* 以下是对名言本身的css修改 */
+.quotes.medium.bright.light {
+  font-weight: bold; 
+}
