@@ -35,6 +35,7 @@ detection_mode = None
 human_detector = None
 voice_detection_active = True
 cali=False
+
 # 全局线程锁
 global_lock = threading.Lock()
 
@@ -78,7 +79,8 @@ def init_status_json():
 
 def preload_face_data():
     face_system = FaceRecognition()
-    image_paths_by_person = load_known_faces_from_folder("known_faces")
+    image_paths_by_person = load_known_faces_from_folder("known_faces") 
+    # 返回值是一个字典，格式为：{人名: [该人名对应的所有图片路径列表]}
     for person_name, image_paths in image_paths_by_person.items():
         face_system.add_new_person(person_name, image_paths)
     return face_system
@@ -391,6 +393,7 @@ def main():
     global running, assistant, preloaded_face_data, human_detector
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
     init_status_json()
+
 
     try:
         # 预加载人脸数据
