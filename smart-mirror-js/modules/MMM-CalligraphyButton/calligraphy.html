@@ -1,20 +1,32 @@
 <!-- 看这里，这个calligraphy.html还有coli.css以及coli.js文件放这里是因为要和botton响应，懒得写绝对路径了，放同一个文件夹里省太多事了，虽然乱了点 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="utf-8">
-    <title>魔镜</title>
     <!-- 引入外部CSS文件 -->
     <link rel="stylesheet" href="coli.css">
 </head>
+
 <body>
     <div class="container">
-        <h3>魔镜</h3>
-        
+        <h3><a onclick="setStatus('talking')">返回</a></h3>
+
         <!-- 顶部操作栏 -->
         <div class="toolbar">
-            <button class="font-btn active" data-font="kaishu">楷书</button>
-            <button class="font-btn" data-font="outi">欧体</button>
+            <select name="fontchoose" id="fontchoose"  class="fontchoose">
+                <option value="楷书">楷书</option>
+                <option value="鹤体">鹤体</option>
+                <option value="行书">行书</option>
+                <option value="金文">金文</option>
+            </select>
+           <select name="fontstyle" id="fontstyle" class="fontstyle">
+                <option value="1">经典</option>
+                <option value="2">书本</option>
+                <option value="3">拼图</option>
+           </select>
+
+
             <input type="text" class="content-input" placeholder="请输入内容...">
             <button class="voice-btn">语音输入</button>
             <button class="generate-btn">生成字帖</button> <!-- 生成按钮 -->
@@ -37,4 +49,5 @@
     <!-- 引入外部JS文件 -->
     <script src="coli.js"></script>
 </body>
+
 </html>
