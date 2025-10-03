@@ -88,7 +88,7 @@ let config = {
 			position: "bottom_left",
 			config:{
 			   sensorPin:4, 
-			   updateInterval: 500,
+			   updateInterval: 1000,
 			   temperatureUnit: "C"
 			}
 		},
@@ -135,7 +135,7 @@ let config = {
 			module: "MMM-quotes",
 			position: "lower_third",
 			config: {
-				updateInterval: 10000,
+				updateInterval: 30000,
 				fadeSpeed: 1000,
 				authorAlign: "align-right",
 		}
