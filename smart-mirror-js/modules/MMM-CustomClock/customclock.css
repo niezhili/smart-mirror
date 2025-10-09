@@ -70,12 +70,22 @@
   margin-bottom: 10px;
 }
 
+/* 日期切换动画样式 */
+.date.fade-animation {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.date.fade-animation.active {
+  opacity: 1;
+}
+
 .customclock-grid .week {
   margin-top: 10px;
 }
 
 .customclock-grid .bold {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 /* 模拟时钟样式 */

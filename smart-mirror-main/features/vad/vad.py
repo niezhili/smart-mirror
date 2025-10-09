@@ -64,7 +64,7 @@ class VAD:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def record_audio(self,filename:str="default_output.wav")->str or "":
+    def record_audio(self,filename:str="default_output.wav")->str:
         # 用户接口
         # 录音人声片段，人声静默1秒结束并且写入音频wav
         # 注意这里接受的filename不是路径，默认路径是【VAD】TEMP_PATH
@@ -96,6 +96,7 @@ class VAD:
         max_silent_frames=int(self.silence*self.SAMPLE_RATE/self.CHUNK)
         timeout_frames=int(self.timeout*self.SAMPLE_RATE/self.CHUNK)
         total_frames=0
+        start_frames = None
 
         try:
             while total_frames<timeout_frames:
@@ -107,8 +108,10 @@ class VAD:
                 speech_prob=self._trust_detection(audio_chunk)
 
                 if speech_prob>self.confidence:
+                    if start_frames is None:
+                        start_frames = max(0, total_frames - 10)
                     self.logger.info(
-                        f"检测到人声 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒，人声概率: {speech_prob:.2f}")
+                        f"检测到人声 {(total_frames-start_frames) * self.CHUNK / self.SAMPLE_RATE:.2f} 秒，人声概率: {speech_prob:.2f}")
 
                     silent_frames=0
                     speech_frames+=1
@@ -118,7 +121,7 @@ class VAD:
 
                 if silent_frames>=max_silent_frames and speech_frames>self.min_cont_frames:
                     self.logger.success(
-                        f"录音结束，已录制 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒 ,录音文件: {output_file}")
+                        f"录音结束，已录制 {(total_frames-start_frames) * self.CHUNK / self.SAMPLE_RATE:.2f} 秒 ,录音文件: {output_file}")
                     break
 
             wf = wave.open(output_file, 'wb')

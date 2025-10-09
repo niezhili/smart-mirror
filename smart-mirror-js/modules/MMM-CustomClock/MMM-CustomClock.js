@@ -352,8 +352,9 @@ Module.register("MMM-CustomClock", {
 			// 显示日期
 			if (this.config.showDate) {
 				const dateElement = document.createElement("div");
-				dateElement.className = "date normal medium";
+				dateElement.className = "date normal medium fade-animation active";
 				dateElement.textContent = this.formatDateByLanguage(displayDate);
+				dateElement.style.transition = "opacity 1s ease-in-out";
 				digitalContainer.appendChild(dateElement);
 			}
 

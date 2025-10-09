@@ -8,6 +8,7 @@ import os
 from features.vad.vad import VAD
 import uuid
 import dashscope
+from concurrent.futures.thread import ThreadPoolExecutor
 TAG=__name__
 
 class ASR:
@@ -21,6 +22,8 @@ class ASR:
 
         self._is_loaded=False
         self.vad=None
+        self.loop = asyncio.new_event_loop()
+        self.executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="llm_worker")
 
         self.recognition=None
 
@@ -62,7 +65,8 @@ class ASR:
                 return ""
             else:
                 if self.platform == "paraformer":
-                    return asyncio.run(self._request_paraformer(audio_path))
+                    out_path=self.executor.submit(lambda: self.loop.run_until_complete(self._request_paraformer(audio_path))).result()
+                    return out_path
                 else:
                     self.logger.warning("未选择asr平台或asr平台不被支持，本次返回空文本")
                     return ""

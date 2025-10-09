@@ -1,0 +1,150 @@
+/* 容器整体样式 */
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #eee;
+}
+h3 a{
+    text-decoration: none;
+    color: black;
+    background-color: #eee;
+    border: #ccc solid 1px;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.toolbar .fontchoose,
+.toolbar .fontstyle {
+    z-index: 100;
+    position: absolute;
+    width: 65px;
+    border-radius: 15px;
+    padding: 5px;
+    height: 40px;
+    background-color: #ddd;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.toolbar .fontchoose {
+    left: 20px;
+}
+
+.toolbar .fontstyle {
+    left: 100px;
+}
+
+.toolbar .fontchoose option,
+.toolbar .fontstyle option {
+    width: 65px;
+    height: 40px;
+}
+
+
+/* 顶部操作栏：字体选择 + 输入框 + 按钮 */
+.toolbar {
+    padding-left: 180px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    /* 小屏幕自动换行 */
+}
+
+/* 文本输入框样式 */
+.content-input {
+    flex: 1;
+    /* 占满操作栏剩余宽度 */
+    min-width: 200px;
+    /* 小屏幕下的最小宽度 */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #ddd;
+    outline: none;
+    /* 移除输入框默认聚焦外框 */
+}
+
+/* 按钮通用样式（语音输入 + 生成书法） */
+.voice-btn,
+.generate-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background-color: #ddd;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.font-btn:hover,
+.voice-btn:hover,
+.generate-btn:hover {
+    background-color: #ccc;
+    /* hover 时的交互反馈 */
+}
+
+/* 书法结果展示区样式 */
+.result-area {
+    min-height: 620px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    font-size: 20px;
+    /* 临时占位字体大小 */
+}
+
+.result-area img {
+    max-width: 100%;
+    max-height: 570px;
+    cursor: pointer;
+    /* 提示可点击查看大图 */
+}
+
+/* 模态框样式 */
+#calligraphyModal {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    /* 半透明背景 */
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+#closeModal {
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    background: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    border: none;
+}
+
+#modalImage {
+    max-width: 100%;
+    max-height: 85vh;
+    /* 限制图片高度，避免超出视口 */
+}

@@ -1,7 +1,7 @@
 # Smart Mirror 智能镜子项目
 
 ## 项目简介
-国创项目，基于树莓派开发，基于Python3.8开发，基于阿里/百度等AI开放平台开发，基于DeepSeek大模型开发。
+国创项目，基于树莓派开发，基于Python3.（!高于这个版本建议降低到此版本*64!）开发，基于阿里/百度等AI开放平台开发，基于DeepSeek大模型开发。
 本项目是一个基于Python的智能镜子系统，结合了语音识别、面部识别和AI对话技术，提供自然的人机交互体验。
 
 ## 核心功能
@@ -60,4 +60,4 @@
 
 [https://github.com/SunnyBoy-y/smart_mirror_gc_main](https://github.com/SunnyBoy-y/smart_mirror_gc_main)
 
-# 这是一个国创项目，基于学长学姐们的代码基础修改，感谢@HeadStone7；@niezhili的贡献！
+# 这是一个国创项目，基于学长学姐们的代码基础修改，感谢@HeadStone7；@SunnyBoy-y；@niezhili的贡献！
