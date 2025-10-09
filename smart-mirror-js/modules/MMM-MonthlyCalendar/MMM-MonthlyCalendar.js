@@ -1,3 +1,5 @@
+// MMM-MonthlyCalendar.js
+
 function el(tag, options) {
   var result = document.createElement(tag);
 
@@ -84,11 +86,6 @@ Module.register("MMM-MonthlyCalendar", {
     hideDuplicateEvents: true
   },
 
-  // 添加当前语言状态（用于同步语言切换）
-  state: {
-    currentLanguage: null
-  },
-
   start: function () {
     var self = this;
 
@@ -98,22 +95,18 @@ Module.register("MMM-MonthlyCalendar", {
     self.displayedEvents = [];
     self.updateTimer = null;
     self.skippedUpdateCount = 0;
-
-    // 初始化当前语言（优先读取MMM-LanguageSwitch的状态）
-    self.state.currentLanguage = localStorage.getItem("mm_language") || config.language;
   },
 
-  // 语言切换监听器
   notificationReceived: function (notification, payload, sender) {
     var self = this;
 
-    // 处理原有日历事件逻辑
     if (notification === "CALENDAR_EVENTS") {
       if (!Array.isArray(payload)) {
         console.error("Payload is not an array:", payload);
         return;
       }
 
+      // Step 1: Parse and filter incoming events
       self.sourceEvents[sender.identifier] = payload
         .map((e) => {
           e.startDate = new Date(+e.startDate);
@@ -129,6 +122,7 @@ Module.register("MMM-MonthlyCalendar", {
             }
           }
 
+          // If not a full-day event, check if it spans multiple days
           if (((e.endDate.getTime() - e.startDate.getTime()) / 1000) > 86400) {
             e.multiDayEvent = true;
           }
@@ -137,6 +131,7 @@ Module.register("MMM-MonthlyCalendar", {
         })
         .filter((e) => !self.config.hideCalendars.includes(e.calendarName));
 
+      // Step 2: Schedule update
       if (self.updateTimer !== null) {
         clearTimeout(self.updateTimer);
         ++self.skippedUpdateCount;
@@ -145,6 +140,7 @@ Module.register("MMM-MonthlyCalendar", {
       self.updateTimer = setTimeout(() => {
         const today = new Date().setHours(12, 0, 0, 0).valueOf();
 
+        // Step 3: Combine and sort events
         self.events = Object.values(self.sourceEvents)
           .flat()
           .sort((a, b) => {
@@ -153,18 +149,20 @@ Module.register("MMM-MonthlyCalendar", {
             return a.title.localeCompare(b.title);
           });
 
+        // Step 4: Remove duplicates using a hash table
         if (self.config.hideDuplicateEvents) {
-          const seenEvents = new Map();
+          const seenEvents = new Map(); // Hash table for deduplication
           self.events = self.events.filter((event) => {
             const key = `${event.title}|${event.startDate.valueOf()}|${event.endDate.valueOf()}`;
             if (seenEvents.has(key)) {
-              return false;
+              return false; // Duplicate
             }
             seenEvents.set(key, true);
-            return true;
+            return true; // Unique
           });
         }
 
+        // Step 5: Update DOM if needed
         if (today !== self.displayedDay || !equals(self.events, self.displayedEvents)) {
           self.displayedDay = today;
           self.displayedEvents = self.events;
@@ -173,30 +171,6 @@ Module.register("MMM-MonthlyCalendar", {
           self.updateDom();
         }
       }, 5000);
-    }
-
-    // 监听语言切换通知
-    if (notification === "LANGUAGE_CHANGED") {
-      Log.info(`[MMM-MonthlyCalendar] 收到语言切换通知，新语言: ${payload}`);
-      // 更新当前语言状态
-      self.state.currentLanguage = payload;
-      // 触发渐入渐出动画
-    const calendarContainer = document.querySelector('.MMM-MonthlyCalendar');
-    if (calendarContainer) {
-      // 移除激活类 → 淡出
-      calendarContainer.classList.remove('fade-active');
-      // 延迟后更新DOM + 添加激活类 → 淡入
-      setTimeout(() => {
-        // 刷新DOM，用新语言重新渲染
-        self.updateDom();
-        setTimeout(() => {
-          calendarContainer.classList.add('fade-active');
-        }, 50); // 确保DOM更新后再激活动画
-      }, 500); 
-    } else {
-      // 容器未找到时直接更新
-      self.updateDom();
-    }
     }
   },
 
@@ -263,8 +237,7 @@ Module.register("MMM-MonthlyCalendar", {
 
     for (var day = 0; day < 7; ++day) {
       const headerDate = new Date(now.getFullYear(), now.getMonth(), cellIndex + day);
-      // 用模块内的currentLanguage替换config.language，确保语言切换立即生效
-      row.appendChild(el("th", { "className": "header", "innerHTML": headerDate.toLocaleString(self.state.currentLanguage, { weekday: "long" }) }));
+      row.appendChild(el("th", { "className": "header", "innerHTML": headerDate.toLocaleString(config.language, { weekday: "long" }) }));
     }
     table.appendChild(row);
 
@@ -291,8 +264,7 @@ Module.register("MMM-MonthlyCalendar", {
         }
 
         if ((week === 0 && day === 0) || cellDay === 1) {
-          //用currentLanguage格式化月份和日期
-          cellDay = cellDate.toLocaleString(self.state.currentLanguage, { month: "short", day: "numeric" });
+          cellDay = cellDate.toLocaleString(config.language, { month: "short", day: "numeric" });
         }
 
         cell.appendChild(el("div", { "innerHTML": cellDay }));
@@ -317,6 +289,8 @@ Module.register("MMM-MonthlyCalendar", {
             div.classList.add("event-nowrap");
           }
 
+          // Print the time if it is NOT a full day event.
+          // And if it is NOT the 2nd or later day of a multi-day event.
           if (!e.fullDayEvent && !(e.multiDayEvent && (eventDate > e.startDate))) {
             div.appendChild(el("span", { "className": "event-label", "innerText": formatEventTime(e.startDate) }));
           }
@@ -329,6 +303,7 @@ Module.register("MMM-MonthlyCalendar", {
 
           div.appendChild(el("span", { "innerText": e.title }));
 
+          // Print ending time if last day of multi-day event.
           if (e.multiDayEvent && (eventDate.toDateString() == e.endDate.toDateString())) {
             div.appendChild(el("span", { "className": "event-label", "innerText": self.config.multiDayEndingTimeSeparator + formatEventTime(e.endDate) }));
           }
@@ -352,13 +327,6 @@ Module.register("MMM-MonthlyCalendar", {
         }
       }
     }
-     //首次加载完成后激活动画
-  setTimeout(() => {
-    const calendarContainer = document.querySelector('.MMM-MonthlyCalendar');
-    if (calendarContainer) {
-      calendarContainer.classList.add('fade-active');
-    }
-  }, 100);
 
     return table;
   },
