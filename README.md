@@ -60,4 +60,9 @@
 
 [https://github.com/SunnyBoy-y/smart_mirror_gc_main](https://github.com/SunnyBoy-y/smart_mirror_gc_main)
 
+## 天气模块API来源
+https://www.qweather.com/
+## 新闻模块API来源
+https://www.juhe.cn/
+
 # 这是一个国创项目，基于学长学姐们的代码基础修改，感谢@HeadStone7；@niezhili的贡献！
