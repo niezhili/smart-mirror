@@ -1,212 +1,276 @@
 Module.register("MMM-NewsScroller", {
 	// Default module config
 	defaults: {
-		updateInterval: 5000, // 3 seconds scroll interval
-		apiUrl: "https://v.juhe.cn/toutiao/index", // Changed to HTTPS
-		apiKey: "7268a1f3d036719920a9bff93ca6b6b1", // Default API key
-		newsType: "guoji", // Default news type
+		updateInterval: 5000, // 滚动间隔（毫秒）
+		apiUrl: "https://v.juhe.cn/toutiao/index", // 固定新闻API地址
+		apiKey: "7268a1f3d036719920a9bff93ca6b6b1", // 新闻API密钥
+		newsType: "guoji", // 固定新闻类型（不随语言变）
 		updateSchedule: [
-			{ hour: 5, minute: 0 }, // 5am
-			{ hour: 7, minute: 0 }, // 7am
-			{ hour: 11, minute: 0 }, // 11am
-			{ hour: 12, minute: 0 }, // 12pm
-			{ hour: 14, minute: 0 }, // 2pm
-			{ hour: 15, minute: 0 }, // 3pm
-			{ hour: 17, minute: 0 }, // 5pm
-			{ hour: 19, minute: 0 }, // 7pm
-			{ hour: 23, minute: 0 }  // 11pm
+			{ hour: 5, minute: 0 },
+			{ hour: 7, minute: 0 },
+			{ hour: 11, minute: 0 },
+			{ hour: 12, minute: 0 },
+			{ hour: 14, minute: 0 },
+			{ hour: 15, minute: 0 },
+			{ hour: 17, minute: 0 },
+			{ hour: 19, minute: 0 },
+			{ hour: 23, minute: 0 }
 		],
 		maxNewsItems: 10,
 		showSourceInfo: true,
-		useNodeFetch: true, // Use node_helper to fetch instead of browser fetch
-		enableTranslation: false, // Enable or disable translation
-		targetLanguage: "en", // Target language for translation
-		baiduAppId: "20250407002326273", // Baidu Translate API appId
-		baiduSecretKey: "Srd_2lNeita_aL09ML6q" // Baidu Translate API secretKey
-	},
-	// Override start method
-	start: function() {
-		Log.info("Starting module: " + this.name);
-
-		this.newsItems = [];
-		this.activeItem = 0;
-		this.loaded = false;
-
-		// Register with the node_helper
-		const currentLanguage = localStorage.getItem("mm_language")
-		// currentLanguage === "Zh-cn"
-		// currentLanguage === "En-us"
-
-		this.sendSocketNotification("INIT", this.config);
-
-		// Initial news fetch
-		this.fetchNews();
-
-		// Set up the periodic updates and scrolling
-		this.scheduleNextUpdate();
-		this.scheduleScroll();
+		useNodeFetch: true, // 必须通过node_helper请求（翻译需后端转发）
+		enableTranslation: true, // 启用翻译（核心开关）
+		baiduAppId: "20250407002326273", // 百度翻译API AppId
+		baiduSecretKey: "Srd_2lNeita_aL09ML6q", // 百度翻译API密钥
+		defaultLanguage: "Zh-cn" // 默认语言
 	},
 
-	// Define required styles
+	// 模块内部状态（保存当前显示的新闻索引）
+	state: {
+		rawNewsItems: [], // 原始新闻数据（未翻译，固定不变）
+		translatedNewsItems: [], // 翻译后的新闻数据
+		activeItem: 0,
+		loaded: false,
+		currentLanguage: null, // 当前语言（同步MMM-LanguageSwitch）
+		// 锁定当前显示的新闻索引（语言切换时保持）
+		lockedActiveItem: null 
+	},
+
+	// 加载样式
 	getStyles: function() {
 		return ["MMM-NewsScroller.css"];
 	},
 
-	// Define required scripts
-	getScripts: function() {
-		return [];
+	// 模块启动初始化
+	start: function() {
+		Log.info("Starting module: " + this.name);
+
+		// 1. 初始化当前语言（优先读取MMM-LanguageSwitch保存的状态）
+		this.state.currentLanguage = localStorage.getItem("mm_language") || this.config.defaultLanguage;
+
+		// 2. 注册并初始化node_helper
+		this.sendSocketNotification("INIT", {
+			config: this.config,
+			currentLanguage: this.state.currentLanguage
+		});
+
+		// 3. 首次拉取新闻（固定数据源）
+		this.fetchRawNews();
+
+		// 4. 启动定时任务（滚动+新闻更新）
+		this.scheduleNextNewsUpdate();
+		this.scheduleScroll();
 	},
 
-	// Override socket notification received method
-	socketNotificationReceived: function(notification, payload) {
-		if (notification === "NEWS_RESULT") {
-			if (payload && payload.data) {
-				this.processNewsData(payload.data);
-			} else {
-				Log.error("MMM-NewsScroller: Invalid news data received", payload);
-		}
-		}
-	},
+	// 拉取原始新闻（固定数据源，不随语言变）
+	fetchRawNews: function() {
+		Log.info("MMM-NewsScroller: Fetching raw news...");
 
-	// Process the news data
-	processNewsData: function(data) {
-		if (data && data.result && data.result.data) {
-			this.newsItems = data.result.data.slice(0, this.config.maxNewsItems);
-			this.loaded = true;
-			this.updateDom(1000);
-			Log.info("MMM-NewsScroller: News updated successfully");
+		if (this.config.useNodeFetch) {
+			// 通过node_helper拉取新闻（避免前端跨域）
+			this.sendSocketNotification("FETCH_RAW_NEWS", {
+				url: this.config.apiUrl,
+				key: this.config.apiKey,
+				type: this.config.newsType
+			});
 		} else {
-			Log.error("MMM-NewsScroller: Unexpected API response format", data);
-			// Keep using old news if available
+			Log.error("MMM-NewsScroller: 必须启用useNodeFetch，否则无法安全调用翻译API");
 		}
 	},
 
-	// Schedule the next API update based on the configured times
-	scheduleNextUpdate: function() {
-		const now = new Date();
-		let nextUpdate = null;
-		let earliestTime = null;
+	// 处理原始新闻数据（拉取后立即触发翻译）
+	processRawNews: function(rawData) {
+		if (rawData && rawData.result && rawData.result.data) {
+			// 保存原始新闻（不变）
+			this.state.rawNewsItems = rawData.result.data.slice(0, this.config.maxNewsItems);
+			this.state.loaded = true;
 
-		// Find the next scheduled update time
-		for (let i = 0; i < this.config.updateSchedule.length; i++) {
-			const schedule = this.config.updateSchedule[i];
-
-			// Create a new date object for this scheduled time today
-			const scheduleTime = new Date();
-			scheduleTime.setHours(schedule.hour, schedule.minute, 0, 0);
-
-			// If this scheduled time is in the future, consider it
-			if (scheduleTime > now && (nextUpdate === null || scheduleTime < nextUpdate)) {
-				nextUpdate = scheduleTime;
-			}
-
-			// Keep track of the earliest time for the next day if needed
-			if (earliestTime === null || scheduleTime < earliestTime) {
-				earliestTime = scheduleTime;
-			}
+			// 立即触发翻译（根据当前语言）
+			this.translateNewsIfNeeded();
+		} else {
+			Log.error("MMM-NewsScroller: 原始新闻数据格式错误", rawData);
 		}
-
-		// If no future updates today, schedule for the earliest time tomorrow
-		if (nextUpdate === null) {
-			nextUpdate = new Date(earliestTime);
-			nextUpdate.setDate(nextUpdate.getDate() + 1);
-		}
-
-		const delay = nextUpdate.getTime() - now.getTime();
-
-		// Schedule the update
-		setTimeout(() => {
-			this.fetchNews();
-			this.scheduleNextUpdate();
-		}, delay);
-
-		Log.info("MMM-NewsScroller: Next update scheduled for " + nextUpdate.toLocaleString());
 	},
 
-	// Set up periodic scrolling of news items
+	// 根据当前语言翻译新闻（如果启用翻译）
+	translateNewsIfNeeded: function() {
+		// 若未启用翻译，直接使用原始数据
+		if (!this.config.enableTranslation) {
+			this.state.translatedNewsItems = [...this.state.rawNewsItems];
+			this.updateDom(1000);
+			return;
+		}
+
+		Log.info(`MMM-NewsScroller: 开始翻译新闻（目标语言：${this.state.currentLanguage}）`);
+
+		// 向node_helper发送翻译请求（避免前端暴露密钥）
+		this.sendSocketNotification("TRANSLATE_NEWS", {
+			rawNews: this.state.rawNewsItems,
+			targetLang: this.state.currentLanguage === "Zh-cn" ? "zh" : "en", // 百度API语言码（zh/en）
+			appId: this.config.baiduAppId,
+			secretKey: this.config.baiduSecretKey
+		});
+	},
+
+	// 处理翻译结果（修改：恢复锁定的新闻索引）
+	processTranslatedNews: function(translatedData) {
+		if (translatedData && translatedData.length > 0) {
+			this.state.translatedNewsItems = translatedData;
+			Log.info("MMM-NewsScroller: 新闻翻译完成");
+
+			// 如果有锁定的索引，恢复到该索引（语言切换时保持原条目）
+			if (this.state.lockedActiveItem !== null) {
+				this.state.activeItem = this.state.lockedActiveItem;
+				// 解锁（仅在语言切换时临时锁定）
+				this.state.lockedActiveItem = null;
+			}
+
+			this.updateDom(1000); // 刷新界面显示翻译后内容
+		} else {
+			Log.error("MMM-NewsScroller: 翻译结果为空", translatedData);
+			// 翻译失败时回退到原始新闻
+			this.state.translatedNewsItems = [...this.state.rawNewsItems];
+			this.updateDom(1000);
+		}
+	},
+
+	// 定时滚动新闻
 	scheduleScroll: function() {
 		setInterval(() => {
-			if (this.newsItems.length > 0) {
-				this.activeItem = (this.activeItem + 1) % this.newsItems.length;
-				this.updateDom(1000); // Smooth transition with 1 second animation
+			if (this.state.translatedNewsItems.length > 0) {
+				this.state.activeItem = (this.state.activeItem + 1) % this.state.translatedNewsItems.length;
+				this.updateDom(1000);
 			}
 		}, this.config.updateInterval);
 	},
 
-	// Override dom generator
+	// 定时更新原始新闻
+	scheduleNextNewsUpdate: function() {
+		const now = new Date();
+		let nextUpdate = null;
+		let earliestTime = null;
+
+		// 查找下一个更新时间点
+		for (let schedule of this.config.updateSchedule) {
+			const scheduleTime = new Date();
+			scheduleTime.setHours(schedule.hour, schedule.minute, 0, 0);
+
+			if (scheduleTime > now && (!nextUpdate || scheduleTime < nextUpdate)) {
+				nextUpdate = scheduleTime;
+			}
+			if (!earliestTime || scheduleTime < earliestTime) {
+				earliestTime = scheduleTime;
+			}
+		}
+
+		// 若当天无更新，顺延到次日
+		if (!nextUpdate) {
+			nextUpdate = new Date(earliestTime);
+			nextUpdate.setDate(nextUpdate.getDate() + 1);
+		}
+
+		// 定时触发下一次新闻拉取
+		setTimeout(() => {
+			this.fetchRawNews();
+			this.scheduleNextNewsUpdate();
+		}, nextUpdate.getTime() - now.getTime());
+
+		Log.info("MMM-NewsScroller: 下一次新闻更新时间: " + nextUpdate.toLocaleString());
+	},
+
+	// 生成界面DOM
 	getDom: function() {
 		const wrapper = document.createElement("div");
 		wrapper.className = "news-scroller";
 
-		if (!this.loaded) {
-			wrapper.innerHTML = "Loading news...";
+		// 加载中状态
+		if (!this.state.loaded) {
+			wrapper.innerHTML = this.state.currentLanguage === "Zh-cn" ? "加载新闻中..." : "Loading news...";
 			wrapper.className = "dimmed light small";
 			return wrapper;
 		}
 
-		if (this.newsItems.length === 0) {
-			wrapper.innerHTML = "No news available.";
+		// 无新闻状态
+		if (this.state.translatedNewsItems.length === 0) {
+			wrapper.innerHTML = this.state.currentLanguage === "Zh-cn" ? "暂无新闻数据" : "No news available.";
 			wrapper.className = "dimmed light small";
 			return wrapper;
 		}
 
-		const newsItem = this.newsItems[this.activeItem];
+		// 显示当前新闻（翻译后）
+		const currentNews = this.state.translatedNewsItems[this.state.activeItem];
 		const newsWrapper = document.createElement("div");
 		newsWrapper.className = "news-item fade-in";
 
-		// Create title element
+		// 新闻标题（翻译后）
 		const title = document.createElement("div");
 		title.className = "news-title bright";
-		title.innerHTML = newsItem.title;
+		title.innerHTML = currentNews.translatedTitle || currentNews.title; // 优先显示翻译后标题
 		newsWrapper.appendChild(title);
 
-		// Create source info element if configured
+		// 新闻来源信息（日期自动适配语言）
 		if (this.config.showSourceInfo) {
 			const sourceInfo = document.createElement("div");
 			sourceInfo.className = "news-source light small";
 
-			// Format the date
-			const newsDate = new Date(newsItem.date);
-			const dateString = newsDate.toLocaleDateString(config.language, {
+			// 日期格式化（根据当前语言自动切换显示格式）
+			const newsDate = new Date(currentNews.date);
+			const dateString = newsDate.toLocaleDateString(this.state.currentLanguage, {
 				day: "numeric",
 				month: "short",
 				hour: "2-digit",
 				minute: "2-digit"
 			});
 
-			sourceInfo.innerHTML = `${newsItem.category} • ${newsItem.author_name || "Unknown"} • ${dateString}`;
+			// 来源信息
+			const category = currentNews.translatedCategory || currentNews.category;
+			sourceInfo.innerHTML = `${category} • ${currentNews.author_name || "Unknown"} • ${dateString}`;
 			newsWrapper.appendChild(sourceInfo);
-
 		}
 
 		wrapper.appendChild(newsWrapper);
 		return wrapper;
 	},
 
-	// Fetch news from the API
-	fetchNews: function() {
-		Log.info("MMM-NewsScroller: Fetching news...");
+	/**
+	 * 语言切换监听器（锁定当前新闻索引）
+	 */
+	notificationReceived: function(notification, payload, sender) {
+		// 监听MMM-LanguageSwitch发送的语言切换通知
+		if (notification === "LANGUAGE_CHANGED") {
+			Log.info(`MMM-NewsScroller: 收到语言切换通知，切换为: ${payload}`);
 
-		if (this.config.useNodeFetch) {
-			// Use node_helper to fetch the data
-			this.sendSocketNotification("FETCH_NEWS", {
-				url: this.config.apiUrl,
-				key: this.config.apiKey,
-				type: this.config.newsType
-			});
-		} else {
-			// Use browser fetch (may have CORS issues)
-			const url = `${this.config.apiUrl}?key=${this.config.apiKey}&type=${this.config.newsType}`;
+			// 1. 锁定当前显示的新闻索引（记录语言切换前的条目）
+			this.state.lockedActiveItem = this.state.activeItem;
 
-			fetch(url)
-				.then(response => response.json())
-				.then(data => {
-					this.processNewsData(data);
-				})
-				.catch(error => {
-					Log.error("MMM-NewsScroller: Error fetching news", error);
-					// Keep using old news if available
-				});
+			// 2. 更新模块内部当前语言
+			this.state.currentLanguage = payload;
+
+			// 3. 重新翻译已有的原始新闻（但会保持锁定的索引）
+			this.translateNewsIfNeeded();
+
+			// 4. 刷新界面（更新加载/无数据提示文字、日期格式等）
+			this.updateDom(1000);
+		}
+	},
+
+	/**
+	 * 接收node_helper的消息
+	 */
+	socketNotificationReceived: function(notification, payload) {
+		// 原始新闻拉取完成
+		if (notification === "RAW_NEWS_RESULT") {
+			this.processRawNews(payload);
+		}
+
+		// 翻译完成
+		if (notification === "TRANSLATED_NEWS_RESULT") {
+			this.processTranslatedNews(payload);
+		}
+
+		// 错误提示
+		if (notification === "ERROR") {
+			Log.error("MMM-NewsScroller: node_helper错误:", payload);
 		}
 	}
 });

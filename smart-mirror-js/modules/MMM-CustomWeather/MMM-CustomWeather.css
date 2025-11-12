@@ -121,6 +121,12 @@
   text-shadow: 0 0 10px #ff6666;
 }
 
+/* 语言切换时的渐入渐出动画 */
+.weather-container {
+  /* 添加动画过渡，确保切换时平滑 */
+  transition: opacity 0.5s ease-in-out;
+}
+
 /* Update media queries for better responsiveness */
 @media (max-width: 400px) {
   .weather-container {
