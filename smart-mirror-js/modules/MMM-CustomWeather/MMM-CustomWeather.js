@@ -62,25 +62,149 @@ Module.register("MMM-CustomWeather", {
 		"NNW": "↖️"
 	},
 
-	start: function () {
-		this.currentLanguage = config.language;
-		// console.log("Current language: ",this.currentLanguage);
+	start: async function () {
+		this.currentLanguage = this.normalizeLanguage(config.language);
 		Log.info("Starting module: " + this.name);
 		this.loaded = false;
 		this.weatherData = null;
+		this.highlighted = false;
+		this.highlightOverlay = null;
+		this.highlightedElement = null;
+		this.boundHandleHighlightKeydown = this.handleHighlightKeydown.bind(this);
+
+		try {
+			await this.reloadTranslationsFor(this.currentLanguage);
+		} catch (error) {
+			Log.error("[MMM-CustomWeather] Failed to initialize translations:", error);
+		}
+
 		this.scheduleUpdate();
 	},
 
 	getTranslations: function () {
-		// const language = config.language.toLowerCase(); // Ensure case-insensitivity
 		return {
-        en: "translations/en.json", // 声明英文翻译文件
-        cn: "translations/cn.json"  // 声明中文翻译文件
-    };
+			en: "translations/en.json",
+			"en-us": "translations/en.json",
+			"zh-cn": "translations/cn.json",
+			zh: "translations/cn.json",
+			cn: "translations/cn.json"
+		};
 	},
 
 	getStyles: function () {
 		return ["MMM-CustomWeather.css"];
+	},
+
+	normalizeLanguage: function (language) {
+		if (!language || typeof language !== "string") {
+			return "en";
+		}
+		const code = language.toLowerCase();
+
+		if (code.startsWith("en")) {
+			return "en";
+		}
+
+		if (code === "zh-cn" || code === "zh" || code === "cn") {
+			return "zh-cn";
+		}
+
+		return code;
+	},
+
+	isEnglishLanguage: function (language) {
+		return this.normalizeLanguage(language).startsWith("en");
+	},
+
+	reloadTranslationsFor: async function (language) {
+		if (typeof Translator === "undefined") {
+			return;
+		}
+
+		const normalized = this.normalizeLanguage(language);
+		const originalLanguage = config.language;
+
+		if (Translator.translations && Translator.translations[this.name]) {
+			delete Translator.translations[this.name];
+		}
+
+		if (Translator.translationsFallback && Translator.translationsFallback[this.name]) {
+			delete Translator.translationsFallback[this.name];
+		}
+
+		config.language = normalized;
+
+		try {
+			await this.loadTranslations();
+		} finally {
+			config.language = originalLanguage;
+		}
+	},
+
+	createHighlightOverlay: function () {
+		if (!this.highlightOverlay) {
+			const overlay = document.createElement("div");
+			overlay.className = "weather-highlight-overlay";
+			overlay.addEventListener("click", () => this.deactivateHighlight());
+			this.highlightOverlay = overlay;
+		}
+		return this.highlightOverlay;
+	},
+
+	activateHighlight: function (wrapper) {
+		if (!wrapper) {
+			return;
+		}
+
+		this.highlightedElement = wrapper;
+
+		if (this.highlighted) {
+			wrapper.classList.add("weather-highlighted");
+			return;
+		}
+
+		const overlay = this.createHighlightOverlay();
+
+		if (!overlay.parentNode) {
+			document.body.appendChild(overlay);
+		}
+
+		document.addEventListener("keydown", this.boundHandleHighlightKeydown, true);
+
+		requestAnimationFrame(() => {
+			overlay.classList.add("weather-highlight-overlay--visible");
+			wrapper.classList.add("weather-highlighted");
+		});
+
+		this.highlighted = true;
+	},
+
+	deactivateHighlight: function () {
+		if (!this.highlighted) {
+			return;
+		}
+
+		if (this.highlightedElement) {
+			this.highlightedElement.classList.remove("weather-highlighted");
+			this.highlightedElement = null;
+		}
+
+		if (this.highlightOverlay) {
+			this.highlightOverlay.classList.remove("weather-highlight-overlay--visible");
+			if (this.highlightOverlay.parentNode) {
+				this.highlightOverlay.parentNode.removeChild(this.highlightOverlay);
+			}
+		}
+
+		document.removeEventListener("keydown", this.boundHandleHighlightKeydown, true);
+
+		this.highlighted = false;
+	},
+
+	handleHighlightKeydown: function (event) {
+		if (event.key === "Escape") {
+			this.deactivateHighlight();
+		}
 	},
 
 	scheduleUpdate: function () {
@@ -153,15 +277,24 @@ Module.register("MMM-CustomWeather", {
 	},
 
 	// 监听器，响应翻译更新
-	notificationReceived: function (notification, payload) {
+	notificationReceived: async function (notification, payload) {
 		// 监听语言切换通知
 		if (notification === "LANGUAGE_CHANGED") {
-			Log.info(`[MMM-CustomWeather] 语言切换为: ${payload}`);
-			// 更新当前语言记录
-			this.currentLanguage = payload;
-			// 重新加载对应语言的翻译文件
-			this.loadTranslations();
-			// 触发DOM更新，刷新翻译内容
+			const normalized = this.normalizeLanguage(payload);
+			Log.info(`[MMM-CustomWeather] 语言切换为: ${payload} (normalized: ${normalized})`);
+
+			if (normalized === this.currentLanguage) {
+				return;
+			}
+
+			this.currentLanguage = normalized;
+
+			try {
+				await this.reloadTranslationsFor(normalized);
+			} catch (error) {
+				Log.error("[MMM-CustomWeather] Failed to reload translations after language change:", error);
+			}
+
 			this.updateDom();
 		}
 	},
@@ -169,6 +302,18 @@ Module.register("MMM-CustomWeather", {
 	getDom: function () {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'weather-container';
+
+		wrapper.addEventListener("click", () => {
+			if (this.highlighted || !this.loaded || !this.weatherData) {
+				return;
+			}
+			this.activateHighlight(wrapper);
+		});
+
+		if (this.highlighted) {
+			this.highlightedElement = wrapper;
+			wrapper.classList.add("weather-highlighted");
+		}
 
 		if (!this.loaded) {
 			const loadingDiv = document.createElement('div');
@@ -194,8 +339,7 @@ Module.register("MMM-CustomWeather", {
 			wrapper.appendChild(cityDiv);
 
 			// Current weather conditions with emoji
-			// 修改：使用this.currentLanguage替代config.language，确保语言切换后立即生效
-			const weatherCondition = ["en", "En-us"].includes(this.currentLanguage.toLowerCase()) ?
+			const weatherCondition = this.isEnglishLanguage(this.currentLanguage) ?
 				this.translate(this.weatherData.now.text) : this.weatherData.now.text;
 
 			const weatherEmoji = this.getWeatherEmoji(weatherCondition);
@@ -269,4 +413,3 @@ Module.register("MMM-CustomWeather", {
 		return wrapper;
 	}
 });
-    

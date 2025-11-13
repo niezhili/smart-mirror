@@ -152,6 +152,7 @@ Module.register('MMM-quotes',{
 		var self = this;
 		setInterval(function() {
 			// 定时刷新时，重置当前索引（允许下次随机新句子）
+
 			self.currentQuoteIndex = null;
 			self.updateDom(self.config.fadeSpeed);
 		}, this.config.updateInterval);

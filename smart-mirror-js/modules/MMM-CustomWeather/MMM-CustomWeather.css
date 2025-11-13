@@ -12,13 +12,13 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(5px);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .weather-container:hover {
   background-color: rgba(0, 0, 0, 0.3);
   transform: translateY(-3px);
 }
-
 .weather-city {
   font-size: 0.58rem;
   font-weight: bold;
@@ -125,6 +125,41 @@
 .weather-container {
   /* 添加动画过渡，确保切换时平滑 */
   transition: opacity 0.5s ease-in-out;
+}
+
+.weather-container.weather-highlighted {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.1);
+  max-width: 320px;
+  width: min(90vw, 360px);
+  margin: 0;
+  padding: 18px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  z-index: 1001;
+  background-color: rgba(0, 0, 0, 0.45);
+  cursor: default;
+}
+
+.weather-container.weather-highlighted:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.weather-highlight-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.weather-highlight-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Update media queries for better responsiveness */

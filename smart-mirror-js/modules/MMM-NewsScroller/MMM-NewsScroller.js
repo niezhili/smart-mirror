@@ -1,7 +1,7 @@
 Module.register("MMM-NewsScroller", {
 	// Default module config
 	defaults: {
-		updateInterval: 5000, // 滚动间隔（毫秒）
+		updateInterval: 30000, // 滚动间隔（毫秒）
 		apiUrl: "https://v.juhe.cn/toutiao/index", // 固定新闻API地址
 		apiKey: "7268a1f3d036719920a9bff93ca6b6b1", // 新闻API密钥
 		newsType: "guoji", // 固定新闻类型（不随语言变）

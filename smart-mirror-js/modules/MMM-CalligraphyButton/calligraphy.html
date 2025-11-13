@@ -1,53 +1,71 @@
-<!-- 看这里，这个calligraphy.html还有coli.css以及coli.js文件放这里是因为要和botton响应，懒得写绝对路径了，放同一个文件夹里省太多事了，虽然乱了点 -->
 <!DOCTYPE html>
-<html lang="zh-CN">
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <!-- 引入外部CSS文件 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="coli.css">
 </head>
-
 <body>
-    <div class="container">
-        <h3><a onclick="setStatus('talking')">返回</a></h3>
-
+        <section>
+            <div class="container">
+                <div class="background-img">
+                    <div class="box">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <div class="content">
+                               <button type="button" class="return-btn" onclick="setStatus('talking')">
+                                    <strong>返回主界面</strong>
+                                    <div id="container-stars">
+                                    <div id="stars"></div>
+                                    </div>
+                                        <div id="glow">
+                                        <div class="circle"></div>
+                                        <div class="circle"></div>
+                                    </div>
+                                </button>
         <!-- 顶部操作栏 -->
         <div class="toolbar">
-            <select name="fontchoose" id="fontchoose"  class="fontchoose">
+            <select name="fontchoose" id="fontchoose"  class="fontchoose" aria-label="字体">
                 <option value="楷书">楷书</option>
                 <option value="鹤体">鹤体</option>
                 <option value="行书">行书</option>
                 <option value="金文">金文</option>
             </select>
-           <select name="fontstyle" id="fontstyle" class="fontstyle">
+           <select name="fontstyle" id="fontstyle" class="fontstyle"aria-label="排版">
                 <option value="1">经典</option>
                 <option value="2">书本</option>
                 <option value="3">拼图</option>
            </select>
 
+            <div id="poda">
+                <div class="glow"></div>
+                <div class="darkBorderBg"></div>
+                <div class="darkBorderBg"></div>
+                <div class="darkBorderBg"></div>
+                <div class="white"></div>
+                <div class="border"></div>
+                <div id="main">
+                    <input placeholder="请输入文本..." type="text" name="text" class="content-input" />
+                    <div id="input-mask"></div>
+                    <div id="pink-mask"></div>
+                </div>
+            </div>
 
-            <input type="text" class="content-input" placeholder="请输入内容...">
             <button class="voice-btn">语音输入</button>
             <button class="generate-btn">生成字帖</button> <!-- 生成按钮 -->
         </div>
-
+        
         <!-- 书法结果展示区 -->
         <div class="result-area" id="calligraphyResult">
             生成的书法字帖将展示于此
         </div>
-    </div>
-
-    <!-- 模态框（查看大图） -->
-    <div id="calligraphyModal">
-        <div class="modal-content">
-            <button id="closeModal">×</button>
-            <img id="modalImage" src="" alt="书法作品大图">
-        </div>
-    </div>
-
-    <!-- 引入外部JS文件 -->
-    <script src="coli.js"></script>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script src="coli.js"></script>
 </body>
-
 </html>

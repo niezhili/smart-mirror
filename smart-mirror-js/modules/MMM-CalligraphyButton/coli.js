@@ -1,5 +1,5 @@
 // 等待DOM加载完成后执行（确保能获取到页面元素）
-const server = "http://c2.zmal.top:7444"
+const server = "http://localhost:8081"
 async function setStatus(status) {
     try {
         const response = await fetch(`${server}/set_status?mode=${status}`, {
