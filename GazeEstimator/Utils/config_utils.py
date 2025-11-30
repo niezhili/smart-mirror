@@ -1,50 +1,12 @@
 import json
 import os
-
-path="../config.json"
+import numpy as np
+path=os.path.dirname(os.path.dirname(__file__))+"\\config.json"
 default_config={
-    "left_eye":{
-        "default":[-1,0],
-        "landmarks":[
-            [[-1,0],1],
-            [[-1,0],1],
-            [[-1,0],1],
-            [[-1,0],1],
-            [[-1,0],1]
-        ],
-    },
-    "top_eye":{
-        "default":[0,1],
-        "landmarks":[
-            [[0,1],1],
-            [[0,1],1],
-            [[0,1],1],
-        ],
-    },
-    "right_eye":{
-        "default":[1,0],
-        "landmarks":[
-            [[1,0],1],
-            [[1,0],1],
-            [[1,0],1],
-            [[1,0],1],
-            [[1,0],1]
-        ],
-    },
-    "bottom_eye":{
-        "default":[0,-1],
-        "landmarks":[
-            [[0,-1],1],
-            [[0,-1],1],
-            [[0,-1],1],
-        ],
-    },
-    "limits":{
         "left":0.3,
         "top":0.7,
         "right":0.7,
         "bottom":0.3
-    }
 }
 def create_config():
     """Create a default configuration file."""
@@ -55,26 +17,30 @@ def check_config(config:dict):
     """Check the validity of the configuration file."""
     global default_config
     try:
-        for eye in ["left_eye","top_eye","right_eye","bottom_eye"]:
-            for landmark in config[eye]["landmarks"]:
-                if landmark["default"] is not list:
-                    landmark["default"]=default_config[eye]["landmarks"]["default"]
-                    raise TypeError("Point must be list")
+        for eye in ["left","top","right","bottom"]:
+            if not isinstance(config[eye],float):
+                raise TypeError("Point must be list")
     except Exception as e:
         return False
     return True
 def set_config(config:dict):
     """Save the configuration to a file."""
+    global path
     with open(path,"w") as file:
         json.dump(config,file)
 def get_config() -> dict:
     """Get the configuration from a file."""
+    global path
     if not os.path.exists(path):
         create_config()
-    with open(path) as file:
-        config=json.load(file)
-        if check_config(config):
-           set_config(config)
+    try:
+        with open(path) as file:
+            config=json.load(file)
+            if not check_config(config):
+               raise TypeError("Point must be list")
+    except Exception as e:
+        create_config()
+        config=default_config
     return config
 
 

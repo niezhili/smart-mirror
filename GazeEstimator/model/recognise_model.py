@@ -1,4 +1,3 @@
-import dlib
 import mediapipe as mp
 import cv2
 class recognise_model(object):
@@ -22,8 +21,11 @@ class recognise_model(object):
     def get_face_mesh(self,img,bbox):
         """Get the facial landmarks of the face in the image given the bounding box"""
         face=img[int(bbox[0]):int(bbox[0]+bbox[2]),int(bbox[1]):int(bbox[1]+bbox[3])]
-        landmark = self.feature_recognizer.process(img).multi_face_landmarks[0].landmark
-        return landmark;
+        try:
+            landmark = self.feature_recognizer.process(img).multi_face_landmarks[0].landmark
+            return landmark;
+        except:
+            return None
 
 
 

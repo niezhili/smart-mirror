@@ -10,5 +10,7 @@ class gaze_estimator_api:
         self.gaze_estimator.start()
     def get(self):
         return self.gaze_estimator.get_frame_gaze_estimate()
+    def get_frame(self):
+        return self.gaze_estimator.get_frame()
     def stop(self):
         self.gaze_estimator.stop()
