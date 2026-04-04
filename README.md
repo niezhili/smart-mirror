@@ -47,13 +47,13 @@
 - 其他要求
 
 ## 安装指南
-请参考[INSTALL.md](smart-mirror-main/doc/INSTALL.md)
+请参考[INSTALL.md](smart-mirror-backend/docs/INSTALL.md)
 
 ## 开发规范
-请参考[CODING_STYLE.md](smart-mirror-main/doc/CODING_STYLE.md)
+请参考[CODING_STYLE.md](smart-mirror-backend/docs/CODING_STYLE.md)
 
 ## 贡献指南
-请参考[CONTRIBUTING.md](smart-mirror-main/doc/CONTRIBUTING.md)
+请参考[CONTRIBUTING.md](smart-mirror-backend/docs/CONTRIBUTING.md)
 
 ## 本仓库使用了以下仓库的代码
 [https://github.com/HeadStone7/smart-mirror](https://github.com/HeadStone7/smart-mirror)

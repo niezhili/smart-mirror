@@ -1,0 +1,11 @@
+[Unit]
+Description=Blinker Service
+After=multi-user.target
+
+[Service]
+Type=idle
+WorkingDirectory=%h/smart-mirror/smart-mirror-backend/features/iot/blinker
+ExecStart=/usr/bin/python3 blinker_raspberrypi.py
+
+[Install]
+WantedBy=multi-user.target

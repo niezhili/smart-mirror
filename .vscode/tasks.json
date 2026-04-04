@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SmartMirror: Bootstrap Unified",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/bootstrap-unified.ps1"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "SmartMirror: Validate Unified",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/validate-unified.ps1"
+      ],
+      "group": "test"
+    },
+    {
+      "label": "SmartMirror: Start Unified",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/start-unified.ps1"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "SmartMirror: Health Unified",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/health-unified.ps1"
+      ],
+      "group": "test"
+    },
+    {
+      "label": "SmartMirror: Stop Unified",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/stop-unified.ps1"
+      ],
+      "group": "build"
+    }
+  ]
+}
