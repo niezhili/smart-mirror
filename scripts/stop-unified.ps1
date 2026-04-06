@@ -1,3 +1,21 @@
+<#
+.SYNOPSIS
+停止统一版 Smart Mirror 的前端与后端进程。
+
+.DESCRIPTION
+优先停止 .runtime PID 文件中记录的进程，随后尝试释放
+配置的前端监听端口。支持重复执行；
+对于 PID 文件缺失或进程已退出的情况会安全处理。
+
+.PARAMETER RootPath
+项目根目录路径。默认是当前脚本的上级目录。
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-unified.ps1
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-unified.ps1 -RootPath D:\ProjectCode\smart-mirror
+#>
 param(
     [string]$RootPath = (Resolve-Path (Join-Path $PSScriptRoot ".."))
 )

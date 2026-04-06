@@ -1,4 +1,4 @@
-# Smart Mirror 智能镜子 — 产品需求文档（PRD）
+﻿# Smart Mirror 智能镜子 — 产品需求文档（PRD）
 
 > **版本**：v1.0  
 > **日期**：2026-04-04  
@@ -149,17 +149,16 @@
 | 模块名 | 来源 | 功能 |
 |--------|------|------|
 | `clock` | 原生 | 数字时钟 |
-| `MMM-CustomClock` | 自研 | 支持中文格式的自定义时钟 |
+| `MMM-Clock` | 自研 | 支持中文格式的自定义时钟 |
 | `MMM-Clockinese` | 自研 | 中文时钟显示样式 |
 | `calendar` | 原生 | 日历事件 |
-| `MMM-MonthlyCalendar` | 自研 | 月历视图 |
-| `MMM-CustomWeather` | 自研 | 接入和风天气 API 的天气展示 |
+| `MMM-Calendar` | 自研 | 月历视图 |
+| `MMM-Weather` | 自研 | 接入和风天气 API 的天气展示 |
 | `MMM-DHT11` | 自研 | 实时室内温湿度展示（DHT11 传感器，500ms 刷新） |
-| `MMM-NewsScroller` | 自研 | 新闻滚动播报（接入聚合数据 API） |
-| `MMM-BackgroundImage` | 自研 | 镜面背景图管理 |
-| `MMM-quotes` | 自研 | 每日语录/名言 |
-| `MMM-TextColor` | 自研 | 文字颜色主题控制 |
-| `MMM-LanguageSwitch` | 自研 | 界面语言切换 |
+| `MMM-News` | 自研 | 新闻滚动播报（接入聚合数据 API） |
+| `MMM-Background` | 自研 | 镜面背景图管理 |
+| `MMM-Quote` | 自研 | 每日语录/名言 |
+| `MMM-Language` | 自研 | 界面语言切换 |
 | `updatenotification` | 原生 | 更新提醒 |
 
 #### 前端配置（`smart-mirror-frontend/config/config.js`）

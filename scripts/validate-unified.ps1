@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+校验统一版 Smart Mirror 的运行前置条件。
+
+.DESCRIPTION
+检查前后端目录结构、必要入口文件、解析后的 Python
+可执行文件，以及可选依赖是否存在
+（前端 node_modules/module-alias、后端 geocoder 导入）。
+建议在启动前执行本脚本，以便快速定位环境问题。
+
+.PARAMETER RootPath
+项目根目录路径。默认是当前脚本的上级目录。
+
+.PARAMETER SkipDependencyCheck
+跳过依赖检查，仅校验项目结构与运行配置。
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-unified.ps1
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-unified.ps1 -SkipDependencyCheck
+#>
 param(
     [string]$RootPath = (Resolve-Path (Join-Path $PSScriptRoot "..")),
     [switch]$SkipDependencyCheck

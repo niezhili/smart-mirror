@@ -10,7 +10,7 @@
  */
 let languageState;
 try {
-	languageState = require('./modules/MMM-LanguageSwitch/language-state.js');
+	languageState = require('./modules/MMM-Language/language-state.js');
 } catch (e) {
 	// Default to English if module not installed
 	languageState = { getLanguage: () => "En-us" };
@@ -48,7 +48,7 @@ let config = {
 
 		modules: [
 		{
-			module: "MMM-CustomClock",
+			module: "MMM-Clock",
 			position: "top_center", // Or wherever you had your clock
 			config: {
 				timeFormat: 24, // Use 12 or 24
@@ -59,14 +59,14 @@ let config = {
 			}
 		},
 			{
-				module: "MMM-LanguageSwitch",
+			module: "MMM-Language",
 				position: "bottom_right",
 				config: {
 					language: "en"
 				}
 			},
 // 		{
-// 			module: "MMM-CustomWeather",
+// 			module: "MMM-Weather",
 // 			position: "top_left",
 // 			config: {
 // 				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
@@ -85,7 +85,7 @@ let config = {
 			}
 		},
 		{
-			module: "MMM-BackgroundImage",
+			module: "MMM-Background",
 			position: "fullscreen_below",
 			config: {
 				bgName: "red-bg-image.png",
@@ -104,7 +104,7 @@ let config = {
 		// 	}
 	 	// },
 		{
-			module: "MMM-NewsScroller",
+			module: "MMM-News",
 			position: "top_right",  // Choose a position that works for your setup
 			config: {
 				//API key and URL are already set in the defaults, but you can override them here if needed
@@ -115,7 +115,7 @@ let config = {
 		},
 		{
 //			header: "月历",
-			module: "MMM-MonthlyCalendar",
+			module: "MMM-Calendar",
 			position: "bottom_center",
 			config: { // See "Configuration options" for more information.
 			mode: "fourWeeks",
@@ -124,7 +124,7 @@ let config = {
 			}
 		},
 		{
-			module: "MMM-quotes",
+			module: "MMM-Quote",
 			position: "lower_third",
 			config: {
 				updateInterval: 10000,

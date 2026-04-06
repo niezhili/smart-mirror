@@ -1,0 +1,51 @@
+.quote-card {
+  width: 100%;
+  padding: 18px 20px 20px;
+  border-radius: 28px;
+}
+
+.quote-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.quote-category {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mirror-text-secondary);
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.quote-category.is-active {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), var(--mirror-accent-soft));
+  color: var(--mirror-text-primary);
+}
+
+.quote-body {
+  display: grid;
+  gap: 14px;
+}
+
+.quote-text {
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  line-height: 1.55;
+  color: var(--mirror-text-primary);
+}
+
+.quote-footer {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--mirror-text-muted);
+}
+
+.quote-footer.align-right {
+  text-align: right;
+}
+
+.quote-empty {
+  color: var(--mirror-text-muted);
+}

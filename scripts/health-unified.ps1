@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+检查统一版 Smart Mirror 的进程与 HTTP 健康状态。
+
+.DESCRIPTION
+读取 .runtime 下的 PID 文件，验证前后端进程是否存活，
+并通过 /version 接口探测前端 HTTP 可用性。
+当前端 HTTP 正常且后端进程存活时返回 0，
+否则返回 1。
+
+.PARAMETER RootPath
+项目根目录路径。默认是当前脚本的上级目录。
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\health-unified.ps1
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\health-unified.ps1 -RootPath D:\ProjectCode\smart-mirror
+#>
 param(
     [string]$RootPath = (Resolve-Path (Join-Path $PSScriptRoot ".."))
 )

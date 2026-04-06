@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+初始化统一版 Smart Mirror 运行环境。
+
+.DESCRIPTION
+安装本地测试所需的前后端依赖。
+脚本会自动识别项目根目录、加载可选的 .env 配置，
+并从 SMART_MIRROR_PYTHON_EXE、CONDA_PREFIX
+或当前 PATH 中解析 Python 可执行文件。
+
+.PARAMETER RootPath
+项目根目录路径。默认是当前脚本的上级目录。
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-unified.ps1
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-unified.ps1 -RootPath D:\ProjectCode\smart-mirror
+#>
 param(
     [string]$RootPath = (Resolve-Path (Join-Path $PSScriptRoot ".."))
 )

@@ -13,3 +13,194 @@
     src: url('../fonts/roboto-condensed/roboto-condensed-latin-700-normal.woff2') format('woff2'),
          url('../fonts/roboto-condensed/roboto-condensed-latin-700-normal.woff') format('woff');
 }
+
+:root {
+    --mirror-text-primary: rgba(244, 247, 255, 0.96);
+    --mirror-text-secondary: rgba(218, 224, 240, 0.76);
+    --mirror-text-muted: rgba(196, 202, 217, 0.54);
+    --mirror-panel-bg: rgba(23, 29, 43, 0.34);
+    --mirror-panel-strong: rgba(255, 255, 255, 0.16);
+    --mirror-panel-border: rgba(255, 255, 255, 0.18);
+    --mirror-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+    --mirror-accent: rgba(168, 219, 255, 0.84);
+    --mirror-accent-soft: rgba(147, 198, 255, 0.18);
+    --mirror-overlay-strength: 0.42;
+    --color-text: var(--mirror-text-secondary);
+    --color-text-bright: var(--mirror-text-primary);
+    --color-text-dimmed: var(--mirror-text-muted);
+}
+
+body {
+    font-family: 'SF Pro Display', 'Segoe UI Variable Display', 'PingFang SC', 'Noto Sans SC', 'Roboto Condensed', sans-serif;
+    color: var(--mirror-text-primary);
+    background:
+        radial-gradient(circle at 18% 18%, rgba(173, 210, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(255, 244, 198, 0.12), transparent 26%),
+        radial-gradient(circle at 50% 85%, rgba(140, 161, 255, 0.14), transparent 34%),
+        #0b1220;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent 16%),
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.22), transparent 45%);
+    opacity: 0.7;
+    z-index: 0;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 22%, transparent 78%, rgba(255, 255, 255, 0.06));
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    z-index: 0;
+}
+
+body.theme-light {
+    --mirror-text-primary: rgba(18, 26, 38, 0.92);
+    --mirror-text-secondary: rgba(28, 38, 52, 0.76);
+    --mirror-text-muted: rgba(51, 66, 84, 0.48);
+    --mirror-panel-bg: rgba(255, 255, 255, 0.32);
+    --mirror-panel-strong: rgba(255, 255, 255, 0.28);
+    --mirror-panel-border: rgba(255, 255, 255, 0.48);
+    --mirror-shadow: 0 28px 70px rgba(46, 66, 97, 0.18);
+    --mirror-accent: rgba(37, 105, 201, 0.9);
+    --mirror-accent-soft: rgba(120, 162, 255, 0.16);
+}
+
+/* 区域保持 main.css 中的 position: absolute，仅补充 z-index 分层；
+   此处已重构，原有 position: relative 覆盖了 .region，导致 top_left/top_right
+   无法按绝对定位布局，变成块级堆叠，全部错位到左侧。 */
+.region {
+    z-index: 1;
+}
+
+.module {
+    position: relative;
+    z-index: 1;
+}
+
+.module-content {
+    color: var(--mirror-text-primary);
+}
+
+.customclock-grid,
+.news-scroller,
+.language-switch,
+.quote-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--mirror-panel-border);
+    background: linear-gradient(135deg, var(--mirror-panel-strong), var(--mirror-panel-bg));
+    box-shadow: var(--mirror-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(28px) saturate(145%);
+    -webkit-backdrop-filter: blur(28px) saturate(145%);
+}
+
+.customclock-grid::before,
+.news-scroller::before,
+.language-switch::before,
+.quote-card::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.03) 26%, transparent 62%);
+    opacity: 0.72;
+}
+
+.top.center {
+    width: min(70vw, 820px);
+}
+
+.top.left {
+    width: min(24vw, 300px);
+}
+
+.top.right {
+    width: min(36vw, 520px);
+}
+
+.bottom.center {
+    width: min(60vw, 860px);
+}
+
+.region.top.left .weather-container {
+    max-width: 260px;
+}
+
+.region.top.right .news-scroller {
+    max-width: 520px;
+    margin-left: auto;
+}
+
+/* quote 与 calendar 放在同一底部中间区域，压缩间距实现“紧贴”效果 */
+.region.bottom.center .module {
+    margin-top: 0;
+}
+
+.region.bottom.center .module + .module {
+    margin-top: 10px;
+}
+
+.region.bottom.center .quote-card,
+.region.bottom.center .monthly-calendar {
+    width: min(60vw, 860px);
+    margin: 0 auto;
+}
+
+.region.bottom.center .quote-card {
+    padding: 14px 16px 16px;
+}
+
+.region.bottom.center .monthly-calendar {
+    padding: 12px 16px 14px;
+}
+
+.lower.third,
+.lower_third {
+    width: min(44vw, 640px);
+}
+
+.bright {
+    color: var(--mirror-text-primary);
+}
+
+.normal {
+    color: var(--mirror-text-secondary);
+}
+
+.dimmed {
+    color: var(--mirror-text-muted);
+}
+
+.module-header,
+.module-title {
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mirror-text-muted);
+}
+
+@media (max-width: 900px) {
+    .top.left,
+    .top.center,
+    .top.right,
+    .bottom.center,
+    .lower.third,
+    .lower_third {
+        width: min(92vw, 680px);
+    }
+
+    .region.bottom.center .quote-card,
+    .region.bottom.center .monthly-calendar {
+        width: min(92vw, 680px);
+    }
+}

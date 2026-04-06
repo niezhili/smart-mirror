@@ -270,6 +270,7 @@ sup {
 
 /* 左侧区域样式 */
 .region.left {
+  left: 0;
   text-align: left;
 }
 

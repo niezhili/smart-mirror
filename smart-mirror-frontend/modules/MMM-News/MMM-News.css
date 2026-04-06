@@ -1,0 +1,123 @@
+.news-scroller {
+  width: 100%;
+  padding: 18px 18px 16px;
+  border-radius: 28px;
+}
+
+.news-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.news-panel-title {
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mirror-text-secondary);
+}
+
+.news-panel-hint {
+  font-size: 0.68rem;
+  color: var(--mirror-text-muted);
+}
+
+.news-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.news-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.news-tab {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mirror-text-secondary);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.news-tab.is-active {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), var(--mirror-accent-soft));
+  color: var(--mirror-text-primary);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.news-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.news-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+
+.news-card-item {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  padding: 12px 12px 12px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.news-order {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--mirror-accent);
+}
+
+.news-content {
+  min-width: 0;
+}
+
+.news-title {
+  margin-bottom: 6px;
+  font-size: 0.94rem;
+  line-height: 1.45;
+  color: var(--mirror-text-primary);
+}
+
+.news-source {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--mirror-text-muted);
+}
+
+.news-empty-state {
+  padding: 28px 0 22px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--mirror-text-muted);
+}
+
+@media (max-width: 900px) {
+  .news-scroller {
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .news-card-item {
+    grid-template-columns: 34px 1fr;
+  }
+}

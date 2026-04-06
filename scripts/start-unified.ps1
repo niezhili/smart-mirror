@@ -1,3 +1,21 @@
+<#
+.SYNOPSIS
+启动统一版 Smart Mirror 的前端与后端服务。
+
+.DESCRIPTION
+先执行环境校验，再以后台 PowerShell 进程启动前后端。
+运行日志与 PID 文件会写入 .runtime 目录，
+便于后续通过配套脚本进行健康检查与停止服务。
+
+.PARAMETER RootPath
+项目根目录路径。默认是当前脚本的上级目录。
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-unified.ps1
+
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-unified.ps1 -RootPath D:\ProjectCode\smart-mirror
+#>
 param(
     [string]$RootPath = (Resolve-Path (Join-Path $PSScriptRoot ".."))
 )
@@ -80,17 +98,20 @@ $backendPid = Join-Path $runtimeDir "backend.pid"
 
 $frontendMode = $env:SMART_MIRROR_FRONTEND_MODE.ToLower()
 if ($frontendMode -eq "electron") {
-    $frontendCommand = "npm run start:windows"
+    $frontendFilePath = "powershell"
+    $frontendArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Set-Location '$frontendPath'; npm run start:windows")
 } else {
     $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
     if ($null -eq $nodeCmd) {
         throw "node command not found. Please install Node.js first."
     }
-    $frontendCommand = "& '$($nodeCmd.Source)' ./serveronly"
+    $frontendFilePath = $nodeCmd.Source
+    $frontendArgumentList = @("./serveronly")
 }
 
 $pythonExe = $env:SMART_MIRROR_PYTHON_EXE
-$backendCommand = "& '$pythonExe' main.py"
+$backendFilePath = "powershell"
+$backendArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Set-Location '$backendPath'; & '$pythonExe' main.py")
 
 if (-not (Test-Path (Join-Path $frontendPath "package.json"))) {
     throw "Frontend package.json not found."
@@ -99,8 +120,8 @@ if (-not (Test-Path (Join-Path $backendPath "main.py"))) {
     throw "Backend main.py not found."
 }
 
-$frontendProc = Start-Process -FilePath "powershell" -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Set-Location '$frontendPath'; $frontendCommand" -RedirectStandardOutput $frontendOutLog -RedirectStandardError $frontendErrLog -PassThru
-$backendProc = Start-Process -FilePath "powershell" -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", "Set-Location '$backendPath'; $backendCommand" -RedirectStandardOutput $backendOutLog -RedirectStandardError $backendErrLog -PassThru
+$frontendProc = Start-Process -FilePath $frontendFilePath -ArgumentList $frontendArgumentList -WorkingDirectory $frontendPath -RedirectStandardOutput $frontendOutLog -RedirectStandardError $frontendErrLog -WindowStyle Hidden -PassThru
+$backendProc = Start-Process -FilePath $backendFilePath -ArgumentList $backendArgumentList -RedirectStandardOutput $backendOutLog -RedirectStandardError $backendErrLog -WindowStyle Hidden -PassThru
 
 $frontendAlive = $null -ne (Get-Process -Id $frontendProc.Id -ErrorAction SilentlyContinue)
 $backendAlive = $null -ne (Get-Process -Id $backendProc.Id -ErrorAction SilentlyContinue)

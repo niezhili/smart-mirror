@@ -49,6 +49,19 @@
 ## 安装指南
 请参考[INSTALL.md](smart-mirror-backend/docs/INSTALL.md)
 
+## 统一脚本（本地联调）
+在仓库根目录可使用 scripts 下的统一脚本进行联调：
+
+1. `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap-unified.ps1`
+2. `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-unified.ps1`
+3. `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\health-unified.ps1`
+4. `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-unified.ps1`
+
+说明：`start-unified.ps1` 会以后台方式拉起前后端，运行日志输出到 `.runtime` 目录。
+
+## 前端重构说明
+本轮前端界面重构采用统一的液态玻璃视觉语言，详细约定见 [smart-mirror-frontend/LIQUID_GLASS_REDESIGN.md](smart-mirror-frontend/LIQUID_GLASS_REDESIGN.md)。
+
 ## 开发规范
 请参考[CODING_STYLE.md](smart-mirror-backend/docs/CODING_STYLE.md)
 

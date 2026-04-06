@@ -1,0 +1,54 @@
+﻿.MMM-Background {
+  inset: 0;
+}
+
+.MMM-Background .module-content {
+  width: 100vw;
+  height: 100vh;
+}
+
+.MMM-Background .background-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.MMM-Background .photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  animation: background-breathe 24s ease-in-out infinite alternate;
+}
+
+.MMM-Background .background-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(3, 8, 18, calc(var(--background-overlay-opacity) + 0.16)), rgba(6, 12, 24, var(--background-overlay-opacity)) 28%, rgba(4, 8, 16, calc(var(--background-overlay-opacity) + 0.08)) 100%),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.16), transparent 38%);
+}
+
+.MMM-Background .background-glow {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.20), transparent 20%),
+    radial-gradient(circle at 80% 14%, rgba(148, 201, 255, 0.24), transparent 24%),
+    radial-gradient(circle at 50% 86%, rgba(255, 222, 161, 0.14), transparent 26%);
+  mix-blend-mode: screen;
+  opacity: 0.42;
+}
+
+@keyframes background-breathe {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
