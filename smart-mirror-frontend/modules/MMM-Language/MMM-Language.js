@@ -2,132 +2,149 @@
 	defaults: {
 		language: "en",
 		supportedLanguages: [
-			{ code: "zh-cn", label: "涓枃", shortLabel: "涓? },
-			{ code: "en", label: "English", shortLabel: "EN" }
+			{ code: "zh-cn", labelKey: "LANGUAGE_NAME_ZH_CN", shortLabelKey: "LANGUAGE_SHORT_ZH_CN" },
+			{ code: "en", labelKey: "LANGUAGE_NAME_EN", shortLabelKey: "LANGUAGE_SHORT_EN" }
 		],
 		defaultTogglePair: ["zh-cn", "en"],
 		longPressDuration: 550
 	},
 
-getStyles: function() {
-return ["MMM-Language.css"];
-},
+	getTranslations: function () {
+		return {
+			en: "translations/en.json",
+			"zh-cn": "translations/zh-cn.json"
+		};
+	},
 
-start: function() {
-this.longPressTimer = null;
-this.menuOpen = false;
-this.ignoreClick = false;
-this.currentLanguage = this.normalizeLanguage(localStorage.getItem("mm_language") || this.config.language);
-config.language = this.currentLanguage;
-config.locale = this.toLocaleCode(this.currentLanguage);
-Log.info(`Starting module: ${this.name} with language: ${this.currentLanguage}`);
-},
+	getStyles: function () {
+		return ["MMM-Language.css"];
+	},
 
-normalizeLanguage: function(language) {
-const aliases = {
-"en-us": "en",
-"en-gb": "en",
-"zh": "zh-cn",
-"zh_cn": "zh-cn",
-"zh-hans": "zh-cn",
-"fr-fr": "fr",
-"ja-jp": "ja",
-"ko-kr": "ko",
-"es-es": "es"
-};
-const normalized = String(language || "en").toLowerCase();
-return aliases[normalized] || normalized;
-},
+	start: function () {
+		this.longPressTimer = null;
+		this.menuOpen = false;
+		this.ignoreClick = false;
+		this.currentLanguage = this.normalizeLanguage(localStorage.getItem("mm_language") || this.config.language);
+		config.language = this.currentLanguage;
+		config.locale = this.toLocaleCode(this.currentLanguage);
+		Log.info(`Starting module: ${this.name} with language: ${this.currentLanguage}`);
+	},
 
-toLocaleCode: function(language) {
-const locales = {
-en: "en-US",
-"zh-cn": "zh-CN",
-fr: "fr-FR",
-ja: "ja-JP",
-ko: "ko-KR",
-es: "es-ES"
-};
-return locales[language] || "en-US";
-},
+	normalizeLanguage: function (language) {
+		const aliases = {
+			"en-us": "en",
+			"en-gb": "en",
+			zh: "zh-cn",
+			"zh_cn": "zh-cn",
+			"zh-hans": "zh-cn",
+			"fr-fr": "fr",
+			"ja-jp": "ja",
+			"ko-kr": "ko",
+			"es-es": "es"
+		};
+		const normalized = String(language || "en").toLowerCase();
+		return aliases[normalized] || normalized;
+	},
 
-getLanguageInfo: function(code) {
-return this.config.supportedLanguages.find((item) => item.code === code) || this.config.supportedLanguages[0];
-},
+	toLocaleCode: function (language) {
+		const locales = {
+			en: "en-US",
+			"zh-cn": "zh-CN",
+			fr: "fr-FR",
+			ja: "ja-JP",
+			ko: "ko-KR",
+			es: "es-ES"
+		};
+		return locales[language] || "en-US";
+	},
 
-persistLanguage: function(language) {
-const normalized = this.normalizeLanguage(language);
-this.currentLanguage = normalized;
-localStorage.setItem("mm_language", normalized);
-config.language = normalized;
-config.locale = this.toLocaleCode(normalized);
-this.sendSocketNotification("SET_LANGUAGE", normalized);
-window.location.reload();
-},
+	getLanguageInfo: function (code) {
+		return this.config.supportedLanguages.find((item) => item.code === code) || this.config.supportedLanguages[0];
+	},
 
-toggleLanguage: function() {
-const [first, second] = this.config.defaultTogglePair.map((item) => this.normalizeLanguage(item));
-const nextLanguage = this.currentLanguage === first ? second : first;
-this.persistLanguage(nextLanguage);
-},
+	resolveLanguageInfo: function (code) {
+		const info = this.getLanguageInfo(code);
+		return {
+			...info,
+			label: info.labelKey ? this.translate(info.labelKey, info.label || info.code) : (info.label || info.code),
+			shortLabel: info.shortLabelKey ? this.translate(info.shortLabelKey, info.shortLabel || info.code) : (info.shortLabel || info.label || info.code)
+		};
+	},
 
-toggleMenu: function(openState) {
-this.menuOpen = typeof openState === "boolean" ? openState : !this.menuOpen;
-this.updateDom(200);
-},
+	persistLanguage: function (language) {
+		const normalized = this.normalizeLanguage(language);
+		this.currentLanguage = normalized;
+		localStorage.setItem("mm_language", normalized);
+		config.language = normalized;
+		config.locale = this.toLocaleCode(normalized);
+		this.sendSocketNotification("SET_LANGUAGE", normalized);
+		window.location.reload();
+	},
 
-handlePressStart: function() {
-clearTimeout(this.longPressTimer);
-this.ignoreClick = false;
-this.longPressTimer = setTimeout(() => {
-this.ignoreClick = true;
-this.toggleMenu(true);
-}, this.config.longPressDuration);
-},
+	toggleLanguage: function () {
+		const [first, second] = this.config.defaultTogglePair.map((item) => this.normalizeLanguage(item));
+		const nextLanguage = this.currentLanguage === first ? second : first;
+		this.persistLanguage(nextLanguage);
+	},
 
-handlePressEnd: function() {
-clearTimeout(this.longPressTimer);
-},
+	toggleMenu: function (openState) {
+		this.menuOpen = typeof openState === "boolean" ? openState : !this.menuOpen;
+		this.updateDom(200);
+	},
 
-getDom: function() {
-const wrapper = document.createElement("div");
-wrapper.className = "language-switch";
+	handlePressStart: function () {
+		clearTimeout(this.longPressTimer);
+		this.ignoreClick = false;
+		this.longPressTimer = setTimeout(() => {
+			this.ignoreClick = true;
+			this.toggleMenu(true);
+		}, this.config.longPressDuration);
+	},
 
-const button = document.createElement("button");
-button.className = "language-toggle-btn";
-button.type = "button";
-button.addEventListener("pointerdown", () => this.handlePressStart());
-button.addEventListener("pointerup", () => this.handlePressEnd());
-button.addEventListener("pointerleave", () => this.handlePressEnd());
-button.addEventListener("click", () => {
-if (this.ignoreClick) {
-this.ignoreClick = false;
-return;
-}
-this.toggleLanguage();
-});
+	handlePressEnd: function () {
+		clearTimeout(this.longPressTimer);
+	},
 
-const currentLanguage = this.getLanguageInfo(this.currentLanguage);
-button.innerHTML = `<span class="language-toggle-short">${currentLanguage.shortLabel || currentLanguage.label}</span><span class="language-toggle-label">${currentLanguage.label}</span>`;
-wrapper.appendChild(button);
+	getDom: function () {
+		const wrapper = document.createElement("div");
+		wrapper.className = "language-switch";
 
-if (this.menuOpen) {
-const panel = document.createElement("div");
-panel.className = "language-menu";
+		const button = document.createElement("button");
+		button.className = "language-toggle-btn";
+		button.type = "button";
+		button.addEventListener("pointerdown", () => this.handlePressStart());
+		button.addEventListener("pointerup", () => this.handlePressEnd());
+		button.addEventListener("pointerleave", () => this.handlePressEnd());
+		button.addEventListener("click", () => {
+			if (this.ignoreClick) {
+				this.ignoreClick = false;
+				return;
+			}
+			this.toggleLanguage();
+		});
 
-this.config.supportedLanguages.forEach((language) => {
-const option = document.createElement("button");
-option.type = "button";
-option.className = `language-option${language.code === this.currentLanguage ? " is-active" : ""}`;
-option.textContent = language.label;
-option.addEventListener("click", () => this.persistLanguage(language.code));
-panel.appendChild(option);
-});
+		const currentLanguage = this.resolveLanguageInfo(this.currentLanguage);
+		button.innerHTML = `<span class="language-toggle-short">${currentLanguage.shortLabel || currentLanguage.label}</span><span class="language-toggle-label">${currentLanguage.label}</span>`;
+		wrapper.appendChild(button);
 
-wrapper.appendChild(panel);
-}
+		if (this.menuOpen) {
+			const panel = document.createElement("div");
+			panel.className = "language-menu";
 
-return wrapper;
-}
+			this.config.supportedLanguages.forEach((language) => {
+				const languageInfo = this.resolveLanguageInfo(language.code);
+				const option = document.createElement("button");
+				option.type = "button";
+				option.className = `language-option${language.code === this.currentLanguage ? " is-active" : ""}`;
+				option.textContent = languageInfo.label;
+				option.addEventListener("click", () => this.persistLanguage(language.code));
+				panel.appendChild(option);
+			});
+
+			wrapper.appendChild(panel);
+		}
+
+		return wrapper;
+	}
 });
 

@@ -1,0 +1,5 @@
+{
+	"WAITING_FOR_SENSOR": "Waiting for sensor data...",
+	"INDOOR_TEMPERATURE": "Room Temperature",
+	"INDOOR_HUMIDITY": "Room Humidity"
+}

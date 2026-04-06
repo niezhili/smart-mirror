@@ -1,5 +1,7 @@
 {
 	"LOADING": "Loading weather...",
+	"LOCATION_UNAVAILABLE": "Location unavailable",
+	"WEATHER_UNAVAILABLE": "Weather unavailable",
 	"NO_DATA": "No weather data available",
 	"ERROR_DISPLAY": "Error displaying weather data",
 	"TEMPERATURE": "Temperature",

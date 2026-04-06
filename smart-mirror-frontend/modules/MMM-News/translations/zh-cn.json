@@ -1,0 +1,12 @@
+{
+	"PANEL_TITLE": "新闻速览",
+	"SWIPE_HINT": "← 左右滑动切换分类 →",
+	"LOADING_NEWS": "正在获取新闻...",
+	"EMPTY_NEWS": "暂无新闻内容",
+	"UNKNOWN_SOURCE": "匿名来源",
+	"CATEGORY_TOP": "热点",
+	"CATEGORY_GUONEI": "推荐",
+	"CATEGORY_TIYU": "体育",
+	"CATEGORY_KEJI": "科技",
+	"CATEGORY_GUOJI": "国际"
+}

@@ -16,8 +16,15 @@ Module.register("MMM-DHT11", {
         showTemperature: true,
         maxAgeSeconds: 10, 
         decimalPlaces: 1, 
-        labelTemp: "Temperature",
-        labelHumidity: "Humidity"
+        labelTemp: "",
+        labelHumidity: ""
+    },
+
+    getTranslations: function() {
+        return {
+            en: "translations/en.json",
+            "zh-cn": "translations/zh-cn.json"
+        };
     },
 
     // Define required scripts
@@ -32,7 +39,6 @@ Module.register("MMM-DHT11", {
 
     // Override start method
     start: function() {
-        this.config.quoteLanguage = config.language;
         Log.info("Starting module: " + this.name);
         
         this.temperature = null;
@@ -64,7 +70,7 @@ Module.register("MMM-DHT11", {
 
         // Check if we have data
         if (this.temperature === null || this.humidity === null) {
-            wrapper.innerHTML = "Waiting for sensor data...";
+            wrapper.textContent = this.translate("WAITING_FOR_SENSOR", "Waiting for sensor data...");
             wrapper.className = "dimmed light small";
             return wrapper;
         }
@@ -100,7 +106,7 @@ Module.register("MMM-DHT11", {
             var tempLabel = document.createElement("span");
             tempLabel.style.fontSize = "0.8em";
             tempLabel.style.opacity = "0.8";
-            tempLabel.textContent = this.config.quoteLanguage === "Zh-cn" ? "室内温度" : "Room Temperature";
+            tempLabel.textContent = this.config.labelTemp || this.translate("INDOOR_TEMPERATURE", "Room Temperature");
             tempValueContainer.appendChild(tempLabel);
 
             // Temperature value
@@ -162,7 +168,7 @@ Module.register("MMM-DHT11", {
             var humidityLabel = document.createElement("span");
             humidityLabel.style.fontSize = "0.8em";
             humidityLabel.style.opacity = "0.8";
-            humidityLabel.textContent = this.config.quoteLanguage === "Zh-cn" ? "室内湿度" : "Room Humidity";
+            humidityLabel.textContent = this.config.labelHumidity || this.translate("INDOOR_HUMIDITY", "Room Humidity");
             humidityValueContainer.appendChild(humidityLabel);
 
             // Humidity value

@@ -10,11 +10,44 @@
  */
 let languageState;
 try {
-	languageState = require('./modules/MMM-Language/language-state.js');
+	languageState = require("../modules/MMM-Language/language-state.js");
 } catch (e) {
-	// Default to English if module not installed
-	languageState = { getLanguage: () => "En-us" };
+	languageState = { getLanguage: () => "en" };
 }
+
+function normalizeMirrorLanguage(language) {
+	const normalized = String(language || "en").toLowerCase();
+	const aliases = {
+		"en-us": "en",
+		"en-gb": "en",
+		zh: "zh-cn",
+		"zh_cn": "zh-cn",
+		"zh-cn": "zh-cn",
+		"zh-hans": "zh-cn",
+		"fr-fr": "fr",
+		"ja-jp": "ja",
+		"ko-kr": "ko",
+		"es-es": "es"
+	};
+
+	return aliases[normalized] || normalized;
+}
+
+function toLocaleCode(language) {
+	const mapping = {
+		en: "en-US",
+		"zh-cn": "zh-CN",
+		fr: "fr-FR",
+		ja: "ja-JP",
+		ko: "ko-KR",
+		es: "es-ES"
+	};
+
+	return mapping[language] || "en-US";
+}
+
+const currentLanguage = normalizeMirrorLanguage(languageState.getLanguage());
+const currentLocale = toLocaleCode(currentLanguage);
 
 let config = {
 	address: "localhost",	// Address to listen on, can be:
@@ -35,8 +68,8 @@ let config = {
 	rateLimitMax: 200, // 每分钟最多50个请求
 	ipWhitelist: ["192.168.1.100", "127.0.0.1","192.168.31.50","::ffff:127.0.0.1", "::1"] ,// 白名单IP不受限制
 
-	language: languageState.getLanguage(),
-	locale: languageState.getLanguage(),
+	language: currentLanguage,
+	locale: currentLocale,
 
 	//
     // language: "En-us",
@@ -49,88 +82,103 @@ let config = {
 		modules: [
 		{
 			module: "MMM-Clock",
-			position: "top_center", // Or wherever you had your clock
+			position: "top_center",
 			config: {
-				timeFormat: 24, // Use 12 or 24
-				displayType: "digital", // "digital", "analog", or "both"
+				timeFormat: 24,
+				displayType: "digital",
 				showDate: true,
-				displaySeconds: true
-				// Add any other options you want to customize
+				displaySeconds: false,
+				clockBold: true,
+				showWeek: false,
+				compactDate: false
 			}
 		},
-			{
-			module: "MMM-Language",
-				position: "bottom_right",
-				config: {
-					language: "en"
-				}
-			},
-// 		{
-// 			module: "MMM-Weather",
-// 			position: "top_left",
-// 			config: {
-// 				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
-// 				debug: true,
-// //				updateInterval: 60000
-// 			}
-// 		},
 		{
-
-			module: "MMM-DHT11",
-			position: "bottom_left",
-			config:{
-			   sensorPin:4, 
-			   updateInterval: 500,
-			   temperatureUnit: "C"
+			module: "MMM-Language",
+			position: "bottom_right",
+			config: {
+				language: currentLanguage,
+				supportedLanguages: [
+					{ code: "zh-cn", labelKey: "LANGUAGE_NAME_ZH_CN", shortLabelKey: "LANGUAGE_SHORT_ZH_CN" },
+					{ code: "en", labelKey: "LANGUAGE_NAME_EN", shortLabelKey: "LANGUAGE_SHORT_EN" }
+				],
+				defaultTogglePair: ["zh-cn", "en"],
+				longPressDuration: 550
 			}
 		},
+		{
+			module: "MMM-Weather",
+			position: "top_left",
+			config: {
+				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
+				width: "240px",
+				height: "auto",
+				city: "Hangzhou"
+			}
+		},
+		// {
+		// 	module: "MMM-DHT11",
+		// 	position: "bottom_left",
+		// 	config:{
+		// 	   sensorPin:4,
+		// 	   updateInterval: 500,
+		// 	   temperatureUnit: "C"
+		// 	}
+		// },
 		{
 			module: "MMM-Background",
 			position: "fullscreen_below",
 			config: {
-				bgName: "red-bg-image.png",
-				videoName: "",
 				height: "100%",
 				width: "100%",
+				overlayOpacity: 0.42,
+				themeSampleSize: 48,
+				swipeThreshold: 70
 			}
 		},
 
-		// {
-		// 	module: 'MMM-Clockinese',
-		// 	position: 'top_center',
-		// 	config: {
-		// 	  timeZone: "n33", // See timeZone chart below for your timeZone code
-		// 	  language: "en"
-		// 	}
-	 	// },
+	
 		{
 			module: "MMM-News",
-			position: "top_right",  // Choose a position that works for your setup
+			position: "top_right",
 			config: {
-				//API key and URL are already set in the defaults, but you can override them here if needed
-				apiUrl: "https://v.juhe.cn/toutiao/index", // Using HTTPS
+				apiUrl: "https://v.juhe.cn/toutiao/index",
 				apiKey: "7268a1f3d036719920a9bff93ca6b6b1",
-				newsType: "guoji"
-			}
-		},
-		{
-//			header: "月历",
-			module: "MMM-Calendar",
-			position: "bottom_center",
-			config: { // See "Configuration options" for more information.
-			mode: "fourWeeks",
-			firstDayOfWeek: "Sunday",
-			multiDayEndingTimeSeparator: "至",
+				newsType: "guoji",
+				maxNewsItems: 10,
+				panelTitleKey: "PANEL_TITLE",
+				panelHeight: 520,
+				categories: [
+					{ key: "top", labelKey: "CATEGORY_TOP" },
+					{ key: "guonei", labelKey: "CATEGORY_GUONEI" },
+					{ key: "tiyu", labelKey: "CATEGORY_TIYU" },
+					{ key: "keji", labelKey: "CATEGORY_KEJI" },
+					{ key: "guoji", labelKey: "CATEGORY_GUOJI" }
+				]
 			}
 		},
 		{
 			module: "MMM-Quote",
-			position: "lower_third",
+			position: "bottom_left",
 			config: {
-				updateInterval: 10000,
+				updateInterval: 16000,
 				fadeSpeed: 1000,
 				authorAlign: "align-right",
-		}
+				defaultCategory: "famous",
+				categories: [
+					{ key: "famous", dataCategory: "名人经典语录", labelKey: "CATEGORY_FAMOUS" },
+					{ key: "proverb", dataCategory: "谚语", labelKey: "CATEGORY_PROVERB" },
+					{ key: "literature", dataCategory: "文学", labelKey: "CATEGORY_LITERATURE" }
+				]
+			}
+		},
+		{
+			module: "MMM-Calendar",
+			position: "bottom_center",
+			config: {
+				mode: "fourWeeks",
+				firstDayOfWeek: "Sunday"
+			}
 		},
 
 	],

@@ -2,84 +2,53 @@
 	defaults: {
 		height: "370px",
 		width: "210px",
-		timeZone: "c78", // China by default
-		updateInterval: 10 * 60 * 1000, // 10 minutes
+		updateInterval: 10 * 60 * 1000,
 		retryDelay: 2500,
-		apiKey: "", // Will be set from config
-		city: "",
-		useAnimations: true, // Enable animations
+		apiKey: "",
+		city: "Hangzhou",
+		useAnimations: true,
 		showWindDirection: true,
-		units: "metric", // celsius by default
+		units: "metric",
 		showHumidity: true,
-		showWindSpeed: true,
-		currentLanguage: ""
+		showWindSpeed: true
 	},
 
-	// Weather condition to emoji mapping
-	weatherEmojis: {
-		"Clear": "鈽€锔?,
-		"Sunny": "鈽€锔?,
-		"Mostly Clear": "馃尋锔?,
-		"Mostly Sunny": "馃尋锔?,
-		"Partly Cloudy": "鉀?,
-		"Cloudy": "鈽侊笍",
-		"Overcast": "鈽侊笍",
-		"Foggy": "馃尗锔?,
-		"Haze": "馃尗锔?,
-		"Light Rain": "馃對锔?,
-		"Moderate Rain": "馃導锔?,
-		"Heavy Rain": "馃導锔?,
-		"Drizzle": "馃對锔?,
-		"Thunderstorm": "鉀堬笍",
-		"Thundershowers": "鉀堬笍",
-		"Snow": "鉂勶笍",
-		"Light Snow": "馃尐锔?,
-		"Moderate Snow": "鉂勶笍",
-		"Heavy Snow": "鉂勶笍",
-		"Sleet": "馃尐锔?,
-		"Dust": "馃挩",
-		"Sand": "馃挩",
-		"Wind": "馃挩"
-	},
-
-	// Wind direction to arrow emoji mapping
-	windDirections: {
-		"N": "猬嗭笍",
-		"NNE": "鈫楋笍",
-		"NE": "鈫楋笍",
-		"ENE": "鈫楋笍",
-		"E": "鉃★笍",
-		"ESE": "鈫橈笍",
-		"SE": "鈫橈笍",
-		"SSE": "鈫橈笍",
-		"S": "猬囷笍",
-		"SSW": "鈫欙笍",
-		"SW": "鈫欙笍",
-		"WSW": "鈫欙笍",
-		"W": "猬咃笍",
-		"WNW": "鈫栵笍",
-		"NW": "鈫栵笍",
-		"NNW": "鈫栵笍"
-	},
-
-	start: function () {
-		this.currentLanguage = config.language;
-		// console.log("Current language: ",this.currentLanguage);
-		Log.info("Starting module: " + this.name);
-		this.loaded = false;
-		this.weatherData = null;
-		this.scheduleUpdate();
+	weatherIcons: {
+		clear: "SUN",
+		sunny: "SUN",
+		cloud: "CLOUD",
+		overcast: "CLOUD",
+		rain: "RAIN",
+		drizzle: "RAIN",
+		thunder: "STORM",
+		snow: "SNOW",
+		fog: "FOG",
+		haze: "FOG",
+		wind: "WIND"
 	},
 
 	getTranslations: function () {
-		// const language = config.language.toLowerCase(); // Ensure case-insensitivity
-		const savedLanguage = localStorage.getItem("mm_language");
+		return {
+			en: "translations/en.json",
+			"zh-cn": "translations/zh-cn.json"
+		};
+	},
 
-		if(savedLanguage === "En-us"){
-			return {en: "translations/en.json"}
-		}else if(savedLanguage === "Zh-cn"){
-			return {cn: "translations/cn.json"}
-		}
+	start: function () {
+		Log.info(`Starting module: ${this.name}`);
+		this.loaded = false;
+		this.errorMessageKey = "";
+		this.weatherData = null;
+		this.fallbackData = {
+			now: {
+				text: "WEATHER_UNAVAILABLE",
+				temp: "--",
+				humidity: "--",
+				windSpeed: "--",
+				windDir: "--"
+			}
+		};
+		this.scheduleUpdate();
 	},
 
 	getStyles: function () {
@@ -87,174 +56,166 @@
 	},
 
 	scheduleUpdate: function () {
-		const self = this;
-		setInterval(() => {
-			self.updateWeather();
+		clearInterval(this.refreshInterval);
+		this.refreshInterval = setInterval(() => {
+			this.updateWeather();
 		}, this.config.updateInterval);
-		self.updateWeather();
+		this.updateWeather();
 	},
 
 	updateWeather: function () {
 		this.sendSocketNotification("GET_LOCATION");
 	},
 
+	getRequestCoordinates: function () {
+		return {
+			city: this.config.city || "Hangzhou",
+			lat: 30.2741,
+			long: 120.1552
+		};
+	},
+
 	socketNotificationReceived: function (notification, payload) {
 		switch (notification) {
-			case "LOCATION_RESULT":
-				// this.config.city = payload.city;
-				this.config.city = "Hangzhou";
-				this.config.lat = 30.2741;
-				this.config.long =120.1552 ;
-
-				// const url = `https://api.qweather.com/v7/weather/now?location=${payload.long},${payload.lat}&key=${this.config.apiKey}`;
-				const url = `https://api.qweather.com/v7/weather/now?location=${this.config.long},${this.config.lat}&key=${this.config.apiKey}`;
-				console.log("[MMM-CustomizedWeather] Requesting weather from:", url);
-				this.sendSocketNotification("FETCH_DATA", {url: url});
+			case "LOCATION_RESULT": {
+				const coords = this.getRequestCoordinates(payload);
+				this.config.city = coords.city;
+				const url = `https://api.qweather.com/v7/weather/now?location=${coords.long},${coords.lat}&key=${this.config.apiKey}`;
+				this.sendSocketNotification("FETCH_DATA", { url });
 				break;
+			}
 			case "DATA_FETCHED":
+				this.errorMessageKey = "";
 				this.weatherData = payload;
 				this.loaded = true;
-				this.updateDom();
+				this.updateDom(300);
 				break;
 			case "LOCATION_ERROR":
-				this.scheduleRetry();
+				this.handleFailure("LOCATION_UNAVAILABLE");
 				break;
 			case "FETCH_ERROR":
-				this.scheduleRetry();
+				this.handleFailure("WEATHER_UNAVAILABLE");
 				break;
 		}
 	},
 
-	scheduleRetry: function () {
-		const self = this;
-		setTimeout(() => {
-			self.updateWeather();
+	handleFailure: function (message) {
+		// 接口失败时保留卡片结构，避免整个区域空白。
+		this.errorMessageKey = message;
+		this.weatherData = this.weatherData || this.fallbackData;
+		this.loaded = true;
+		this.updateDom(300);
+		clearTimeout(this.retryTimer);
+		this.retryTimer = setTimeout(() => {
+			this.updateWeather();
 		}, this.config.retryDelay);
 	},
 
-	// Get appropriate emoji for weather condition
-	getWeatherEmoji: function (condition) {
-		return this.weatherEmojis[condition] || "馃寛"; // Default to rainbow if condition not found
+	resolveIcon: function (condition) {
+		const normalized = String(condition || "").toLowerCase();
+		if (normalized.includes("rain")) return this.weatherIcons.rain;
+		if (normalized.includes("snow")) return this.weatherIcons.snow;
+		if (normalized.includes("thunder")) return this.weatherIcons.thunder;
+		if (normalized.includes("fog") || normalized.includes("haze")) return this.weatherIcons.fog;
+		if (normalized.includes("wind")) return this.weatherIcons.wind;
+		if (normalized.includes("cloud") || normalized.includes("overcast")) return this.weatherIcons.cloud;
+		if (normalized.includes("clear") || normalized.includes("sunny")) return this.weatherIcons.clear;
+		return "SKY";
 	},
 
-	// Get appropriate emoji for wind direction
-	getWindDirectionEmoji: function (direction) {
-		return this.windDirections[direction] || "馃Л"; // Default to compass if direction not found
-	},
-
-	// Format temperature with color based on value
 	formatTemperature: function (temp) {
-		const tempNum = parseInt(temp);
+		const tempNum = parseInt(temp, 10);
 		let colorClass = "normal-temp";
 
-		if (tempNum <= 0) colorClass = "freezing-temp";
-		else if (tempNum < 10) colorClass = "cold-temp";
-		else if (tempNum > 30) colorClass = "hot-temp";
-		else if (tempNum > 25) colorClass = "warm-temp";
+		if (!Number.isNaN(tempNum)) {
+			if (tempNum <= 0) colorClass = "freezing-temp";
+			else if (tempNum < 10) colorClass = "cold-temp";
+			else if (tempNum > 30) colorClass = "hot-temp";
+			else if (tempNum > 25) colorClass = "warm-temp";
+		}
 
-		return `<span class="${colorClass}">${temp}掳${this.config.units === "imperial" ? "F" : "C"}</span>`;
+		return `<span class="${colorClass}">${temp}${this.config.units === "imperial" ? "F" : "C"}</span>`;
+	},
+
+	getSafeWeatherData: function () {
+		return this.weatherData && this.weatherData.now ? this.weatherData : this.fallbackData;
 	},
 
 	getDom: function () {
-		const wrapper = document.createElement('div');
-		wrapper.className = 'weather-container';
+		const wrapper = document.createElement("div");
+		wrapper.className = "weather-container";
 
 		if (!this.loaded) {
-			const loadingDiv = document.createElement('div');
-			loadingDiv.className = 'weather-loading';
-			loadingDiv.innerHTML = '馃攧 ' + this.translate("LOADING");
+			const loadingDiv = document.createElement("div");
+			loadingDiv.className = "weather-loading";
+			loadingDiv.textContent = this.translate("LOADING", "Loading weather...");
 			wrapper.appendChild(loadingDiv);
 			return wrapper;
 		}
 
-		if (!this.weatherData || !this.weatherData.now) {
-			const errorDiv = document.createElement('div');
-			errorDiv.className = 'weather-error';
-			errorDiv.innerHTML = '鉂?' + this.translate("NO_DATA");
-			wrapper.appendChild(errorDiv);
-			return wrapper;
+		const safeData = this.getSafeWeatherData();
+		const now = safeData.now || this.fallbackData.now;
+
+		const cityDiv = document.createElement("div");
+		cityDiv.className = "weather-city";
+		cityDiv.textContent = this.translate(this.config.city || "Hangzhou", this.config.city || "Hangzhou");
+		wrapper.appendChild(cityDiv);
+
+		const conditionsDiv = document.createElement("div");
+		conditionsDiv.className = "weather-current";
+
+		const mainWeatherDiv = document.createElement("div");
+		mainWeatherDiv.className = "weather-main";
+		mainWeatherDiv.innerHTML = `
+			<div class="weather-emoji ${this.config.useAnimations ? "weather-animated" : ""}">${this.resolveIcon(now.text)}</div>
+			<div class="weather-temp">${this.formatTemperature(now.temp || "--")}</div>
+		`;
+		conditionsDiv.appendChild(mainWeatherDiv);
+
+		const descriptionDiv = document.createElement("div");
+		descriptionDiv.className = "weather-description";
+		descriptionDiv.textContent = this.translate(now.text || "WEATHER_UNAVAILABLE", now.text || "Weather unavailable");
+		conditionsDiv.appendChild(descriptionDiv);
+		wrapper.appendChild(conditionsDiv);
+
+		const detailsDiv = document.createElement("div");
+		detailsDiv.className = "weather-details";
+
+		if (this.config.showHumidity) {
+			const humidityDiv = document.createElement("div");
+			humidityDiv.className = "weather-detail";
+			humidityDiv.textContent = `${this.translate("HUMIDITY", "Humidity")}: ${now.humidity || "--"}%`;
+			detailsDiv.appendChild(humidityDiv);
 		}
 
-		try {
-			// City header with location pin emoji
-			const cityDiv = document.createElement('div');
-			cityDiv.className = 'weather-city';
-			cityDiv.innerHTML = `馃搷 ${this.translate(this.config.city)}`;
-			wrapper.appendChild(cityDiv);
+		if (this.config.showWindSpeed) {
+			const windSpeedDiv = document.createElement("div");
+			windSpeedDiv.className = "weather-detail weather-wind-speed";
+			windSpeedDiv.textContent = `${this.translate("WIND_SPEED", "Wind")}: ${now.windSpeed || "--"} km/h`;
+			detailsDiv.appendChild(windSpeedDiv);
 
-			// Current weather conditions with emoji
-			const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase()) ?
-				this.translate(this.weatherData.now.text) : this.weatherData.now.text;
-
-			const weatherEmoji = this.getWeatherEmoji(weatherCondition);
-
-			const conditionsDiv = document.createElement('div');
-			conditionsDiv.className = 'weather-current';
-
-			// Large emoji and temperature display
-			const mainWeatherDiv = document.createElement('div');
-			mainWeatherDiv.className = 'weather-main';
-			mainWeatherDiv.innerHTML = `
-                <div class="weather-emoji ${this.config.useAnimations ? 'weather-animated' : ''}">${weatherEmoji}</div>
-                <div class="weather-temp">${this.formatTemperature(this.weatherData.now.temp)}</div>
-            `;
-			conditionsDiv.appendChild(mainWeatherDiv);
-
-			// Weather description
-			const descriptionDiv = document.createElement('div');
-			descriptionDiv.className = 'weather-description';
-			descriptionDiv.textContent = this.translate(weatherCondition);
-			conditionsDiv.appendChild(descriptionDiv);
-
-			wrapper.appendChild(conditionsDiv);
-
-			// Weather details section
-			const detailsDiv = document.createElement('div');
-			detailsDiv.className = 'weather-details';
-			detailsDiv.style.fontSize = '0.6rem';
-
-			// Only show humidity if configured
-			if (this.config.showHumidity) {
-				const humidityDiv = document.createElement('div');
-				humidityDiv.className = 'weather-detail';
-				humidityDiv.innerHTML = `馃挧 ${this.translate("HUMIDITY")}: ${this.weatherData.now.humidity}%`;
-				detailsDiv.appendChild(humidityDiv);
+			if (this.config.showWindDirection) {
+				const windDirDiv = document.createElement("div");
+				windDirDiv.className = "weather-detail weather-wind-direction";
+				windDirDiv.textContent = now.windDir || "--";
+				detailsDiv.appendChild(windDirDiv);
 			}
-
-			// Only show wind if configured
-			if (this.config.showWindSpeed) {
-				const windSpeedDiv = document.createElement('div');
-				windSpeedDiv.className = 'weather-detail weather-wind-speed';
-				windSpeedDiv.style.fontSize = "0.6rem";
-				windSpeedDiv.innerHTML = `馃挩 ${this.translate("WIND_SPEED")}: ${this.weatherData.now.windSpeed} km/h`;
-				detailsDiv.appendChild(windSpeedDiv);
-
-				// Add wind direction if configured
-				if (this.config.showWindDirection && this.weatherData.now.windDir) {
-					const windDirDiv = document.createElement('div');
-					windDirDiv.className = 'weather-detail weather-wind-direction';
-					windDirDiv.style.fontSize = "0.6rem";
-					const directionEmoji = this.getWindDirectionEmoji(this.weatherData.now.windDir);
-					windDirDiv.innerHTML = `${directionEmoji} ${this.translate(this.weatherData.now.windDir)}`;
-					detailsDiv.appendChild(windDirDiv);
-				}
-			}
-
-			// Add last updated info
-			const updateDiv = document.createElement('div');
-			updateDiv.className = 'weather-updated';
-			const updateTime = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-			updateDiv.textContent = `馃晵 ${this.translate("UPDATED")}: ${updateTime}`;
-			detailsDiv.appendChild(updateDiv);
-
-			wrapper.appendChild(detailsDiv);
-
-		} catch (e) {
-			console.error("[MMM-Weather] Error rendering weather:", e);
-			wrapper.innerHTML = "鉂?" + this.translate("ERROR_DISPLAY");
 		}
 
+		const updateDiv = document.createElement("div");
+		updateDiv.className = "weather-updated";
+		updateDiv.textContent = this.errorMessageKey
+			? this.translate(this.errorMessageKey, this.errorMessageKey)
+			: `${this.translate("UPDATED", "Updated")}: ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+		detailsDiv.appendChild(updateDiv);
+
+		wrapper.appendChild(detailsDiv);
 		return wrapper;
+	},
+
+	stop: function () {
+		clearInterval(this.refreshInterval);
+		clearTimeout(this.retryTimer);
 	}
 });
 

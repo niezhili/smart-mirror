@@ -92,9 +92,11 @@ body.theme-light {
 }
 
 .customclock-grid,
+.weather-container,
 .news-scroller,
 .language-switch,
-.quote-card {
+.quote-card,
+.monthly-calendar {
     position: relative;
     overflow: hidden;
     border: 1px solid var(--mirror-panel-border);
@@ -105,9 +107,11 @@ body.theme-light {
 }
 
 .customclock-grid::before,
+.weather-container::before,
 .news-scroller::before,
 .language-switch::before,
-.quote-card::before {
+.quote-card::before,
+.monthly-calendar::before {
     content: '';
     position: absolute;
     inset: 1px;
@@ -122,47 +126,40 @@ body.theme-light {
 }
 
 .top.left {
-    width: min(24vw, 300px);
+    width: min(22vw, 260px);
 }
 
 .top.right {
-    width: min(36vw, 520px);
+    width: min(32vw, 440px);
+}
+
+.bottom.left {
+    width: min(28vw, 360px);
 }
 
 .bottom.center {
-    width: min(60vw, 860px);
+    width: min(34vw, 460px);
 }
 
 .region.top.left .weather-container {
-    max-width: 260px;
+    max-width: 240px;
+    margin-right: auto;
 }
 
 .region.top.right .news-scroller {
-    max-width: 520px;
+    max-width: 440px;
     margin-left: auto;
 }
 
-/* quote 与 calendar 放在同一底部中间区域，压缩间距实现“紧贴”效果 */
-.region.bottom.center .module {
-    margin-top: 0;
-}
-
-.region.bottom.center .module + .module {
-    margin-top: 10px;
-}
-
-.region.bottom.center .quote-card,
-.region.bottom.center .monthly-calendar {
-    width: min(60vw, 860px);
-    margin: 0 auto;
-}
-
-.region.bottom.center .quote-card {
-    padding: 14px 16px 16px;
-}
-
-.region.bottom.center .monthly-calendar {
+.region.bottom.left .quote-card {
+    width: min(28vw, 360px);
+    max-height: 180px;
     padding: 12px 16px 14px;
+}
+
+.region.bottom.center .monthly-calendar {
+    width: min(34vw, 460px);
+    padding: 10px 14px 12px;
 }
 
 .lower.third,
@@ -193,13 +190,14 @@ body.theme-light {
     .top.left,
     .top.center,
     .top.right,
+    .bottom.left,
     .bottom.center,
     .lower.third,
     .lower_third {
         width: min(92vw, 680px);
     }
 
-    .region.bottom.center .quote-card,
+    .region.bottom.left .quote-card,
     .region.bottom.center .monthly-calendar {
         width: min(92vw, 680px);
     }

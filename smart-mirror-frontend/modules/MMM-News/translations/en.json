@@ -1,0 +1,12 @@
+{
+	"PANEL_TITLE": "Newsroom",
+	"SWIPE_HINT": "← Swipe to switch categories →",
+	"LOADING_NEWS": "Loading news...",
+	"EMPTY_NEWS": "No news available",
+	"UNKNOWN_SOURCE": "Unknown source",
+	"CATEGORY_TOP": "Trending",
+	"CATEGORY_GUONEI": "Recommended",
+	"CATEGORY_TIYU": "Sports",
+	"CATEGORY_KEJI": "Technology",
+	"CATEGORY_GUOJI": "World"
+}

@@ -13,6 +13,7 @@ start: function() {
 this.wallpapers = [];
 this.currentIndex = 0;
 this.activeWallpaper = null;
+this.lastCollectionKey = "";
 this.fallbackWallpapers = [
 "modules/MMM-Background/images/cultures/cha.png",
 "modules/MMM-Background/images/cultures/greatwall.png",
@@ -22,6 +23,8 @@ this.pointerStart = null;
 this.boundPointerDown = this.handlePointerDown.bind(this);
 this.boundPointerUp = this.handlePointerUp.bind(this);
 this.retryTimer = null;
+this.stageElement = null;
+this.photoElement = null;
 
 this.attachGlobalSwipe();
 this.requestWallpapers();
@@ -45,13 +48,13 @@ wrapper.style.backgroundSize = "cover";
 wrapper.style.backgroundPosition = "center";
 }
 
-if (this.activeWallpaper) {
 const image = document.createElement("img");
 image.className = "photo";
+if (this.activeWallpaper) {
 image.src = this.activeWallpaper;
+}
 image.alt = "Background image";
 wrapper.appendChild(image);
-}
 
 const overlay = document.createElement("div");
 overlay.className = "background-overlay";
@@ -60,6 +63,9 @@ wrapper.appendChild(overlay);
 const glow = document.createElement("div");
 glow.className = "background-glow";
 wrapper.appendChild(glow);
+
+this.stageElement = wrapper;
+this.photoElement = image;
 
 return wrapper;
 },
@@ -87,18 +93,30 @@ return;
 }
 
 if (!payload.images.length) {
-// 鍚姩闃舵濡傛灉鏆傛椂鎷夸笉鍒板浘鐗囷紝鐭棿闅旈噸璇曪紝閬垮厤绛夊緟鍒颁笅涓€涓皬鏃躲€?clearTimeout(this.retryTimer);
+			// 启动阶段如果暂时取不到图片，短间隔重试，避免整页长期停留在空背景。
+			clearTimeout(this.retryTimer);
 this.retryTimer = setTimeout(() => {
 this.requestWallpapers();
 }, 15000);
 this.wallpapers = [...this.fallbackWallpapers];
+this.lastCollectionKey = this.wallpapers.join("|");
 this.currentIndex = 0;
 this.showWallpaper(this.currentIndex, true);
 return;
 }
 
+const nextCollectionKey = payload.images.join("|");
+if (nextCollectionKey === this.lastCollectionKey && this.activeWallpaper) {
+return;
+}
+
 this.wallpapers = payload.images;
-this.currentIndex = Math.max(0, Math.min(payload.initialIndex || 0, this.wallpapers.length - 1));
+this.lastCollectionKey = nextCollectionKey;
+const preferredIndex = this.activeWallpaper
+? this.wallpapers.indexOf(this.activeWallpaper)
+: -1;
+const initialIndex = preferredIndex >= 0 ? preferredIndex : (payload.initialIndex || 0);
+this.currentIndex = Math.max(0, Math.min(initialIndex, this.wallpapers.length - 1));
 this.showWallpaper(this.currentIndex, true);
 },
 
@@ -108,6 +126,7 @@ return;
 }
 
 this.wallpapers = [...this.fallbackWallpapers];
+this.lastCollectionKey = this.wallpapers.join("|");
 this.currentIndex = 0;
 this.showWallpaper(this.currentIndex, true);
 },
@@ -118,12 +137,59 @@ return;
 }
 
 this.currentIndex = (index + this.wallpapers.length) % this.wallpapers.length;
-this.activeWallpaper = this.wallpapers[this.currentIndex];
-this.updateDom(this.config.animationSpeed);
+const nextWallpaper = this.wallpapers[this.currentIndex];
 
-if (forceThemeRefresh || this.activeWallpaper) {
-this.applyThemeFromWallpaper(this.activeWallpaper);
+if (!nextWallpaper) {
+return;
 }
+
+if (nextWallpaper === this.activeWallpaper) {
+if (forceThemeRefresh) {
+this.applyThemeFromWallpaper(nextWallpaper);
+}
+return;
+}
+
+this.preloadAndApplyWallpaper(nextWallpaper, forceThemeRefresh);
+
+if (!this.stageElement) {
+this.updateDom(0);
+}
+},
+
+preloadAndApplyWallpaper: function(imageUrl, forceThemeRefresh) {
+const preloadImage = new Image();
+preloadImage.onload = () => {
+			// 先预加载再替换，避免背景层出现黑场闪烁。
+this.activeWallpaper = imageUrl;
+this.applyWallpaperToDom(imageUrl);
+if (forceThemeRefresh) {
+this.applyThemeFromWallpaper(imageUrl);
+}
+};
+
+preloadImage.onerror = () => {
+			// 图片加载失败时保留当前背景，不做降级清空，避免整屏黑底。
+if (!this.activeWallpaper) {
+this.activeWallpaper = imageUrl;
+this.updateDom(0);
+}
+};
+
+preloadImage.src = imageUrl;
+},
+
+applyWallpaperToDom: function(imageUrl) {
+if (this.stageElement) {
+this.stageElement.style.backgroundImage = `url("${imageUrl}")`;
+this.stageElement.style.backgroundSize = "cover";
+this.stageElement.style.backgroundPosition = "center";
+}
+
+if (this.photoElement) {
+this.photoElement.src = imageUrl;
+}
+
 },
 
 showRelativeWallpaper: function(step) {
@@ -188,7 +254,8 @@ let green = 0;
 let blue = 0;
 let count = 0;
 
-// 璁＄畻缂╃暐閲囨牱鍥剧殑骞冲潎 RGB锛岀敤浜庡姩鎬佸垏鎹㈡祬鑹?娣辫壊涓婚銆?for (let index = 0; index < pixels.length; index += 4) {
+			// 这里按缩略图均值估算明暗，是为了保证前景模块在不同背景下都可读。
+			for (let index = 0; index < pixels.length; index += 4) {
 red += pixels[index];
 green += pixels[index + 1];
 blue += pixels[index + 2];
@@ -209,7 +276,7 @@ const accent = isLightTheme
 body.classList.toggle("theme-light", isLightTheme);
 body.classList.toggle("theme-dark", !isLightTheme);
 root.style.setProperty("--mirror-accent", accent);
-root.style.setProperty("--mirror-accent-soft", accent.replace(/0\.[0-9]+\)/, "0.18)"));
+			root.style.setProperty("--mirror-accent-soft", `rgba(${isLightTheme ? Math.max(35, red - 40) : Math.min(220, red + 68)}, ${isLightTheme ? Math.max(80, green - 25) : Math.min(232, green + 66)}, ${isLightTheme ? Math.max(120, blue - 10) : Math.min(255, blue + 90)}, 0.18)`);
 root.style.setProperty("--mirror-overlay-strength", this.config.overlayOpacity);
 };
 
@@ -221,6 +288,8 @@ clearInterval(this.interval);
 clearTimeout(this.retryTimer);
 document.removeEventListener("pointerdown", this.boundPointerDown);
 document.removeEventListener("pointerup", this.boundPointerUp);
+this.stageElement = null;
+this.photoElement = null;
 }
 });
 

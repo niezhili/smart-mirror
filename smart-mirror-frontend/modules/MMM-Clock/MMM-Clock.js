@@ -27,7 +27,8 @@ this.scheduleTick();
 },
 
 scheduleTick: function() {
-// 閲嶆瀯璇存槑锛氬幓闄ょ绾ф覆鏌撳悗锛岀粺涓€鎸夊垎閽熻竟鐣屽埛鏂帮紝鍑忓皯鏃犳晥閲嶇粯骞舵秷闄ら棯鐑佽鎰熴€?const delay = (60 - new Date().getSeconds()) * 1000;
+	// 按分钟边界刷新，避免持续重绘导致时钟区域闪烁。
+	const delay = this.config.displaySeconds ? 1000 : (60 - new Date().getSeconds()) * 1000;
 clearTimeout(this.refreshTimer);
 this.refreshTimer = setTimeout(() => {
 this.updateDom(0);
@@ -54,7 +55,8 @@ if (!this.config.timezone) {
 return now;
 }
 
-// 闂備緡鍋呮穱铏规崲?Intl 闂佸搫绉堕崢褏妲愰敓鐘茬闁哄诞鍐╂珒闂佹悶鍎抽崑娑㈠疮閹捐绫嶉柕澶涢檮閸╁倿鏌ㄥ☉妯肩劯濞村皷鏅犲畷妤€顓奸崱姗嗘Н闂佸憡鐗曢幖顐ｇ閸濄儳鐭撻悹鍥皺閺併劑鏌℃径鍫濆姢婵炲牊鍨规禒锕傚即閻橆喕绮甸柣鐘叉祩閸ㄦ澘螣婵犲洤违?const locale = this.getLocale();
+// 使用 Intl 在目标时区格式化后再回构日期，避免本地时区干扰展示结果。
+const locale = this.getLocale();
 const parts = new Intl.DateTimeFormat(locale, {
 timeZone: this.config.timezone,
 year: "numeric",
@@ -81,23 +83,40 @@ formatWeekLabel: function(date) {
 const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
 const pastDays = (date - firstDayOfYear) / 86400000;
 const weekNumber = Math.ceil((pastDays + firstDayOfYear.getDay() + 1) / 7);
-return `Week ${weekNumber}`;
+return this.translate("WEEK", { weekNumber }, `Week ${weekNumber}`);
+},
+
+resolveDayPeriod: function(date) {
+const locale = this.getLocale();
+const parts = new Intl.DateTimeFormat(locale, {
+hour: "numeric",
+hour12: true
+}).formatToParts(date);
+const dayPeriod = parts.find((item) => item.type === "dayPeriod");
+
+if (!dayPeriod) {
+	return date.getHours() >= 12 ? "PM" : "AM";
+}
+
+return this.config.showPeriodUpper ? dayPeriod.value.toUpperCase() : dayPeriod.value.toLowerCase();
 },
 
 formatTimeParts: function(date) {
 let hours = date.getHours();
 const minutes = String(date.getMinutes()).padStart(2, "0");
+const seconds = String(date.getSeconds()).padStart(2, "0");
 let period = "";
 
 if (this.config.timeFormat !== 24) {
-period = hours >= 12 ? "PM" : "AM";
+period = this.resolveDayPeriod(date);
 hours = hours % 12 || 12;
 }
 
 return {
 hours: String(hours).padStart(2, "0"),
 minutes,
-period: this.config.showPeriodUpper ? period : period.toLowerCase()
+seconds,
+period
 };
 },
 
@@ -130,6 +149,13 @@ const minutesElement = document.createElement("span");
 minutesElement.className = "clock-minutes";
 minutesElement.textContent = timeParts.minutes;
 timeShell.appendChild(minutesElement);
+
+if (this.config.displaySeconds) {
+	const secondsElement = document.createElement("span");
+	secondsElement.className = "clock-period";
+	secondsElement.textContent = timeParts.seconds;
+	timeShell.appendChild(secondsElement);
+}
 
 if (this.config.timeFormat !== 24 && this.config.showPeriod) {
 const periodElement = document.createElement("span");
