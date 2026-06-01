@@ -17,79 +17,76 @@ Module.register("MMM-CustomWeather", {
 
 	// Weather condition to emoji mapping
 	weatherEmojis: {
-		Clear: "☀️",
-		Sunny: "☀️",
+		"Clear": "☀️",
+		"Sunny": "☀️",
 		"Mostly Clear": "🌤️",
 		"Mostly Sunny": "🌤️",
 		"Partly Cloudy": "⛅",
-		Cloudy: "☁️",
-		Overcast: "☁️",
-		Foggy: "🌫️",
-		Haze: "🌫️",
+		"Cloudy": "☁️",
+		"Overcast": "☁️",
+		"Foggy": "🌫️",
+		"Haze": "🌫️",
 		"Light Rain": "🌦️",
 		"Moderate Rain": "🌧️",
 		"Heavy Rain": "🌧️",
-		Drizzle: "🌦️",
-		Thunderstorm: "⛈️",
-		Thundershowers: "⛈️",
-		Snow: "❄️",
+		"Drizzle": "🌦️",
+		"Thunderstorm": "⛈️",
+		"Thundershowers": "⛈️",
+		"Snow": "❄️",
 		"Light Snow": "🌨️",
 		"Moderate Snow": "❄️",
 		"Heavy Snow": "❄️",
-		Sleet: "🌨️",
-		Dust: "💨",
-		Sand: "💨",
-		Wind: "💨"
+		"Sleet": "🌨️",
+		"Dust": "💨",
+		"Sand": "💨",
+		"Wind": "💨"
 	},
 
 	// Wind direction to arrow emoji mapping
 	windDirections: {
-		N: "⬆️",
-		NNE: "↗️",
-		NE: "↗️",
-		ENE: "↗️",
-		E: "➡️",
-		ESE: "↘️",
-		SE: "↘️",
-		SSE: "↘️",
-		S: "⬇️",
-		SSW: "↙️",
-		SW: "↙️",
-		WSW: "↙️",
-		W: "⬅️",
-		WNW: "↖️",
-		NW: "↖️",
-		NNW: "↖️"
+		"N": "⬆️",
+		"NNE": "↗️",
+		"NE": "↗️",
+		"ENE": "↗️",
+		"E": "➡️",
+		"ESE": "↘️",
+		"SE": "↘️",
+		"SSE": "↘️",
+		"S": "⬇️",
+		"SSW": "↙️",
+		"SW": "↙️",
+		"WSW": "↙️",
+		"W": "⬅️",
+		"WNW": "↖️",
+		"NW": "↖️",
+		"NNW": "↖️"
 	},
 
-	start () {
+	start: function () {
 		this.currentLanguage = config.language;
 		// console.log("Current language: ",this.currentLanguage);
-		Log.info(`Starting module: ${this.name}`);
+		Log.info("Starting module: " + this.name);
 		this.loaded = false;
 		this.weatherData = null;
-		this.overlay = null;
-		this.isExpanded = false;
-		this._boundEscapeHandler = this._onEscapeKey.bind(this);
 		this.scheduleUpdate();
 	},
 
-	getTranslations () {
+	getTranslations: function () {
 		// const language = config.language.toLowerCase(); // Ensure case-insensitivity
 		const savedLanguage = localStorage.getItem("mm_language");
 
-		if (savedLanguage === "En-us") {
-			return { en: "translations/en.json" };
-		} else if (savedLanguage === "Zh-cn") {
-			return { cn: "translations/cn.json" };
+		if(savedLanguage === "En-us"){
+			return {en: "translations/en.json"}
+		}else if(savedLanguage === "Zh-cn"){
+			return {cn: "translations/cn.json"}
 		}
 	},
 
-	getStyles () {
+	getStyles: function () {
 		return ["MMM-CustomWeather.css"];
 	},
 
-	scheduleUpdate () {
+	scheduleUpdate: function () {
 		const self = this;
 		setInterval(() => {
 			self.updateWeather();
@@ -97,24 +94,23 @@ Module.register("MMM-CustomWeather", {
 		self.updateWeather();
 	},
 
-	updateWeather () {
+	updateWeather: function () {
 		this.sendSocketNotification("GET_LOCATION");
 	},
 
-	socketNotificationReceived (notification, payload) {
+	socketNotificationReceived: function (notification, payload) {
 		switch (notification) {
-			case "LOCATION_RESULT": {
+			case "LOCATION_RESULT":
 				// this.config.city = payload.city;
 				this.config.city = "Hangzhou";
 				this.config.lat = 30.2741;
-				this.config.long = 120.1552;
+				this.config.long =120.1552 ;
 
 				// const url = `https://api.qweather.com/v7/weather/now?location=${payload.long},${payload.lat}&key=${this.config.apiKey}`;
 				const url = `https://api.qweather.com/v7/weather/now?location=${this.config.long},${this.config.lat}&key=${this.config.apiKey}`;
 				console.log("[MMM-CustomizedWeather] Requesting weather from:", url);
-				this.sendSocketNotification("FETCH_DATA", { url: url });
+				this.sendSocketNotification("FETCH_DATA", {url: url});
 				break;
-			}
 			case "DATA_FETCHED":
 				this.weatherData = payload;
 				this.loaded = true;
@@ -129,7 +125,7 @@ Module.register("MMM-CustomWeather", {
 		}
 	},
 
-	scheduleRetry () {
+	scheduleRetry: function () {
 		const self = this;
 		setTimeout(() => {
 			self.updateWeather();
@@ -137,17 +133,17 @@ Module.register("MMM-CustomWeather", {
 	},
 
 	// Get appropriate emoji for weather condition
-	getWeatherEmoji (condition) {
+	getWeatherEmoji: function (condition) {
 		return this.weatherEmojis[condition] || "🌈"; // Default to rainbow if condition not found
 	},
 
 	// Get appropriate emoji for wind direction
-	getWindDirectionEmoji (direction) {
+	getWindDirectionEmoji: function (direction) {
 		return this.windDirections[direction] || "🧭"; // Default to compass if direction not found
 	},
 
 	// Format temperature with color based on value
-	formatTemperature (temp) {
+	formatTemperature: function (temp) {
 		const tempNum = parseInt(temp);
 		let colorClass = "normal-temp";
 
@@ -159,85 +155,84 @@ Module.register("MMM-CustomWeather", {
 		return `<span class="${colorClass}">${temp}°${this.config.units === "imperial" ? "F" : "C"}</span>`;
 	},
 
-	getDom () {
-		const wrapper = document.createElement("div");
-		wrapper.className = "weather-container";
+	getDom: function () {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'weather-container';
 
 		if (!this.loaded) {
-			const loadingDiv = document.createElement("div");
-			loadingDiv.className = "weather-loading";
-			loadingDiv.innerHTML = `🔄 ${this.translate("LOADING")}`;
+			const loadingDiv = document.createElement('div');
+			loadingDiv.className = 'weather-loading';
+			loadingDiv.innerHTML = '🔄 ' + this.translate("LOADING");
 			wrapper.appendChild(loadingDiv);
 			return wrapper;
 		}
 
 		if (!this.weatherData || !this.weatherData.now) {
-			const errorDiv = document.createElement("div");
-			errorDiv.className = "weather-error";
-			errorDiv.innerHTML = `❌ ${this.translate("NO_DATA")}`;
+			const errorDiv = document.createElement('div');
+			errorDiv.className = 'weather-error';
+			errorDiv.innerHTML = '❌ ' + this.translate("NO_DATA");
 			wrapper.appendChild(errorDiv);
 			return wrapper;
 		}
 
 		try {
 			// City header with location pin emoji
-			const cityDiv = document.createElement("div");
-			cityDiv.className = "weather-city";
+			const cityDiv = document.createElement('div');
+			cityDiv.className = 'weather-city';
 			cityDiv.innerHTML = `📍 ${this.translate(this.config.city)}`;
 			wrapper.appendChild(cityDiv);
 
 			// Current weather conditions with emoji
-			const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase())
-				? this.translate(this.weatherData.now.text)
-				: this.weatherData.now.text;
+			const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase()) ?
+				this.translate(this.weatherData.now.text) : this.weatherData.now.text;
 
 			const weatherEmoji = this.getWeatherEmoji(weatherCondition);
 
-			const conditionsDiv = document.createElement("div");
-			conditionsDiv.className = "weather-current";
+			const conditionsDiv = document.createElement('div');
+			conditionsDiv.className = 'weather-current';
 
 			// Large emoji and temperature display
-			const mainWeatherDiv = document.createElement("div");
-			mainWeatherDiv.className = "weather-main";
+			const mainWeatherDiv = document.createElement('div');
+			mainWeatherDiv.className = 'weather-main';
 			mainWeatherDiv.innerHTML = `
-		                <div class="weather-emoji ${this.config.useAnimations ? "weather-animated" : ""}">${weatherEmoji}</div>
-		                <div class="weather-temp">${this.formatTemperature(this.weatherData.now.temp)}</div>
-		            `;
+                <div class="weather-emoji ${this.config.useAnimations ? 'weather-animated' : ''}">${weatherEmoji}</div>
+                <div class="weather-temp">${this.formatTemperature(this.weatherData.now.temp)}</div>
+            `;
 			conditionsDiv.appendChild(mainWeatherDiv);
 
 			// Weather description
-			const descriptionDiv = document.createElement("div");
-			descriptionDiv.className = "weather-description";
+			const descriptionDiv = document.createElement('div');
+			descriptionDiv.className = 'weather-description';
 			descriptionDiv.textContent = this.translate(weatherCondition);
 			conditionsDiv.appendChild(descriptionDiv);
 
 			wrapper.appendChild(conditionsDiv);
 
 			// Weather details section
-			const detailsDiv = document.createElement("div");
-			detailsDiv.className = "weather-details";
-			detailsDiv.style.fontSize = "0.6rem";
+			const detailsDiv = document.createElement('div');
+			detailsDiv.className = 'weather-details';
+			detailsDiv.style.fontSize = '0.6rem';
 
 			// Only show humidity if configured
 			if (this.config.showHumidity) {
-				const humidityDiv = document.createElement("div");
-				humidityDiv.className = "weather-detail";
+				const humidityDiv = document.createElement('div');
+				humidityDiv.className = 'weather-detail';
 				humidityDiv.innerHTML = `💧 ${this.translate("HUMIDITY")}: ${this.weatherData.now.humidity}%`;
 				detailsDiv.appendChild(humidityDiv);
 			}
 
 			// Only show wind if configured
 			if (this.config.showWindSpeed) {
-				const windSpeedDiv = document.createElement("div");
-				windSpeedDiv.className = "weather-detail weather-wind-speed";
+				const windSpeedDiv = document.createElement('div');
+				windSpeedDiv.className = 'weather-detail weather-wind-speed';
 				windSpeedDiv.style.fontSize = "0.6rem";
 				windSpeedDiv.innerHTML = `💨 ${this.translate("WIND_SPEED")}: ${this.weatherData.now.windSpeed} km/h`;
 				detailsDiv.appendChild(windSpeedDiv);
 
 				// Add wind direction if configured
 				if (this.config.showWindDirection && this.weatherData.now.windDir) {
-					const windDirDiv = document.createElement("div");
-					windDirDiv.className = "weather-detail weather-wind-direction";
+					const windDirDiv = document.createElement('div');
+					windDirDiv.className = 'weather-detail weather-wind-direction';
 					windDirDiv.style.fontSize = "0.6rem";
 					const directionEmoji = this.getWindDirectionEmoji(this.weatherData.now.windDir);
 					windDirDiv.innerHTML = `${directionEmoji} ${this.translate(this.weatherData.now.windDir)}`;
@@ -246,9 +241,9 @@ Module.register("MMM-CustomWeather", {
 			}
 
 			// Add last updated info
-			const updateDiv = document.createElement("div");
-			updateDiv.className = "weather-updated";
-			const updateTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+			const updateDiv = document.createElement('div');
+			updateDiv.className = 'weather-updated';
+			const updateTime = new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
 			updateDiv.textContent = `🕒 ${this.translate("UPDATED")}: ${updateTime}`;
 			detailsDiv.appendChild(updateDiv);
 
@@ -256,221 +251,9 @@ Module.register("MMM-CustomWeather", {
 
 		} catch (e) {
 			console.error("[MMM-CustomWeather] Error rendering weather:", e);
-			wrapper.innerHTML = `❌ ${this.translate("ERROR_DISPLAY")}`;
-		}
-
-		// Click handler: expand weather into fullscreen overlay
-		if (!wrapper.dataset.hasClickHandler) {
-			wrapper.dataset.hasClickHandler = "true";
-			wrapper.style.cursor = "pointer";
-			wrapper.addEventListener("click", (event) => {
-				event.stopPropagation();
-				this.showExpandedView();
-			});
+			wrapper.innerHTML = "❌ " + this.translate("ERROR_DISPLAY");
 		}
 
 		return wrapper;
-	},
-
-	/**
-	 * Show the expanded weather overlay (modal).
-	 * Creates a fullscreen backdrop with blur and a centered enlarged weather card.
-	 */
-	showExpandedView () {
-		if (this.isExpanded || !this.loaded || !this.weatherData || !this.weatherData.now) return;
-		this.isExpanded = true;
-
-		const self = this;
-
-		// Overlay backdrop — clicking it dismisses the modal
-		const overlay = document.createElement("div");
-		overlay.className = "weather-modal-overlay";
-		overlay.setAttribute("aria-label", "Weather detail overlay");
-		overlay.setAttribute("role", "dialog");
-		overlay.setAttribute("aria-modal", "true");
-		overlay.addEventListener("click", function () {
-			self.dismissExpandedView();
-		});
-
-		// Expanded card — stops clicks from reaching the overlay
-		const card = document.createElement("div");
-		card.className = "weather-expanded-card";
-		card.addEventListener("click", function (e) {
-			e.stopPropagation();
-		});
-
-		// Close button
-		const closeBtn = document.createElement("button");
-		closeBtn.className = "weather-close-btn";
-		closeBtn.innerHTML = "&times;";
-		closeBtn.setAttribute("aria-label", "Close weather detail");
-		closeBtn.addEventListener("click", function (e) {
-			e.stopPropagation();
-			self.dismissExpandedView();
-		});
-		card.appendChild(closeBtn);
-
-		// Expanded content
-		card.appendChild(this.createExpandedContent());
-		overlay.appendChild(card);
-		document.body.appendChild(overlay);
-		this.overlay = overlay;
-
-		// Focus the close button for accessibility
-		closeBtn.focus();
-
-		// Register Escape key handler
-		document.addEventListener("keydown", this._boundEscapeHandler);
-
-		// Trigger CSS transitions on next frame
-		requestAnimationFrame(function () {
-			overlay.classList.add("weather-modal-overlay--visible");
-			card.classList.add("weather-expanded-card--visible");
-		});
-	},
-
-	/**
-	 * Dismiss the expanded weather overlay with a fade-out animation.
-	 * Cleans up DOM and event listeners after the transition completes.
-	 */
-	dismissExpandedView () {
-		if (!this.isExpanded || !this.overlay) return;
-
-		const overlay = this.overlay;
-		const card = overlay.querySelector(".weather-expanded-card");
-
-		// Remove visible classes to trigger reverse transitions
-		overlay.classList.remove("weather-modal-overlay--visible");
-		if (card) card.classList.remove("weather-expanded-card--visible");
-
-		// Remove keyboard listener immediately
-		document.removeEventListener("keydown", this._boundEscapeHandler);
-
-		// Wait for transition to complete, then remove from DOM
-		const self = this;
-		const onTransitionEnd = function () {
-			if (overlay.parentNode) {
-				overlay.parentNode.removeChild(overlay);
-			}
-			self.overlay = null;
-			self.isExpanded = false;
-			overlay.removeEventListener("transitionend", onTransitionEnd);
-		};
-		overlay.addEventListener("transitionend", onTransitionEnd);
-	},
-
-	/**
-	 * Build enriched weather content for the expanded view.
-	 * Reuses existing formatting/translation methods from the module.
-	 * @returns {HTMLElement}
-	 */
-	createExpandedContent () {
-		const container = document.createElement("div");
-		container.className = "weather-expanded-content";
-
-		const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase())
-			? this.translate(this.weatherData.now.text)
-			: this.weatherData.now.text;
-		const weatherEmoji = this.getWeatherEmoji(weatherCondition);
-
-		// City header
-		const header = document.createElement("div");
-		header.className = "weather-expanded-header";
-		header.textContent = `📍 ${this.translate(this.config.city)}`;
-		container.appendChild(header);
-
-		// Main row: large emoji + temperature
-		const mainRow = document.createElement("div");
-		mainRow.className = "weather-expanded-main";
-
-		const emojiEl = document.createElement("div");
-		emojiEl.className = "weather-expanded-emoji";
-		emojiEl.textContent = weatherEmoji;
-
-		const tempEl = document.createElement("div");
-		tempEl.className = "weather-expanded-temp";
-		tempEl.innerHTML = this.formatTemperature(this.weatherData.now.temp);
-
-		mainRow.appendChild(emojiEl);
-		mainRow.appendChild(tempEl);
-		container.appendChild(mainRow);
-
-		// Weather description
-		const descEl = document.createElement("div");
-		descEl.className = "weather-expanded-description";
-		descEl.textContent = this.translate(weatherCondition);
-		container.appendChild(descEl);
-
-		// Details grid
-		const detailsGrid = document.createElement("div");
-		detailsGrid.className = "weather-expanded-details";
-
-		// Feels like (if available)
-		if (this.weatherData.now.feelsLike !== undefined) {
-			detailsGrid.appendChild(this._createDetailItem(
-				"🌡️", this.translate("FEELS_LIKE"), `${this.weatherData.now.feelsLike}°${this.config.units === "imperial" ? "F" : "C"}`
-			));
-		}
-
-		// Humidity
-		if (this.config.showHumidity) {
-			detailsGrid.appendChild(this._createDetailItem(
-				"💧", this.translate("HUMIDITY"), `${this.weatherData.now.humidity}%`
-			));
-		}
-
-		// Wind
-		if (this.config.showWindSpeed) {
-			let windText = `${this.weatherData.now.windSpeed} km/h`;
-			if (this.config.showWindDirection && this.weatherData.now.windDir) {
-				windText += ` ${this.getWindDirectionEmoji(this.weatherData.now.windDir)} ${this.translate(this.weatherData.now.windDir)}`;
-			}
-			detailsGrid.appendChild(this._createDetailItem(
-				"💨", this.translate("WIND_SPEED"), windText
-			));
-		}
-
-		// Update time
-		const updateTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-		detailsGrid.appendChild(this._createDetailItem(
-			"🕒", this.translate("UPDATED"), updateTime
-		));
-
-		container.appendChild(detailsGrid);
-		return container;
-	},
-
-	/**
-	 * Create a single detail item for the expanded details grid.
-	 * @param {string} emoji  - Leading emoji icon
-	 * @param {string} label  - Label text (translated)
-	 * @param {string} value  - Value text
-	 * @returns {HTMLElement}
-	 */
-	_createDetailItem (emoji, label, value) {
-		const item = document.createElement("div");
-		item.className = "weather-expanded-detail-item";
-
-		const labelEl = document.createElement("div");
-		labelEl.className = "weather-expanded-detail-label";
-		labelEl.textContent = `${emoji} ${label}`;
-
-		const valueEl = document.createElement("div");
-		valueEl.className = "weather-expanded-detail-value";
-		valueEl.textContent = value;
-
-		item.appendChild(labelEl);
-		item.appendChild(valueEl);
-		return item;
-	},
-
-	/**
-	 * Handle Escape key to dismiss the expanded overlay.
-	 * @param {KeyboardEvent} e
-	 */
-	_onEscapeKey (e) {
-		if (e.key === "Escape" && this.isExpanded) {
-			this.dismissExpandedView();
-		}
 	}
 });

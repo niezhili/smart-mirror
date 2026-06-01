@@ -292,59 +292,6 @@ def launch_gui():
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
 
 
-
-def keyboard_input_loop():
-    """Keyboard fallback: type wake words or commands directly."""
-    global running, face_detected
-    import sys
-    logger.bind(tag=TAG).info("💬 Keyboard mode active — type a wake word (e.g. 你好) or command")
-    while running:
-        try:
-            text = input().strip()
-            if not text:
-                continue
-            logger.bind(tag=TAG).info(f"⌨️  Keyboard input: {text}")
-
-            # Check wake words
-            wake_found = False
-            for wake_word in config.get('wakeup_words', []):
-                if wake_word in text:
-                    if not face_detected:
-                        with global_lock:
-                            face_detected = True
-                        logger.bind(tag=TAG).info("⌨️  Wake word detected via keyboard, entering assistant mode")
-                        set_tts_state(False)
-                        threading.Thread(target=assistant_mode).start()
-                        wake_found = True
-                        break
-            if wake_found:
-                continue
-            
-            # If already in assistant mode, this text is a command
-            if face_detected:
-                logger.bind(tag=TAG).info(f"⌨️  Command: {text}")
-                if '天气' in text:
-                    threading.Thread(target=play_weather_info).start()
-                elif '几点' in text:
-                    from datetime import datetime
-                    logger.bind(tag=TAG).info(f"当前时间: {datetime.now().strftime('%H:%M')}")
-                elif '拜拜' in text or '再见' in text or 'bye' in text.lower():
-                    logger.bind(tag=TAG).info("再见！")
-                    with global_lock:
-                        face_detected = False
-                elif '关闭系统' in text:
-                    logger.bind(tag=TAG).info("关闭系统...")
-                    with global_lock:
-                        running = False
-                else:
-                    response = chat_llm(text)
-                    logger.bind(tag=TAG).info(f"🤖 AI: {response}")
-        except (EOFError, KeyboardInterrupt):
-            break
-        except Exception as e:
-            logger.bind(tag=TAG).error(f"Keyboard input error: {e}")
-
-
 def main():
     global running, assistant, preloaded_face_data, human_detector
     logger.bind(tag=TAG).info("Starting Smart Mirror...")
@@ -371,11 +318,6 @@ def main():
             gui_thread = threading.Thread(target=launch_gui)
             gui_thread.daemon = True
             gui_thread.start()
-
-        # 启动键盘输入（备用交互方式）
-        keyboard_thread = threading.Thread(target=keyboard_input_loop)
-        keyboard_thread.daemon = True
-        keyboard_thread.start()
 
         # 启动唤醒词检测
         voice_thread = threading.Thread(target=wake_word_detection_loop)

@@ -1,19 +1,11 @@
 from collections import defaultdict
-try:
-    import audioop
-except ImportError:
-    audioop = None  # removed in Python 3.13
+import audioop
 import os
 import tempfile
 import time
 import threading
 import wave
-try:
-    import pyaudio
-    PYAUDIO_AVAILABLE = True
-except ImportError:
-    PYAUDIO_AVAILABLE = False
-    pyaudio = None  # type: ignore
+import pyaudio
 import pyttsx3
 import glob
 from features.tts.tts_huoshan import text_to_speech
@@ -359,9 +351,6 @@ def user_speech_recognition(timeout=30) -> str:
 # Update the listening and reading of data
 
 def record_audio_until_silence(timeout=30):  # 添加超时参数（单位：秒）
-    if not PYAUDIO_AVAILABLE:
-        logger.bind(tag=TAG).error("pyaudio not installed; cannot record audio")
-        return None
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
