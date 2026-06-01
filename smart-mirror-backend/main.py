@@ -290,6 +290,9 @@ def launch_gui():
             SimpleApp().run()
         except ImportError:
             logger.bind(tag=TAG).warning("Running in console mode. GUI frameworks not available")
+    except Exception as e:
+        logger.bind(tag=TAG).warning(f"GUI launch failed (non-critical): {e}")
+        logger.bind(tag=TAG).info("Smart Mirror is accessible at http://localhost:8080")
 
 
 def main():
@@ -315,9 +318,12 @@ def main():
 
         # 统一启动模式下默认不启用后端GUI，避免与前端Electron重复开窗
         if ENABLE_BACKEND_GUI:
-            gui_thread = threading.Thread(target=launch_gui)
-            gui_thread.daemon = True
-            gui_thread.start()
+            try:
+                gui_thread = threading.Thread(target=launch_gui)
+                gui_thread.daemon = True
+                gui_thread.start()
+            except Exception:
+                logger.bind(tag=TAG).warning("无法启动GUI界面，可通过浏览器访问 http://localhost:8080")
 
         # 启动唤醒词检测
         voice_thread = threading.Thread(target=wake_word_detection_loop)
