@@ -2,7 +2,15 @@ import os
 import glob
 import wave
 import numpy as np
-import pyaudio
+import torch
+import time
+import threading
+try:
+    import pyaudio
+    PYAUDIO_AVAILABLE = True
+except ImportError:
+    PYAUDIO_AVAILABLE = False
+    pyaudio = None  # type: ignore
 from features.common.log_loader import logger
 from features.common.config_loader import config
 TAG=__name__
@@ -25,7 +33,6 @@ class VAD:
         self.logger=logger.bind(tag=TAG)
 
         try:
-            import torch
             self.model, self.utils = torch.hub.load(
                 repo_or_dir=self.MODEL_PATH,
                 model="silero_vad",
@@ -47,7 +54,7 @@ class VAD:
         self.CHANNELS= 1
         self.DTYPE=np.int16
         self.CHUNK=512
-        self.FORMAT=pyaudio.paInt16
+        self.FORMAT=pyaudio.paInt16 if PYAUDIO_AVAILABLE else None
 
         self.confidence=config.get("vad",{"confidence":0.5}).get("confidence",0.5)
         self.silence=config.get("vad",{"silence":1}).get("silence",1)
@@ -55,8 +62,8 @@ class VAD:
         self.max_temp_num=config.get("vad",{"max_temp_num":15}).get("max_temp_num",15)
         self.min_cont_frames=int(config.get("vad",{"min_cont_frames":5}).get("min_cont_frames",5))
 
-        self.p=None
-        self.stream=None
+        # Thread-safe: prevent concurrent stream access from wake-word + assistant threads
+        self._lock = threading.Lock()
 
     def __enter__(self):
         return self
@@ -68,70 +75,102 @@ class VAD:
         # 用户接口
         # 录音人声片段，人声静默1秒结束并且写入音频wav
         # 注意这里接受的filename不是路径，默认路径是【VAD】TEMP_PATH
+        if not PYAUDIO_AVAILABLE:
+            self.logger.error("pyaudio not installed; cannot record audio")
+            time.sleep(5)
+            return ""
         try:
             os.makedirs(self.TEMP_PATH,exist_ok=True)
             output_file=os.path.join(self.TEMP_PATH,filename)
         except Exception as e:
             self.logger.error(f"创建临时目录时发生错误:{e}")
             return ""
-        try:
-            if self.p is None:
-                self.p = pyaudio.PyAudio()
-            if self.stream is None:
-                self.stream=self.p.open(
-                format=self.FORMAT,
-                channels=self.CHANNELS,
-                rate=self.SAMPLE_RATE,
-                input=True,
-                frames_per_buffer=self.CHUNK
-            )
-        except Exception as e:
-            self.logger.error(f"初始化音频流出错:{e}")
-            return  ""
 
-        self.logger.info("开启麦克风,等待人声...")
-        frames=[]
-        silent_frames=0
-        speech_frames=0
-        max_silent_frames=int(self.silence*self.SAMPLE_RATE/self.CHUNK)
-        timeout_frames=int(self.timeout*self.SAMPLE_RATE/self.CHUNK)
-        total_frames=0
+        # Open a fresh stream for every recording and clean it up in finally.
+        # Reusing self.stream across calls caused "Stream closed" (-9988) errors
+        # when the stream went stale or two threads raced on the same VAD instance.
+        p = None
+        stream = None
+        with self._lock:
+            try:
+                p = pyaudio.PyAudio()
+                stream = p.open(
+                    format=self.FORMAT,
+                    channels=self.CHANNELS,
+                    rate=self.SAMPLE_RATE,
+                    input=True,
+                    frames_per_buffer=self.CHUNK
+                )
+            except Exception as e:
+                self.logger.error(f"初始化音频流出错:{e}")
+                if stream:
+                    try:
+                        stream.close()
+                    except Exception:
+                        pass
+                if p:
+                    try:
+                        p.terminate()
+                    except Exception:
+                        pass
+                return ""
 
-        try:
-            while total_frames<timeout_frames:
-                data=self.stream.read(self.CHUNK)
-                frames.append(data)
-                total_frames+=1
+            self.logger.info("开启麦克风,等待人声...")
+            frames=[]
+            silent_frames=0
+            speech_frames=0
+            max_silent_frames=int(self.silence*self.SAMPLE_RATE/self.CHUNK)
+            timeout_frames=int(self.timeout*self.SAMPLE_RATE/self.CHUNK)
+            total_frames=0
 
-                audio_chunk=np.frombuffer(data,dtype=self.DTYPE)
-                speech_prob=self._trust_detection(audio_chunk)
+            try:
+                while total_frames<timeout_frames:
+                    data=stream.read(self.CHUNK, exception_on_overflow=False)
+                    frames.append(data)
+                    total_frames+=1
 
-                if speech_prob>self.confidence:
-                    self.logger.info(
-                        f"检测到人声 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒，人声概率: {speech_prob:.2f}")
+                    audio_chunk=np.frombuffer(data,dtype=self.DTYPE)
+                    speech_prob=self._trust_detection(audio_chunk)
 
-                    silent_frames=0
-                    speech_frames+=1
-                else:
-                    if speech_frames>0:
-                       silent_frames+=1
+                    if speech_prob>self.confidence:
+                        self.logger.info(
+                            f"检测到人声 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒，人声概率: {speech_prob:.2f}")
 
-                if silent_frames>=max_silent_frames and speech_frames>self.min_cont_frames:
-                    self.logger.success(
-                        f"录音结束，已录制 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒 ,录音文件: {output_file}")
-                    break
+                        silent_frames=0
+                        speech_frames+=1
+                    else:
+                        if speech_frames>0:
+                           silent_frames+=1
 
-            wf = wave.open(output_file, 'wb')
-            wf.setnchannels(self.CHANNELS)
-            wf.setsampwidth(self.p.get_sample_size(self.FORMAT))
-            wf.setframerate(self.SAMPLE_RATE)
-            wf.writeframes(b''.join(frames))
-            wf.close()
-            self._audio_temp_manager(output_file)
-            return output_file
-        except Exception as e:
-            self.logger.error(f"录音时发生错误:{e}")
-            return ""
+                    if silent_frames>=max_silent_frames and speech_frames>self.min_cont_frames:
+                        self.logger.success(
+                            f"录音结束，已录制 {total_frames * self.CHUNK / self.SAMPLE_RATE:.2f} 秒 ,录音文件: {output_file}")
+                        break
+
+                wf = wave.open(output_file, 'wb')
+                wf.setnchannels(self.CHANNELS)
+                wf.setsampwidth(p.get_sample_size(self.FORMAT))
+                wf.setframerate(self.SAMPLE_RATE)
+                wf.writeframes(b''.join(frames))
+                wf.close()
+                self._audio_temp_manager(output_file)
+                return output_file
+            except Exception as e:
+                self.logger.error(f"录音时发生错误:{e}")
+                return ""
+            finally:
+                # Always clean up the stream and PyAudio instance for this recording
+                if stream:
+                    try:
+                        stream.stop_stream()
+                        stream.close()
+                    except Exception as e:
+                        self.logger.error(f"关闭音频流时发生错误:{e}")
+                if p:
+                    try:
+                        p.terminate()
+                    except Exception as e:
+                        self.logger.error(f"关闭PyAudio时发生错误:{e}")
 
 
     def _audio_temp_manager(self, audio_path):
@@ -168,20 +207,6 @@ class VAD:
             return 0.0
 
     def close(self):
-        if self.stream:
-            try:
-                self.stream.stop_stream()
-                self.stream.close()
-            except Exception as e:
-                self.logger.error(f"关闭音频流时发生错误:{e}")
-            finally:
-                self.stream=None
-        if self.p:
-            try:
-                self.p.terminate()
-            except Exception as e:
-                self.logger.error(f"关闭PyAudio时发生错误:{e}")
-            finally:
-                self.p=None
-
-
+        # No-op: each record_audio() call now manages its own stream lifecycle.
+        # Kept for backward compatibility with context-manager usage.
+        pass
