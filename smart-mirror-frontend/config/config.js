@@ -47,95 +47,18 @@ let config = {
 		units: "公制",
 
 		modules: [
-		{
-			module: "MMM-CustomClock",
-			position: "top_center", // Or wherever you had your clock
-			config: {
-				timeFormat: 24, // Use 12 or 24
-				displayType: "digital", // "digital", "analog", or "both"
-				showDate: true,
-				displaySeconds: true
-				// Add any other options you want to customize
-			}
-		},
 			{
-				module: "MMM-LanguageSwitch",
-				position: "bottom_right",
+				module: "MMM-CustomWeather",
+				position: "top_left",
 				config: {
-					language: "en"
+					apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
+					debug: true,
+					// updateInterval: 60000
 				}
-			},
-// 		{
-// 			module: "MMM-CustomWeather",
-// 			position: "top_left",
-// 			config: {
-// 				apiKey: "8ff8d7c3dd9d4e3190df3931536544ef",
-// 				debug: true,
-// //				updateInterval: 60000
-// 			}
-// 		},
-		{
-
-			module: "MMM-DHT11",
-			position: "bottom_left",
-			config:{
-			   sensorPin:4, 
-			   updateInterval: 500,
-			   temperatureUnit: "C"
 			}
-		},
-		{
-			module: "MMM-BackgroundImage",
-			position: "fullscreen_below",
-			config: {
-				bgName: "red-bg-image.png",
-				videoName: "",
-				height: "100%",
-				width: "100%",
-			}
-		},
+		],
 
-		// {
-		// 	module: 'MMM-Clockinese',
-		// 	position: 'top_center',
-		// 	config: {
-		// 	  timeZone: "n33", // See timeZone chart below for your timeZone code
-		// 	  language: "en"
-		// 	}
-	 	// },
-		{
-			module: "MMM-NewsScroller",
-			position: "top_right",  // Choose a position that works for your setup
-			config: {
-				//API key and URL are already set in the defaults, but you can override them here if needed
-				apiUrl: "https://v.juhe.cn/toutiao/index", // Using HTTPS
-				apiKey: "7268a1f3d036719920a9bff93ca6b6b1",
-				newsType: "guoji"
-			}
-		},
-		{
-//			header: "月历",
-			module: "MMM-MonthlyCalendar",
-			position: "bottom_center",
-			config: { // See "Configuration options" for more information.
-			mode: "fourWeeks",
-			firstDayOfWeek: "Sunday",
-			multiDayEndingTimeSeparator: "至",
-			}
-		},
-		{
-			module: "MMM-quotes",
-			position: "lower_third",
-			config: {
-				updateInterval: 10000,
-				fadeSpeed: 1000,
-				authorAlign: "align-right",
-		}
-		},
-
-	],
-
-	electronOptions: {
+		electronOptions: {
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true
