@@ -1,4 +1,9 @@
-import face_recognition
+try:
+    import face_recognition
+    FACE_RECOGNITION_AVAILABLE = True
+except ImportError:
+    FACE_RECOGNITION_AVAILABLE = False
+    face_recognition = None  # type: ignore
 import cv2
 import numpy as np
 from collections import defaultdict
@@ -57,7 +62,10 @@ class FaceRecognition:
         self.setup_voice_engine()
 
         # Load known faces
-        self.load_known_faces()
+        if FACE_RECOGNITION_AVAILABLE:
+            self.load_known_faces()
+        else:
+            self.logger.warning("face_recognition package not installed; face recognition disabled")
 
         # Start voice processing thread
         self.voice_thread = threading.Thread(target=self.
@@ -101,6 +109,8 @@ class FaceRecognition:
 
     def _process_and_add_face(self, image_path: Path, person_name: str) -> bool:
         """Process and add a face with improved image processing"""
+        if not FACE_RECOGNITION_AVAILABLE:
+            return False
         try:
             image = cv2.imread(str(image_path))
             if image is None:
@@ -172,6 +182,9 @@ class FaceRecognition:
     def start_recognition(self, confidence_threshold: float = 0.6) -> bool:
         """Start real-time face recognition without displaying the camera frame
         Returns True if a known person is recognized, False otherwise"""
+        if not FACE_RECOGNITION_AVAILABLE:
+            self.logger.warning("face_recognition not available; cannot start recognition")
+            return False
         video_capture = cv2.VideoCapture(0)
 
         if not video_capture.isOpened():

@@ -1,2 +1,45 @@
 .env
 .runtime/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / distribution
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# Editors and IDEs
+.vscode/
+.idea/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+
+# Logs
+logs/
+*.log
+
+# Misc
+.cache/
+Thumbs.db

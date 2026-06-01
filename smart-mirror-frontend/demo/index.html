@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Mirror — Demo Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --mirror-bg: #0a0a0a;
+      --glass-bg: rgba(0, 0, 0, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #e0e0e0;
+      --text-secondary: #999;
+      --accent: #4fc3f7;
+      --accent-warm: #ffb74d;
+      --accent-hot: #ef5350;
+      --accent-cool: #4fc3f7;
+      --glow: 0 0 20px rgba(79, 195, 247, 0.3);
+      --font-mono: 'Orbitron', monospace;
+      --font-cn: 'Noto Sans SC', sans-serif;
+      --font-jp: 'Noto Sans JP', sans-serif;
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-cn);
+      background: var(--mirror-bg);
+      color: var(--text-primary);
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Mirror Background ===== */
+    .mirror-stage {
+      position: fixed; inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 0;
+      z-index: 1;
+      padding: 2vh 3vw;
+    }
+
+    /* Mirror reflective overlay */
+    .mirror-stage::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 60%, rgba(255,255,255,0.03) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(255,255,255,0.01) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Subtle mirror scan line */
+    .mirror-stage::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.008) 2px,
+        rgba(255,255,255,0.008) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== Background Image Module (fullscreen_below) ===== */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse at 50% 50%, #1a1a2e 0%, #0a0a0f 70%),
+        linear-gradient(180deg, #0d1b2a 0%, #1b0d1b 50%, #0d1b2a 100%);
+    }
+    .bg-layer .particles {
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.15), transparent),
+        radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,0.1), transparent),
+        radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.12), transparent),
+        radial-gradient(2px 2px at 80% 50%, rgba(255,255,255,0.08), transparent),
+        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.1), transparent),
+        radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.13), transparent),
+        radial-gradient(2px 2px at 50% 45%, rgba(255,255,255,0.07), transparent),
+        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.09), transparent);
+      animation: twinkle 4s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    /* ===== Module Regions ===== */
+    .region { position: relative; z-index: 1; }
+    .module-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .module-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      border-radius: 16px;
+    }
+    .module-card:hover {
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4), var(--glow);
+      transform: translateY(-2px);
+    }
+    .module-label {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 6px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    /* ===== Grid Placements ===== */
+    .top-left      { grid-column: 1; grid-row: 1; align-self: start; }
+    .top-center    { grid-column: 2; grid-row: 1; align-self: start; justify-self: center; text-align: center; }
+    .top-right     { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; }
+    .middle-center { grid-column: 2; grid-row: 2; align-self: center; justify-self: center; text-align: center; }
+    .bottom-left   { grid-column: 1; grid-row: 3; align-self: end; }
+    .bottom-center { grid-column: 2; grid-row: 3; align-self: end; justify-self: center; }
+    .bottom-right  { grid-column: 3; grid-row: 3; align-self: end; justify-self: end; }
+
+    /* ===== 1. CustomClock Module (top_center) ===== */
+    .clock-module { text-align: center; min-width: 260px; }
+    .clock-date {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-family: var(--font-cn);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .clock-time {
+      font-size: 4rem;
+      font-family: var(--font-mono);
+      font-weight: 900;
+      background: linear-gradient(180deg, #ffffff 0%, #b0c4de 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      text-shadow: 0 0 40px rgba(255,255,255,0.2);
+    }
+    .clock-seconds {
+      font-size: 1.5rem;
+      font-family: var(--font-mono);
+      font-weight: 400;
+      color: var(--text-secondary);
+      vertical-align: super;
+      margin-left: 4px;
+    }
+    .clock-weekday {
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-top: 2px;
+      font-family: var(--font-cn);
+    }
+
+    /* ===== 2. Weather Module (top_left — included for completeness) ===== */
+    .weather-module { min-width: 180px; }
+    .weather-main {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .weather-emoji {
+      font-size: 2.8rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .weather-temp {
+      font-size: 2.2rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent-warm);
+    }
+    .weather-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+    .weather-details {
+      display: flex; gap: 16px; margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);
+    }
+    .weather-details span { display: flex; align-items: center; gap: 4px; }
+
+    /* ===== 3. NewsScroller Module (top_right) ===== */
+    .news-module { min-width: 240px; max-width: 320px; }
+    .news-title {
+      font-size: 0.78rem; line-height: 1.5; font-weight: 400;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .news-title.fade-out { opacity: 0; transform: translateY(-8px); }
+    .news-title.fade-in  { opacity: 1; transform: translateY(0); }
+    .news-source {
+      font-size: 0.6rem; color: #888; margin-top: 4px;
+    }
+    .news-counter {
+      font-size: 0.6rem; color: rgba(255,255,255,0.25); margin-top: 6px;
+      font-family: var(--font-mono);
+    }
+
+    /* ===== 4. Quotes Module (middle_center / lower_third) ===== */
+    .quotes-module { min-width: 320px; max-width: 500px; }
+    .quote-text {
+      font-size: 1.15rem; font-style: italic; line-height: 1.7;
+      color: #ccc;
+      transition: opacity 0.8s ease;
+    }
+    .quote-text::before { content: '"'; }
+    .quote-text::after  { content: '"'; }
+    .quote-author {
+      font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;
+      text-align: right;
+      transition: opacity 0.8s ease;
+    }
+    .quote-author::before { content: '— '; }
+
+    /* ===== 5. DHT11 Sensor Module (bottom_left) ===== */
+    .dht-module { min-width: 140px; }
+    .dht-readings { display: flex; gap: 20px; }
+    .dht-item { text-align: center; }
+    .dht-value {
+      font-size: 1.6rem; font-family: var(--font-mono); font-weight: 700;
+    }
+    .dht-label {
+      font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px;
+    }
+    .dht-status {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    .dht-status.live { background: #4caf50; box-shadow: 0 0 8px #4caf50; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .dht-updated { font-size: 0.55rem; color: rgba(255,255,255,0.2); margin-top: 6px; font-family: var(--font-mono); }
+
+    /* ===== System Modules Panel ===== */
+    .sys-toggle {
+      position: fixed; top: 12px; right: 12px; z-index: 100;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; font-size: 1.2rem; cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .sys-toggle:hover { background: rgba(255,255,255,0.12); transform: scale(1.08); }
+    .sys-panel {
+      position: fixed; top: 60px; right: 12px; z-index: 100;
+      background: rgba(10,10,20,0.92); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+      padding: 20px; width: 320px; max-height: 70vh; overflow-y: auto;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+      font-size: 0.75rem; line-height: 1.8;
+      transform: translateX(120%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sys-panel.open { transform: translateX(0); }
+    .sys-panel h3 { font-size: 0.85rem; color: var(--accent); margin-bottom: 12px; font-family: var(--font-mono); }
+    .sys-panel .section { margin-bottom: 14px; }
+    .sys-panel .section-title { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .sys-panel .module-item { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+    .sys-panel .module-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sys-panel .module-dot.active { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+    .sys-panel .module-dot.inactive { background: #666; }
+    .sys-panel .module-dot.off { background: #444; }
+    .sys-panel .module-name { flex: 1; }
+    .sys-panel .module-status { color: rgba(255,255,255,0.35); font-size: 0.65rem; }
+
+    /* ===== 6. Monthly Calendar Module (bottom_center) ===== */
+    .calendar-module { min-width: 300px; }
+    .cal-header {
+      font-size: 0.95rem; font-weight: 700; text-align: center; margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;
+      font-size: 0.7rem;
+    }
+    .cal-day-header { color: var(--text-secondary); font-size: 0.6rem; padding: 2px 0; font-weight: 700; }
+    .cal-day-header.weekend { color: rgba(239, 83, 80, 0.6); }
+    .cal-day {
+      padding: 4px 0; border-radius: 6px; cursor: default;
+      transition: background 0.2s;
+    }
+    .cal-day:hover { background: rgba(255,255,255,0.06); }
+    .cal-day.today {
+      background: var(--accent); color: #000; font-weight: 700;
+      box-shadow: 0 0 12px rgba(79,195,247,0.4);
+    }
+    .cal-day.other-month { color: rgba(255,255,255,0.15); }
+    .cal-day.weekend { color: rgba(239, 83, 80, 0.6); }
+
+    /* ===== 7. Language Switch Module (bottom_right) ===== */
+    .lang-module { text-align: center; }
+    .lang-btn {
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-family: var(--font-cn);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    .lang-btn:hover {
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+      transform: scale(1.05);
+    }
+    .lang-btn:active { transform: scale(0.95); }
+    .lang-btn.switching { animation: pulse-btn 0.5s ease; }
+    @keyframes pulse-btn {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* ===== 8. Voice Assistant Panel (middle — bonus demo) ===== */
+    .voice-module {
+      min-width: 360px; max-width: 500px;
+      margin-top: 20px;
+    }
+    .voice-status {
+      display: flex; align-items: center; gap: 10px; justify-content: center;
+      font-size: 0.8rem; color: var(--text-secondary);
+    }
+    .voice-indicator {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #4caf50;
+      box-shadow: 0 0 12px rgba(76,175,80,0.5);
+    }
+    .voice-indicator.listening {
+      background: var(--accent-hot);
+      box-shadow: 0 0 16px rgba(239,83,80,0.6);
+      animation: pulse-listen 1s ease-in-out infinite;
+    }
+    @keyframes pulse-listen {
+      0%, 100% { box-shadow: 0 0 8px rgba(239,83,80,0.4); }
+      50% { box-shadow: 0 0 24px rgba(239,83,80,0.8); }
+    }
+    .voice-wave {
+      display: flex; align-items: center; gap: 3px; height: 30px; margin-top: 10px;
+      justify-content: center;
+    }
+    .voice-wave .bar {
+      width: 3px; background: var(--accent); border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+    .voice-wave .bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+    .voice-wave .bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+    .voice-wave .bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+    .voice-wave .bar:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+    .voice-wave .bar:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+    @keyframes wave {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(0.3); }
+    }
+    .voice-transcript {
+      margin-top: 10px; font-size: 0.85rem; color: #bbb; min-height: 24px;
+      text-align: center; font-style: italic;
+      transition: opacity 0.4s;
+    }
+
+    /* ===== Status Bar ===== */
+    .status-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 20px;
+      background: rgba(0,0,0,0.5);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.55rem; color: rgba(255,255,255,0.3);
+      font-family: var(--font-mono);
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px;
+    }
+    .status-dot.green { background: #4caf50; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .mirror-stage {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto auto;
+        padding: 1.5vh 2vw; gap: 8px;
+      }
+      .top-left { grid-column: 1; grid-row: 1; }
+      .top-center { grid-column: 1 / span 2; grid-row: 2; }
+      .top-right { grid-column: 2; grid-row: 1; }
+      .middle-center { grid-column: 1 / span 2; grid-row: 3; }
+      .bottom-left { grid-column: 1; grid-row: 4; }
+      .bottom-center { grid-column: 1 / span 2; grid-row: 5; }
+      .bottom-right { grid-column: 2; grid-row: 4; }
+      .clock-time { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background layer (MMM-BackgroundImage) -->
+  <div class="bg-layer"><div class="particles"></div></div>
+
+  <!-- Main mirror grid -->
+  <div class="mirror-stage">
+
+    <!-- ===== MMM-CustomWeather (top_left) ===== -->
+    <div class="region top-left">
+      <div class="module-card weather-module">
+        <div class="module-label">☀️ MMM-CustomWeather</div>
+        <div class="weather-main">
+          <span class="weather-emoji" id="weather-emoji">☀️</span>
+          <span class="weather-temp" id="weather-temp">28°C</span>
+        </div>
+        <div class="weather-desc" id="weather-desc">Sunny, Hangzhou</div>
+        <div class="weather-details">
+          <span>💧 <span id="weather-humidity">65%</span></span>
+          <span>💨 <span id="weather-wind">12 km/h</span></span>
+          <span>🧭 <span id="weather-dir">SE</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-CustomClock (top_center) ===== -->
+    <div class="region top-center">
+      <div class="module-card clock-module">
+        <div class="module-label">🕐 MMM-CustomClock</div>
+        <div class="clock-date" id="clock-date">2026年6月1日</div>
+        <div>
+          <span class="clock-time" id="clock-time">14:30</span>
+          <span class="clock-seconds" id="clock-seconds">00</span>
+        </div>
+        <div class="clock-weekday" id="clock-weekday">星期一 Monday</div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-NewsScroller (top_right) ===== -->
+    <div class="region top-right">
+      <div class="module-card news-module">
+        <div class="module-label">📰 MMM-NewsScroller</div>
+        <div class="news-title fade-in" id="news-title">Loading headlines...</div>
+        <div class="news-source" id="news-source"></div>
+        <div class="news-counter" id="news-counter">1/10</div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-quotes (middle_center / lower_third) ===== -->
+    <div class="region middle-center">
+      <div class="module-card quotes-module">
+        <div class="module-label">💬 MMM-quotes</div>
+        <div class="quote-text" id="quote-text">The best way to predict the future is to create it.</div>
+        <div class="quote-author" id="quote-author">Peter Drucker</div>
+      </div>
+
+      <!-- ===== Voice Assistant (bonus interaction panel) ===== -->
+      <div class="module-card voice-module" style="margin-top:16px;">
+        <div class="module-label">🎤 Voice Assistant (Backend)</div>
+        <div class="voice-status">
+          <span class="voice-indicator" id="voice-dot"></span>
+          <span id="voice-status-text">Idle — say "你好 小镜" to wake</span>
+        </div>
+        <div class="voice-wave" id="voice-wave">
+          <span class="bar"></span><span class="bar"></span>
+          <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </div>
+        <div class="voice-transcript" id="voice-transcript"></div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-DHT11 (bottom_left) ===== -->
+    <div class="region bottom-left">
+      <div class="module-card dht-module">
+        <div class="module-label">🌡️ MMM-DHT11</div>
+        <div class="dht-readings">
+          <div class="dht-item">
+            <div class="dht-value" style="color: var(--accent-warm);" id="dht-temp">26.5°C</div>
+            <div class="dht-label" id="dht-temp-label">Temperature</div>
+          </div>
+          <div class="dht-item">
+            <div class="dht-value" style="color: var(--accent-cool);" id="dht-humidity">58.2%</div>
+            <div class="dht-label" id="dht-hum-label">Humidity</div>
+          </div>
+        </div>
+        <div class="dht-updated">
+          <span class="dht-status live"></span>Sensor Live · GPIO Pin 4
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-MonthlyCalendar (bottom_center) ===== -->
+    <div class="region bottom-center">
+      <div class="module-card calendar-module">
+        <div class="module-label">📅 MMM-MonthlyCalendar</div>
+        <div class="cal-header" id="cal-header">June 2026</div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== MMM-LanguageSwitch (bottom_right) ===== -->
+    <div class="region bottom-right">
+      <div class="module-card lang-module">
+        <div class="module-label">🌐 MMM-LanguageSwitch</div>
+        <button class="lang-btn" id="lang-btn" onclick="toggleLanguage()">中文 / English</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== System Modules Toggle ===== -->
+  <button class="sys-toggle" id="sys-toggle" onclick="toggleSysPanel()" title="System Modules">⚙</button>
+  <div class="sys-panel" id="sys-panel">
+    <h3>🪞 Smart Mirror — System Modules</h3>
+
+    <div class="section">
+      <div class="section-title">📺 Frontend Modules (MagicMirror²)</div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-CustomClock</span><span class="module-status">top_center</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-CustomWeather</span><span class="module-status">top_left</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-NewsScroller</span><span class="module-status">top_right</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-DHT11</span><span class="module-status">bottom_left</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-MonthlyCalendar</span><span class="module-status">bottom_center</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-quotes</span><span class="module-status">lower_third</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-LanguageSwitch</span><span class="module-status">bottom_right</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">MMM-BackgroundImage</span><span class="module-status">fullscreen_below</span></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🧠 Backend Services (Python)</div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">Voice Activity Detection</span><span class="module-status">Silero VAD</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">Speech Recognition</span><span class="module-status">Paraformer ASR</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">LLM Conversation</span><span class="module-status">Qwen-turbo</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">Text-to-Speech</span><span class="module-status">Huoshan TTS</span></div>
+      <div class="module-item"><span class="module-dot inactive"></span><span class="module-name">Face Recognition</span><span class="module-status">dlib/OpenCV</span></div>
+      <div class="module-item"><span class="module-dot inactive"></span><span class="module-name">Human Detection</span><span class="module-status">PIR Sensor / GPIO</span></div>
+      <div class="module-item"><span class="module-dot inactive"></span><span class="module-name">Gaze Estimation</span><span class="module-status">MediaPipe</span></div>
+      <div class="module-item"><span class="module-dot inactive"></span><span class="module-name">IoT Remote Control</span><span class="module-status">Tuya API / Blinker</span></div>
+      <div class="module-item"><span class="module-dot active"></span><span class="module-name">Weather Service</span><span class="module-status">QWeather API</span></div>
+      <div class="module-item"><span class="module-dot inactive"></span><span class="module-name">Home Control (AC)</span><span class="module-status">IR Blaster</span></div>
+    </div>
+  </div>
+
+  <!-- ===== Status Bar ===== -->
+  <div class="status-bar">
+    <span><span class="status-dot green"></span>System Online</span>
+    <span>LLM: Qwen · ASR: Paraformer · TTS: Huoshan</span>
+    <span>Smart Mirror v1.0</span>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════
+    //  Smart Mirror — Demo Dashboard Script
+    // ═══════════════════════════════════════════
+
+    let currentLanguage = 'zh';
+    const translations = {
+      zh: {
+        weekday: ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'],
+        months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+        calDays: ['日','一','二','三','四','五','六'],
+        tempLabel: '温度', humLabel: '湿度',
+        idle: '待机 — 说 "你好 小镜" 唤醒',
+        listening: '聆听中...',
+        thinking: '思考中...',
+        speaking: '说话中...',
+        weatherDesc: ['晴', 'Sunny, Hangzhou'],
+      },
+      en: {
+        weekday: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+        months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        calDays: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+        tempLabel: 'Temperature', humLabel: 'Humidity',
+        idle: 'Idle — say "Hello Mirror" to wake',
+        listening: 'Listening...',
+        thinking: 'Thinking...',
+        speaking: 'Speaking...',
+        weatherDesc: ['Clear', 'Sunny, Hangzhou'],
+      }
+    };
+
+    // ─── Clock ───────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      const t = translations[currentLanguage];
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock-time').textContent = `${h}:${m}`;
+      document.getElementById('clock-seconds').textContent = s;
+      document.getElementById('clock-date').textContent =
+        `${now.getFullYear()}${t.months[now.getMonth()]}${now.getDate()}日`;
+      document.getElementById('clock-weekday').textContent =
+        `${t.weekday[now.getDay()]} ${translations['en'].weekday[now.getDay()]}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ─── Weather (mock data + live clock) ───
+    function updateWeather() {
+      const now = new Date();
+      const h = now.getHours();
+      let emoji, temp, desc, humid, wind, dir;
+      if (h >= 6 && h < 18) {
+        emoji = '☀️'; temp = 28 + Math.random() * 3; desc = 'Sunny'; humid = 58 + Math.floor(Math.random() * 10); wind = 8 + Math.floor(Math.random() * 8); dir = 'SE';
+      } else if (h >= 18 && h < 21) {
+        emoji = '🌅'; temp = 22 + Math.random() * 3; desc = 'Clear'; humid = 62 + Math.floor(Math.random() * 8); wind = 5 + Math.floor(Math.random() * 5); dir = 'E';
+      } else {
+        emoji = '🌙'; temp = 20 + Math.random() * 3; desc = 'Clear Night'; humid = 70 + Math.floor(Math.random() * 10); wind = 3 + Math.floor(Math.random() * 4); dir = 'NE';
+      }
+      document.getElementById('weather-emoji').textContent = emoji;
+      document.getElementById('weather-temp').textContent = `${temp.toFixed(0)}°C`;
+      document.getElementById('weather-desc').textContent = `${desc}, Hangzhou`;
+      document.getElementById('weather-humidity').textContent = `${humid}%`;
+      document.getElementById('weather-wind').textContent = `${wind} km/h`;
+      document.getElementById('weather-dir').textContent = dir;
+    }
+    updateWeather();
+    setInterval(updateWeather, 300000); // every 5 min
+
+    // ─── News Scroller ──────────────────────
+    const newsItems = [
+      { title: 'AI breakthrough enables real-time multilingual translation on edge devices', source: 'TechCrunch · 2h ago' },
+      { title: 'Smart home market projected to reach $380 billion by 2028', source: 'Reuters · 4h ago' },
+      { title: 'Raspberry Pi 5 brings desktop-class performance to IoT projects', source: 'The Verge · 6h ago' },
+      { title: 'New computer vision models achieve 99% accuracy in facial recognition', source: 'Nature · 8h ago' },
+      { title: 'Edge AI: The next frontier for privacy-preserving smart devices', source: 'Wired · 10h ago' },
+      { title: '全球人工智能开发者大会今日在杭州开幕', source: '新华网 · 1小时前' },
+      { title: '教育部启动新一轮人工智能人才培养计划', source: '人民日报 · 3小时前' },
+      { title: '树莓派生态大会：开源硬件推动智能家居创新', source: '36氪 · 5小时前' },
+      { title: '量子计算新突破：室温量子比特操作取得重大进展', source: '科技日报 · 7小时前' },
+      { title: 'IoT security standards updated: What developers need to know', source: 'IEEE Spectrum · 9h ago' },
+    ];
+    let newsIndex = 0;
+    function scrollNews() {
+      const el = document.getElementById('news-title');
+      const src = document.getElementById('news-source');
+      el.classList.add('fade-out');
+      setTimeout(() => {
+        const item = newsItems[newsIndex % newsItems.length];
+        el.textContent = item.title;
+        src.textContent = item.source;
+        document.getElementById('news-counter').textContent = `${(newsIndex % newsItems.length) + 1}/${newsItems.length}`;
+        el.classList.remove('fade-out');
+        el.classList.add('fade-in');
+        setTimeout(() => el.classList.remove('fade-in'), 600);
+        newsIndex++;
+      }, 400);
+    }
+    scrollNews();
+    setInterval(scrollNews, 5000);
+
+    // ─── Quotes ─────────────────────────────
+    const quotes = [
+      { text: 'The best way to predict the future is to create it.', author: 'Peter Drucker' },
+      { text: 'Innovation distinguishes between a leader and a follower.', author: 'Steve Jobs' },
+      { text: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
+      { text: '学而不思则罔，思而不学则殆。', author: '孔子' },
+      { text: 'Stay hungry, stay foolish.', author: 'Steve Jobs' },
+      { text: '千里の道も一歩から。', author: '老子' },
+      { text: 'Simple can be harder than complex.', author: 'Steve Jobs' },
+      { text: 'Talk is cheap. Show me the code.', author: 'Linus Torvalds' },
+      { text: 'The future is already here — it\'s just not evenly distributed.', author: 'William Gibson' },
+      { text: '知之为知之，不知为不知，是知也。', author: '孔子' },
+    ];
+    let quoteIndex = 0;
+    function rotateQuote() {
+      const textEl = document.getElementById('quote-text');
+      const authEl = document.getElementById('quote-author');
+      textEl.style.opacity = '0'; authEl.style.opacity = '0';
+      setTimeout(() => {
+        const q = quotes[quoteIndex % quotes.length];
+        textEl.textContent = q.text; authEl.textContent = q.author;
+        textEl.style.opacity = '1'; authEl.style.opacity = '1';
+        quoteIndex++;
+      }, 800);
+    }
+    rotateQuote();
+    setInterval(rotateQuote, 10000);
+
+    // ─── DHT11 Sensor (simulated) ───────────
+    function updateDHT() {
+      const t = translations[currentLanguage];
+      const temp = (25 + Math.random() * 3).toFixed(1);
+      const hum = (55 + Math.random() * 10).toFixed(1);
+      document.getElementById('dht-temp').textContent = `${temp}°C`;
+      document.getElementById('dht-humidity').textContent = `${hum}%`;
+      document.getElementById('dht-temp-label').textContent = t.tempLabel;
+      document.getElementById('dht-hum-label').textContent = t.humLabel;
+    }
+    updateDHT();
+    setInterval(updateDHT, 2000);
+
+    // ─── Monthly Calendar ───────────────────
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const today = now.getDate();
+      const t = translations[currentLanguage];
+
+      document.getElementById('cal-header').textContent =
+        `${currentLanguage === 'zh' ? `${year}年${month + 1}月` : `${t.months[month]} ${year}`}`;
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+
+      // Day headers
+      t.calDays.forEach((d, i) => {
+        const dh = document.createElement('div');
+        dh.className = `cal-day-header${i === 0 || i === 6 ? ' weekend' : ''}`;
+        dh.textContent = d;
+        grid.appendChild(dh);
+      });
+
+      // Calculate calendar days
+      const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      // Previous month fill
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const d = document.createElement('div');
+        d.className = 'cal-day other-month';
+        d.textContent = daysInPrevMonth - i;
+        grid.appendChild(d);
+      }
+
+      // Current month
+      for (let d = 1; d <= daysInMonth; d++) {
+        const div = document.createElement('div');
+        div.className = 'cal-day';
+        if (d === today) div.classList.add('today');
+        const dow = (firstDay + d - 1) % 7;
+        if (dow === 0 || dow === 6) div.classList.add('weekend');
+        div.textContent = d;
+        grid.appendChild(div);
+      }
+
+      // Next month fill
+      const remaining = 7 - (grid.children.length % 7);
+      if (remaining < 7) {
+        for (let d = 1; d <= remaining; d++) {
+          const div = document.createElement('div');
+          div.className = 'cal-day other-month';
+          div.textContent = d;
+          grid.appendChild(div);
+        }
+      }
+    }
+    renderCalendar();
+
+    // ─── Language Switch ────────────────────
+    function toggleLanguage() {
+      const btn = document.getElementById('lang-btn');
+      btn.classList.add('switching');
+      setTimeout(() => btn.classList.remove('switching'), 500);
+      currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+      btn.textContent = currentLanguage === 'zh' ? '中文 / English' : 'English / 中文';
+      // Refresh all language-dependent modules
+      updateClock();
+      renderCalendar();
+      updateDHT();
+      updateWeather();
+      // Weather desc
+      document.getElementById('weather-desc').textContent =
+        currentLanguage === 'zh' ? '晴, 杭州' : 'Clear, Hangzhou';
+    }
+
+    // ─── Voice Assistant Simulation ─────────
+    const voicePhrases = [
+      { trigger: '你好', response: '你好！有什么可以帮您的吗？' },
+      { trigger: '天气', response: '今天杭州天气晴朗，气温28°C，适合出门走走。' },
+      { trigger: '时间', response: '现在是北京时间下午2点30分。' },
+      { trigger: 'hello', response: 'Hello! How can I help you today?' },
+      { trigger: '天气怎么样', response: '今日晴，气温26至30度，东南风2级，空气质量良好。' },
+    ];
+    let voicePhase = 0;
+    function simulateVoiceInteraction() {
+      const dot = document.getElementById('voice-dot');
+      const status = document.getElementById('voice-status-text');
+
+      // Cycle through states: idle → listening → thinking → speaking → idle
+      voicePhase = (voicePhase + 1) % 5;
+      switch (voicePhase) {
+        case 0: // idle
+          dot.classList.remove('listening');
+          status.textContent = translations[currentLanguage].idle;
+          document.getElementById('voice-transcript').textContent = '';
+          break;
+        case 1: // listening
+          dot.classList.add('listening');
+          status.textContent = translations[currentLanguage].listening;
+          document.getElementById('voice-transcript').textContent = '👂 "你好，小镜..."';
+          break;
+        case 2: // thinking
+          dot.classList.add('listening');
+          status.textContent = translations[currentLanguage].thinking;
+          document.getElementById('voice-transcript').textContent = '🤔 Processing with Qwen-turbo...';
+          break;
+        case 3: // speaking
+          dot.classList.remove('listening');
+          status.textContent = translations[currentLanguage].speaking;
+          document.getElementById('voice-transcript').textContent = '🗣️ "你好！有什么可以帮您的吗？"';
+          break;
+        case 4: // back to idle
+          dot.classList.remove('listening');
+          status.textContent = translations[currentLanguage].idle;
+          setTimeout(() => {
+            document.getElementById('voice-transcript').textContent = '';
+          }, 2000);
+          break;
+      }
+    }
+    setInterval(simulateVoiceInteraction, 6000);
+
+    // ─── Keyboard shortcut for demo ─────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'l' || e.key === 'L') toggleLanguage();
+      if (e.key === 'n' || e.key === 'N') scrollNews();
+      if (e.key === 'q' || e.key === 'Q') rotateQuote();
+      if (e.key === 'v' || e.key === 'V') simulateVoiceInteraction();
+      if (e.key === 'Escape') closeSysPanel();
+    });
+
+    // ─── System Panel Toggle ───────────────
+    let sysPanelOpen = false;
+    function toggleSysPanel() {
+      sysPanelOpen = !sysPanelOpen;
+      document.getElementById('sys-panel').classList.toggle('open', sysPanelOpen);
+    }
+    function closeSysPanel() {
+      sysPanelOpen = false;
+      document.getElementById('sys-panel').classList.remove('open');
+    }
+    // Close panel when clicking outside
+    document.addEventListener('click', (e) => {
+      if (sysPanelOpen && !e.target.closest('.sys-panel') && !e.target.closest('.sys-toggle')) {
+        closeSysPanel();
+      }
+    });
+    console.log('🪞 Smart Mirror Demo Ready');
+    console.log('Keyboard shortcuts: L=Language, N=News, Q=Quote, V=Voice');
+  </script>
+</body>
+</html>
