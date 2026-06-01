@@ -32,6 +32,17 @@ Module.register("MMM-CustomClock", {
 	start: function () {
 		Log.info(`Starting module: ${this.name}`);
 		this.sendSocketNotification("CONFIG", this.config);
+
+		// Color cycling state
+		this._colorIndex = 0;
+		this._colorPalette = [
+			null,        // default (inherit)
+			"#ffffff",   // white
+			"#00e5ff",   // cyan
+			"#76ff03",   // green
+			"#ffab00",   // orange
+			"#ff4081"    // pink
+		];
 		
 		// 计算下次更新延迟时间
 		const calculateNextUpdateDelay = () => {
@@ -279,6 +290,41 @@ Module.register("MMM-CustomClock", {
 				.forEach(el => el.style.backgroundColor = this.getHighContrastColor(bgColor));
 		}, 0);
 
+		// Click to cycle text color
+		container.style.cursor = "pointer";
+		var self = this;
+		container.addEventListener("click", function (event) {
+			event.stopPropagation();
+			self.cycleColor();
+		});
+
 		return container;
 	},
+
+	/**
+	 * Cycle through a palette of text colors on click.
+	 */
+	cycleColor: function () {
+		this._colorIndex = (this._colorIndex + 1) % this._colorPalette.length;
+		var color = this._colorPalette[this._colorIndex];
+
+		var container = document.querySelector("#" + this.identifier + " .module-content");
+		if (container) {
+			if (color) {
+				container.style.color = color;
+				container.style.transition = "color 0.5s ease";
+			} else {
+				container.style.color = "";
+			}
+		}
+
+		var colorName = color || "default";
+		Log.info(this.name + ": color changed to " + colorName);
+	},
+
+	notificationReceived: function (notification, payload, sender) {
+		if (notification === "LANGUAGE_CHANGED") {
+			this.updateDom(0);
+		}
+	}
 });

@@ -167,8 +167,20 @@ Module.register("calendar", {
 		}
 
 		this.selfUpdate();
+
+		// Register with shared interaction controller
+		if (window.InteractionController) {
+			InteractionController.register(this, {
+				getExpandedContent: this.getExpandedContent.bind(this)
+			});
+		}
 	},
 	notificationReceived (notification, payload, sender) {
+		if (notification === "LANGUAGE_CHANGED") {
+			moment.updateLocale(payload.language, CalendarUtils.getLocaleSpecification(config.timeFormat));
+			this.updateDom(this.config.animationSpeed);
+			return;
+		}
 
 		if (notification === "FETCH_CALENDAR") {
 			if (this.hasCalendarURL(payload.url)) {
@@ -575,7 +587,15 @@ Module.register("calendar", {
 			}
 		});
 
-		return wrapper;
+			// Make clickable for shared interaction controller
+	wrapper.style.cursor = "pointer";
+	wrapper.addEventListener("click", (event) => {
+		if (window.InteractionController) {
+			InteractionController.expand(this);
+		}
+	});
+
+	return wrapper;
 	},
 
 	/**
@@ -957,5 +977,67 @@ Module.register("calendar", {
 			},
 			ONE_MINUTE - (new Date() % ONE_MINUTE)
 		);
+	},
+
+	/**
+	 * Build expanded calendar view for the shared interaction card.
+	 */
+	getExpandedContent: function () {
+		var container = document.createElement("div");
+		container.className = "calendar-expanded-container";
+
+		var header = document.createElement("div");
+		header.className = "calendar-expanded-header";
+		header.textContent = this.translate("UPCOMING_EVENTS") || "Upcoming Events";
+		container.appendChild(header);
+
+		// Try to use the existing createEventList to get formatted events
+		var events = this.createEventList ? this.createEventList(false) : [];
+		if (!events || events.length === 0) {
+			var emptyDiv = document.createElement("div");
+			emptyDiv.className = "calendar-expanded-empty";
+			emptyDiv.textContent = this.translate("EMPTY");
+			container.appendChild(emptyDiv);
+			return container;
+		}
+
+		var self = this;
+		events.forEach(function (event) {
+			var eventEl = document.createElement("div");
+			eventEl.className = "calendar-expanded-event";
+
+			// Color indicator
+			if (self.config.colored && self.config.coloredText && event.url) {
+				eventEl.style.borderLeftColor = self.colorForUrl ? self.colorForUrl(event.url, false) : "rgba(255,255,255,0.3)";
+			}
+
+			var titleEl = document.createElement("div");
+			titleEl.className = "calendar-expanded-event-title";
+			titleEl.textContent = event.title;
+			eventEl.appendChild(titleEl);
+
+			var timeEl = document.createElement("div");
+			timeEl.className = "calendar-expanded-event-time";
+			if (event.fullDayEvent) {
+				timeEl.textContent = moment(event.startDate, "x").format(self.config.fullDayEventDateFormat);
+			} else {
+				timeEl.textContent = moment(event.startDate, "x").format("LT");
+				if (self.config.showEnd) {
+					timeEl.textContent += " - " + moment(event.endDate, "x").format("LT");
+				}
+			}
+			eventEl.appendChild(timeEl);
+
+			if (self.config.showLocation && event.location) {
+				var locEl = document.createElement("div");
+				locEl.className = "calendar-expanded-event-location";
+				locEl.textContent = event.location;
+				eventEl.appendChild(locEl);
+			}
+
+			container.appendChild(eventEl);
+		});
+
+		return container;
 	}
 });

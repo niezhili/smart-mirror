@@ -1,0 +1,94 @@
+/* ==========================================
+   Shared Interaction Controller Styles
+   One overlay + card for all expandable modules
+   ========================================== */
+
+/* Fullscreen overlay backdrop */
+.ic-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.ic-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Centered card */
+.ic-card {
+  position: relative;
+  max-width: 420px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: rgba(25, 25, 35, 0.92);
+  border-radius: 20px;
+  padding: 30px 25px;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transform: scale(0.85);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.ic-card--visible {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Close button */
+.ic-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s ease;
+  z-index: 10;
+}
+
+.ic-close-btn:hover,
+.ic-close-btn:focus {
+  color: #fff;
+}
+
+/* Blur all non-active modules when overlay is visible */
+.ic-blur-active .module:not(.ic-expanded-module) {
+  filter: blur(3px);
+  transition: filter 0.3s ease;
+}
+
+/* The expanded module stays sharp */
+.ic-expanded-module {
+  filter: none !important;
+  z-index: 10000;
+  position: relative;
+}
+
+/* Responsive: smaller card on narrow screens */
+@media (max-width: 480px) {
+  .ic-card {
+    padding: 20px 15px;
+    max-width: 95%;
+  }
+}

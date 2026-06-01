@@ -45,6 +45,13 @@ Module.register("MMM-NewsScroller", {
 		// Set up the periodic updates and scrolling
 		this.scheduleNextUpdate();
 		this.scheduleScroll();
+
+		// Register with shared interaction controller
+		if (window.InteractionController) {
+			InteractionController.register(this, {
+				getExpandedContent: this.getExpandedContent.bind(this)
+			});
+		}
 	},
 
 	// Define required styles
@@ -180,6 +187,16 @@ Module.register("MMM-NewsScroller", {
 		}
 
 		wrapper.appendChild(newsWrapper);
+
+		// Click to expand via shared controller
+		wrapper.style.cursor = "pointer";
+		wrapper.addEventListener("click", (event) => {
+			event.stopPropagation();
+			if (window.InteractionController) {
+				InteractionController.expand(this);
+			}
+		});
+
 		return wrapper;
 	},
 
@@ -208,5 +225,56 @@ Module.register("MMM-NewsScroller", {
 					// Keep using old news if available
 				});
 		}
-	}
-});
+		},
+
+		/**
+		 * Build expanded news list for the shared interaction card.
+		 */
+		getExpandedContent: function () {
+			var container = document.createElement("div");
+			container.className = "news-expanded-container";
+
+			var header = document.createElement("div");
+			header.className = "news-expanded-header";
+			header.textContent = "📰 Latest News";
+			container.appendChild(header);
+
+			if (!this.newsItems || this.newsItems.length === 0) {
+				var emptyMsg = document.createElement("div");
+				emptyMsg.className = "news-expanded-empty";
+				emptyMsg.textContent = "No news available.";
+				container.appendChild(emptyMsg);
+				return container;
+			}
+
+			this.newsItems.forEach(function (item) {
+				var newsCard = document.createElement("div");
+				newsCard.className = "news-expanded-item";
+
+				var titleEl = document.createElement("div");
+				titleEl.className = "news-expanded-title";
+				titleEl.textContent = item.title;
+				newsCard.appendChild(titleEl);
+
+				var sourceEl = document.createElement("div");
+				sourceEl.className = "news-expanded-source";
+				var newsDate = new Date(item.date);
+				var dateString = newsDate.toLocaleDateString(config.language, {
+					day: "numeric", month: "short",
+					hour: "2-digit", minute: "2-digit"
+				});
+				sourceEl.textContent = (item.category || "") + " • " + (item.author_name || "Unknown") + " • " + dateString;
+				newsCard.appendChild(sourceEl);
+
+				container.appendChild(newsCard);
+			});
+
+			return container;
+		},
+
+		notificationReceived: function (notification, payload, sender) {
+			if (notification === "LANGUAGE_CHANGED") {
+				this.updateDom(0);
+			}
+		}
+	});

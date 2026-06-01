@@ -1,0 +1,47 @@
+/* MMM-Quote Styles */
+
+.quote-container {
+  padding: 14px 18px;
+  text-align: center;
+  max-width: 340px;
+  margin: 0 auto;
+  touch-action: pan-y; /* allow vertical scroll, capture horizontal swipes */
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+}
+
+.quote-content {
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: #ddd;
+  margin-bottom: 8px;
+}
+
+.quote-author {
+  font-size: 0.7rem;
+  color: #999;
+  text-align: right;
+}
+
+/* ===== Expanded Quote View ===== */
+.quote-expanded-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.quote-expanded-content {
+  font-size: 1.4rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.quote-expanded-author {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+}

@@ -96,3 +96,39 @@
     margin: 10px;
   }
 }
+
+/* ===== Language List (expanded view) ===== */
+.language-list-container {
+  padding: 10px 0;
+}
+
+.language-list-title {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.language-list-item {
+  padding: 15px 20px;
+  margin: 5px 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease;
+}
+
+.language-list-item:hover,
+.language-list-item:active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.language-list-item--active {
+  background: rgba(74, 144, 226, 0.4);
+  border: 1px solid rgba(74, 144, 226, 0.6);
+}

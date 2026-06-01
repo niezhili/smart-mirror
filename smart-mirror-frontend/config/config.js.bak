@@ -71,13 +71,19 @@ let config = {
 					updateInterval: 5000
 				}
 			},
-				{
-					module: "MMM-MonthCalendar",
-					position: "bottom_center",
-					config: {
-						firstDayOfWeek: 0
-					}
-				},
+			{
+				module: "calendar",
+				position: "top_left",
+				config: {
+					maximumEntries: 10,
+					calendars: [
+						{
+							symbol: "calendar-alt",
+							url: "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics"
+						}
+					]
+				}
+			},
 			{
 				module: "MMM-LanguageSwitch",
 				position: "bottom_right",

@@ -39,7 +39,27 @@ Module.register("MMM-CustomWeather", {
 		"Sleet": "🌨️",
 		"Dust": "💨",
 		"Sand": "💨",
-		"Wind": "💨"
+		"Wind": "💨",
+		// Chinese weather conditions (from Juhe API)
+		"晴": "☀️",
+		"多云": "⛅",
+		"阴": "☁️",
+		"小雨": "🌦️",
+		"中雨": "🌧️",
+		"大雨": "🌧️",
+		"阵雨": "🌦️",
+		"雷阵雨": "⛈️",
+		"雷阵雨伴有冰雹": "⛈️",
+		"小雪": "🌨️",
+		"中雪": "❄️",
+		"大雪": "❄️",
+		"暴雪": "❄️",
+		"雾": "🌫️",
+		"霾": "🌫️",
+		"大风": "💨",
+		"扬沙": "💨",
+		"浮尘": "💨",
+		"沙尘暴": "💨",
 	},
 
 	// Wind direction to arrow emoji mapping
@@ -59,7 +79,16 @@ Module.register("MMM-CustomWeather", {
 		"W": "⬅️",
 		"WNW": "↖️",
 		"NW": "↖️",
-		"NNW": "↖️"
+		"NNW": "↖️",
+		// Chinese wind directions (from Juhe API)
+		"北风": "⬆️",
+		"东北风": "↗️",
+		"东风": "➡️",
+		"东南风": "↘️",
+		"南风": "⬇️",
+		"西南风": "↙️",
+		"西风": "⬅️",
+		"西北风": "↖️",
 	},
 
 	start: function () {
@@ -67,10 +96,14 @@ Module.register("MMM-CustomWeather", {
 		Log.info("Starting module: " + this.name);
 		this.loaded = false;
 		this.weatherData = null;
-		this.overlay = null;
-		this.isExpanded = false;
-		this._boundEscapeHandler = this._onEscapeKey.bind(this);
 		this.scheduleUpdate();
+
+		// Register with shared interaction controller
+		if (window.InteractionController) {
+			InteractionController.register(this, {
+				getExpandedContent: this.getExpandedContent.bind(this)
+			});
+		}
 	},
 
 	getTranslations: function () {
@@ -103,13 +136,15 @@ Module.register("MMM-CustomWeather", {
 		switch (notification) {
 			case "LOCATION_RESULT":
 				this.config.city = "Hangzhou";
-				this.config.lat = 30.2741;
-				this.config.long =120.1552 ;
-
-				const url = `https://api.qweather.com/v7/weather/now?location=${this.config.long},${this.config.lat}&key=${this.config.apiKey}`;
+				const url = `https://apis.juhe.cn/simpleWeather/query?city=${encodeURIComponent("杭州")}&key=${this.config.apiKey}`;
 				this.sendSocketNotification("FETCH_DATA", {url: url});
 				break;
 			case "DATA_FETCHED":
+				if (payload.error_code !== 0) {
+					Log.error("[MMM-CustomWeather] API error: " + payload.reason);
+					this.scheduleRetry();
+					return;
+				}
 				this.weatherData = payload;
 				this.loaded = true;
 				this.updateDom();
@@ -162,7 +197,7 @@ Module.register("MMM-CustomWeather", {
 			return wrapper;
 		}
 
-		if (!this.weatherData || !this.weatherData.now) {
+		if (!this.weatherData || !this.weatherData.result || !this.weatherData.result.realtime) {
 			const errorDiv = document.createElement('div');
 			errorDiv.className = 'weather-error';
 			errorDiv.innerHTML = '❌ ' + this.translate("NO_DATA");
@@ -179,7 +214,7 @@ Module.register("MMM-CustomWeather", {
 
 			// Current weather conditions
 			const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase()) ?
-				this.translate(this.weatherData.now.text) : this.weatherData.now.text;
+				this.translate(this.weatherData.result.realtime.info) : this.weatherData.result.realtime.info;
 
 			const weatherEmoji = this.getWeatherEmoji(weatherCondition);
 
@@ -191,7 +226,7 @@ Module.register("MMM-CustomWeather", {
 			mainWeatherDiv.className = 'weather-main';
 			mainWeatherDiv.innerHTML = `
                 <div class="weather-emoji ${this.config.useAnimations ? 'weather-animated' : ''}">${weatherEmoji}</div>
-                <div class="weather-temp">${this.formatTemperature(this.weatherData.now.temp)}</div>
+                <div class="weather-temp">${this.formatTemperature(this.weatherData.result.realtime.temperature)}</div>
             `;
 			conditionsDiv.appendChild(mainWeatherDiv);
 
@@ -211,7 +246,7 @@ Module.register("MMM-CustomWeather", {
 			if (this.config.showHumidity) {
 				const humidityDiv = document.createElement('div');
 				humidityDiv.className = 'weather-detail';
-				humidityDiv.innerHTML = `💧 ${this.translate("HUMIDITY")}: ${this.weatherData.now.humidity}%`;
+				humidityDiv.innerHTML = `💧 ${this.translate("HUMIDITY")}: ${this.weatherData.result.realtime.humidity}%`;
 				detailsDiv.appendChild(humidityDiv);
 			}
 
@@ -219,15 +254,15 @@ Module.register("MMM-CustomWeather", {
 				const windSpeedDiv = document.createElement('div');
 				windSpeedDiv.className = 'weather-detail weather-wind-speed';
 				windSpeedDiv.style.fontSize = "0.6rem";
-				windSpeedDiv.innerHTML = `💨 ${this.translate("WIND_SPEED")}: ${this.weatherData.now.windSpeed} km/h`;
+				windSpeedDiv.innerHTML = `💨 ${this.translate("WIND_SPEED")}: ${this.weatherData.result.realtime.power}`;
 				detailsDiv.appendChild(windSpeedDiv);
 
-				if (this.config.showWindDirection && this.weatherData.now.windDir) {
+				if (this.config.showWindDirection && this.weatherData.result.realtime.direct) {
 					const windDirDiv = document.createElement('div');
 					windDirDiv.className = 'weather-detail weather-wind-direction';
 					windDirDiv.style.fontSize = "0.6rem";
-					const directionEmoji = this.getWindDirectionEmoji(this.weatherData.now.windDir);
-					windDirDiv.innerHTML = `${directionEmoji} ${this.translate(this.weatherData.now.windDir)}`;
+					const directionEmoji = this.getWindDirectionEmoji(this.weatherData.result.realtime.direct);
+					windDirDiv.innerHTML = `${directionEmoji} ${this.translate(this.weatherData.result.realtime.direct)}`;
 					detailsDiv.appendChild(windDirDiv);
 				}
 			}
@@ -246,110 +281,27 @@ Module.register("MMM-CustomWeather", {
 			wrapper.innerHTML = "❌ " + this.translate("ERROR_DISPLAY");
 		}
 
-		// Click handler: expand weather to centered modal
+		// Click handler: expand via shared controller
 		wrapper.style.cursor = "pointer";
 		wrapper.addEventListener("click", (event) => {
 			event.stopPropagation();
-			this.showExpandedView();
+			if (window.InteractionController) {
+				InteractionController.expand(this);
+			}
 		});
 
 		return wrapper;
 	},
 
 	/**
-	 * Show the expanded weather modal: fullscreen blurred overlay + centered card.
-	 */
-	showExpandedView: function () {
-		if (this.isExpanded || !this.loaded || !this.weatherData || !this.weatherData.now) return;
-		this.isExpanded = true;
-
-		const self = this;
-
-		// Overlay backdrop — click to dismiss
-		const overlay = document.createElement("div");
-		overlay.className = "weather-modal-overlay";
-		overlay.setAttribute("aria-label", "Weather detail overlay");
-		overlay.setAttribute("role", "dialog");
-		overlay.setAttribute("aria-modal", "true");
-		overlay.addEventListener("click", function () {
-			self.dismissExpandedView();
-		});
-
-		// Centered card — clicks don't bubble to overlay
-		const card = document.createElement("div");
-		card.className = "weather-expanded-card";
-		card.addEventListener("click", function (e) {
-			e.stopPropagation();
-		});
-
-		// Close button
-		const closeBtn = document.createElement("button");
-		closeBtn.className = "weather-close-btn";
-		closeBtn.innerHTML = "&times;";
-		closeBtn.setAttribute("aria-label", "Close weather detail");
-		closeBtn.addEventListener("click", function (e) {
-			e.stopPropagation();
-			self.dismissExpandedView();
-		});
-		card.appendChild(closeBtn);
-
-		// Expanded content
-		card.appendChild(this.createExpandedContent());
-		overlay.appendChild(card);
-		document.body.appendChild(overlay);
-		this.overlay = overlay;
-
-		// Focus close button for accessibility
-		closeBtn.focus();
-
-		// Register Escape key handler
-		document.addEventListener("keydown", this._boundEscapeHandler);
-
-		// Trigger CSS transitions on next frame
-		requestAnimationFrame(function () {
-			overlay.classList.add("weather-modal-overlay--visible");
-			card.classList.add("weather-expanded-card--visible");
-		});
-	},
-
-	/**
-	 * Dismiss the expanded weather modal with fade-out animation.
-	 */
-	dismissExpandedView: function () {
-		if (!this.isExpanded || !this.overlay) return;
-
-		const overlay = this.overlay;
-		const card = overlay.querySelector(".weather-expanded-card");
-
-		// Remove visible classes to trigger reverse transitions
-		overlay.classList.remove("weather-modal-overlay--visible");
-		if (card) card.classList.remove("weather-expanded-card--visible");
-
-		// Remove keyboard listener immediately
-		document.removeEventListener("keydown", this._boundEscapeHandler);
-
-		// Wait for transition to complete, then remove from DOM
-		const self = this;
-		const onTransitionEnd = function () {
-			if (overlay.parentNode) {
-				overlay.parentNode.removeChild(overlay);
-			}
-			self.overlay = null;
-			self.isExpanded = false;
-			overlay.removeEventListener("transitionend", onTransitionEnd);
-		};
-		overlay.addEventListener("transitionend", onTransitionEnd);
-	},
-
-	/**
 	 * Build enriched weather content for the expanded card.
 	 */
-	createExpandedContent: function () {
+	getExpandedContent: function () {
 		const container = document.createElement("div");
 		container.className = "weather-expanded-content";
 
 		const weatherCondition = ["en", "En-us"].includes(config.language.toLowerCase()) ?
-			this.translate(this.weatherData.now.text) : this.weatherData.now.text;
+			this.translate(this.weatherData.result.realtime.info) : this.weatherData.result.realtime.info;
 		const weatherEmoji = this.getWeatherEmoji(weatherCondition);
 
 		// City header
@@ -368,7 +320,7 @@ Module.register("MMM-CustomWeather", {
 
 		const tempEl = document.createElement("div");
 		tempEl.className = "weather-expanded-temp";
-		tempEl.innerHTML = this.formatTemperature(this.weatherData.now.temp);
+		tempEl.innerHTML = this.formatTemperature(this.weatherData.result.realtime.temperature);
 
 		mainRow.appendChild(emojiEl);
 		mainRow.appendChild(tempEl);
@@ -385,24 +337,24 @@ Module.register("MMM-CustomWeather", {
 		detailsGrid.className = "weather-expanded-details";
 
 		// Feels like
-		if (this.weatherData.now.feelsLike !== undefined) {
+		if (this.weatherData.result.realtime.feelsLike !== undefined) {
 			detailsGrid.appendChild(this._createDetailItem(
-				"🌡️", this.translate("FEELS_LIKE"), `${this.weatherData.now.feelsLike}°${this.config.units === "imperial" ? "F" : "C"}`
+				"🌡️", this.translate("FEELS_LIKE"), `${this.weatherData.result.realtime.temperature}°${this.config.units === "imperial" ? "F" : "C"}`
 			));
 		}
 
 		// Humidity
 		if (this.config.showHumidity) {
 			detailsGrid.appendChild(this._createDetailItem(
-				"💧", this.translate("HUMIDITY"), `${this.weatherData.now.humidity}%`
+				"💧", this.translate("HUMIDITY"), `${this.weatherData.result.realtime.humidity}%`
 			));
 		}
 
 		// Wind
 		if (this.config.showWindSpeed) {
-			let windText = `${this.weatherData.now.windSpeed} km/h`;
-			if (this.config.showWindDirection && this.weatherData.now.windDir) {
-				windText += ` ${this.getWindDirectionEmoji(this.weatherData.now.windDir)} ${this.translate(this.weatherData.now.windDir)}`;
+			let windText = `${this.weatherData.result.realtime.power}`;
+			if (this.config.showWindDirection && this.weatherData.result.realtime.direct) {
+				windText += ` ${this.getWindDirectionEmoji(this.weatherData.result.realtime.direct)} ${this.translate(this.weatherData.result.realtime.direct)}`;
 			}
 			detailsGrid.appendChild(this._createDetailItem(
 				"💨", this.translate("WIND_SPEED"), windText
@@ -439,12 +391,4 @@ Module.register("MMM-CustomWeather", {
 		return item;
 	},
 
-	/**
-	 * Handle Escape key to dismiss the expanded overlay.
-	 */
-	_onEscapeKey: function (e) {
-		if (e.key === "Escape" && this.isExpanded) {
-			this.dismissExpandedView();
-		}
-	}
 });

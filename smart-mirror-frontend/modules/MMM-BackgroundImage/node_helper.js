@@ -55,6 +55,8 @@ module.exports = NodeHelper.create({
     // 处理前端发送的通知
     socketNotificationReceived: function(notification, payload) {
         if (notification === "GET_WALLPAPER") {
+            console.log("MMM-BackgroundImage helper: received GET_WALLPAPER, dateString:", payload.dateString);
+            console.log("MMM-BackgroundImage helper: modulePath:", payload.modulePath);
             this.handleWallpaperRequest(payload);
         }
     },
@@ -64,24 +66,27 @@ module.exports = NodeHelper.create({
         try {
             const allSpecialDates = [...this.festivals, ...this.solar_terms];
             const specialDate = allSpecialDates.find(item => item.date === payload.dateString);
-            
+
             let wallpaperUrl = null;
             if (specialDate) {
-                    wallpaperUrl = await this.getRandomFileFromFolder(
-                    path.join(payload.modulePath, 'images', specialDate.type, specialDate.name)
-                );
+                const specialPath = path.join(payload.modulePath, 'images', specialDate.type, specialDate.name);
+                console.log("MMM-BackgroundImage helper: special date found:", specialDate.name, "path:", specialPath);
+                wallpaperUrl = await this.getRandomFileFromFolder(specialPath);
             }
-            
+
             // 如果特殊日期没有图片，使用默认图片
             if (!wallpaperUrl) {
-                wallpaperUrl = await this.getRandomFileFromFolder(
-                    path.join(payload.modulePath, 'images', 'culture')
-                );
+                const fallbackPath = path.join(payload.modulePath, 'images', 'culture');
+                console.log("MMM-BackgroundImage helper: using fallback path:", fallbackPath);
+                wallpaperUrl = await this.getRandomFileFromFolder(fallbackPath);
             }
+
+            const finalUrl = wallpaperUrl ? `modules/MMM-BackgroundImage/${this.getRelativePath(wallpaperUrl, payload.modulePath)}` : null;
+            console.log("MMM-BackgroundImage helper: sending WALLPAPER_URL:", finalUrl);
 
             // 发送结果给前端
             this.sendSocketNotification("WALLPAPER_URL", {
-                url: wallpaperUrl ? `modules/MMM-BackgroundImage/${this.getRelativePath(wallpaperUrl, payload.modulePath)}` : null
+                url: finalUrl
             });
 
         } catch (error) {
@@ -101,7 +106,7 @@ module.exports = NodeHelper.create({
 
             // 异步读取文件夹
             const files = await fs.readdir(folderPath);
-            
+
             // 过滤出图片文件
             const imageFiles = files.filter(file => {
                 const ext = path.extname(file).toLowerCase();
@@ -115,7 +120,9 @@ module.exports = NodeHelper.create({
 
             // 随机选择一个图片
             const randomIndex = Math.floor(Math.random() * imageFiles.length);
-            return path.join(folderPath, imageFiles[randomIndex]);
+            const result = path.join(folderPath, imageFiles[randomIndex]);
+            console.log(`Selected image: ${result}`);
+            return result;
 
         } catch (error) {
             console.error(`Error reading folder ${folderPath}:`, error);
