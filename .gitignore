@@ -1,2 +1,5 @@
 .env
 .runtime/
+.DS_Store
+.workbuddy/
+.~*

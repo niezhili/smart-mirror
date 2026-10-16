@@ -15,7 +15,6 @@ smart-mirror-backend/
 │   ├── tts/             # 文字转语音
 │   ├── vad/             # 语音活动检测
 │   └── weather/         # 天气服务
-├── home_control/        # 家居控制
 ├── logs_AND_location/   # 日志和路径管理
 ├── tests/               # 测试文件
 └── known_faces/         # 已知人脸图片

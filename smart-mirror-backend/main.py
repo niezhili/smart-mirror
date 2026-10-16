@@ -152,8 +152,6 @@ def assistant_mode():
                     threading.Thread(target=play_weather_info).start()
                 elif '几点' in text:
                     tts_speech(f"现在是 {time.strftime('%H:%M')}")
-                elif '空调' in text:
-                    tts_speech("好的，正在处理空调指令。")
                 elif '拜拜' in text or '再见' in text or "bye" in text:
                     tts_speech("拜拜，下次再见！")
                     with global_lock:

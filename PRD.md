@@ -22,9 +22,8 @@
    - 5.7 人脸识别
    - 5.8 人体检测
    - 5.9 天气服务
-   - 5.10 家居控制（空调控制）
-   - 5.11 IoT 远程通信（Blinker）
-   - 5.12 视线估计（GazeEstimator）
+  - 5.10 IoT 远程通信（Blinker）
+  - 5.11 视线估计（GazeEstimator）
 6. [非功能性需求](#6-非功能性需求)
 7. [外部依赖与第三方 API](#7-外部依赖与第三方-api)
 8. [开发规范](#8-开发规范)
@@ -40,7 +39,7 @@
 - 计算机视觉（人脸识别、人体检测、视线估计）
 - 语音交互（唤醒词检测 → 语音识别 → LLM 推理 → 语音合成）
 - 信息展示（时钟、日历、实时天气、新闻滚动）
-- 智能家居控制（空调红外控制、IoT 远程通信）
+- IoT 远程通信（Blinker APP 远程控制与数据上报）
 
 项目基于学长学姐的代码基础（[@HeadStone7](https://github.com/HeadStone7/smart-mirror)、[@niezhili](https://github.com/SunnyBoy-y/smart_mirror_gc_main)）进行扩展开发。
 
@@ -57,8 +56,7 @@
 | **自然交互** | 用户无需触屏，通过语音即可获取信息和控制设备 |
 | **身份识别** | 通过人脸识别区分不同用户，提供个性化问候 |
 | **信息中枢** | 在镜面上展示时间、日历、天气、新闻等生活信息 |
-| **智能家居** | 语音控制空调等家电设备 |
-| **多语言支持** | 支持中文、英语、日语三语交互 |
+| **多语言支持** | 支持中文、英语等多语言交互 |
 | **低功耗运行** | 通过人体检测按需激活，避免持续运行耗能 |
 
 ---
@@ -68,7 +66,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        硬件层（树莓派）                         │
-│  摄像头 | 麦克风 | 扬声器 | PIR传感器 | DHT11 | 红外发射模块     │
+│  摄像头 | 麦克风 | 扬声器 | PIR传感器                        │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
@@ -82,10 +80,9 @@
 │  └────┬────┘  └──┬───┘  └──┬───┘  └──┬───┘  └──────────┘  │
 │       └──────────┴──────────┴──────────┘                    │
 │                    Flask Web Server (:8080)                  │
-│       ┌────────────────┬────────────────┐                   │
-│       │  home_control  │  人体检测(GPIO)  │                  │
-│       │ (AC/涂鸦API)   │  PIR 红外传感   │                   │
-│       └────────────────┴────────────────┘                   │
+│       ┌────────────────────────────────────┐                │
+│       │  人体检测(GPIO)  PIR 红外传感        │                │
+│       └────────────────────────────────────┘                │
 └──────────────────────┬──────────────────────────────────────┘
                        │ HTTP (localhost:8080)
 ┌──────────────────────▼──────────────────────────────────────┐
@@ -93,7 +90,7 @@
 │                  smart-mirror-frontend/                      │
 │                   基于 MagicMirror² 框架                      │
 │                                                              │
-│  时钟 | 日历 | 天气 | 新闻滚动 | DHT11 | 背景图 | 语录        │
+│  时钟 | 日历 | 天气 | 新闻滚动 | 背景图 | 语录              │
 └─────────────────────────────────────────────────────────────┘
                        │ 局域网
 ┌──────────────────────▼───────────┐
@@ -125,16 +122,13 @@
 | 扬声器 | 3.5mm / USB 音频 | TTS 语音播报 |
 | 显示屏 | HDMI 镜面显示器 | 信息展示 |
 | PIR 传感器 | HC-SR501（GPIO BCM 17） | 人体检测 |
-| DHT11 传感器 | GPIO BCM 4 | 室内温湿度采集 |
-| 红外发射模块 | 连接 GPIO BCM 18 | 空调红外控制 |
 
 ### GPIO 引脚映射（BCM 模式）
 
 | GPIO Pin | 功能 |
 |----------|------|
 | BCM 17 | PIR 人体探测传感器输入 |
-| BCM 18 | 红外发射模块输出（空调控制） |
-| BCM 4 | DHT11 数据引脚 |
+| BCM 18 | LED 控制输出（Blinker IoT 远程控制） |
 
 ---
 
@@ -154,7 +148,6 @@
 | `calendar` | 原生 | 日历事件 |
 | `MMM-MonthlyCalendar` | 自研 | 月历视图 |
 | `MMM-CustomWeather` | 自研 | 接入和风天气 API 的天气展示 |
-| `MMM-DHT11` | 自研 | 实时室内温湿度展示（DHT11 传感器，500ms 刷新） |
 | `MMM-NewsScroller` | 自研 | 新闻滚动播报（接入聚合数据 API） |
 | `MMM-BackgroundImage` | 自研 | 镜面背景图管理 |
 | `MMM-quotes` | 自研 | 每日语录/名言 |
@@ -203,7 +196,7 @@ let config = {
          │               │               │
          │               │               ├─ VAD 录制用户语音
          │               │               ├─ ASR 语音转文字
-         │               │               ├─ 意图判断（天气/时间/空调/AI对话）
+         │               │               ├─ 意图判断（天气/时间/AI对话）
          │               │               ├─ 执行对应功能
          │               │               └─ TTS 语音播报结果
          │               │
@@ -249,20 +242,22 @@ wakeup_words: ["你好", "树莓派", "小", "小朋友", "朋友", "小镜子"]
 
 | 后端标识 | 服务商 | 模型 | 支持语言 |
 |----------|--------|------|----------|
-| `paraformer` | 阿里云 DashScope | `paraformer-realtime-v2` | 中文、英语、日语 |
+| `qwen3_asr` | 阿里云百炼 | `qwen3-asr-flash-realtime`（首选，10h/月免费额度） | 中文、英语等多语种，自动判别 |
+| `paraformer` | 阿里云 DashScope | `paraformer-realtime-v2`（备选） | 中文、英语等 |
 | `asr_baidu` | 百度 AI 开放平台 | 普通话模型（dev_pid: 1537） | 中文 |
+| `sensevoice_local` | 本地（sherpa-onnx） | SenseVoice-Small ONNX（228MB，离线兜底） | 中、英、日、韩、粤 |
 
-#### Paraformer 调用示例
+#### Qwen3-ASR 调用示例
 
 ```python
-from features.asr.asr_paraformer import speech_to_text_paraformer
+from features.asr.asr_qwen3 import speech_to_text_qwen3
 
-text = speech_to_text_paraformer(
+text = speech_to_text_qwen3(
     audio_file_path="recording.wav",
     api_key="sk-xxx",
-    model="paraformer-realtime-v2",
+    model="qwen3-asr-flash-realtime",
     sample_rate=16000,
-    language_hints=["zh", "en", "ja"]
+    language_hints=["zh", "en"]
 )
 ```
 
@@ -282,8 +277,8 @@ AI 助手名为 **"小镜"** / **"小朋友"**，人设定义于 `config.yaml`�
 
 | 后端标识 | 服务商 | 模型 |
 |----------|--------|------|
-| `qwen` | 阿里云 DashScope | `qwen-turbo` |
-| `deepseek` | DeepSeek | DeepSeek Chat API |
+| `qwen` | 阿里云 DashScope | `qwen3.6-flash`（首选：低成本、低延迟） |
+| `deepseek` | DeepSeek | DeepSeek V4-Flash（备选：缓存便宜、推理强） |
 
 #### 上下文管理（`features/llm/context_manager.py`）
 
@@ -402,36 +397,7 @@ tts_huoshan:
 
 ---
 
-### 5.10 家居控制（空调控制）
-
-文件：`home_control/ac_control.py`
-
-提供两种空调控制方式：
-
-#### 方式一：涂鸦 API + 红外发射模块（主要方式）
-
-- 通过 Tuya OpenAPI 获取红外编码
-- 控制 BCM 18 GPIO 红外发射模块发出信号
-- 需配置 `config.yaml` 中 `iot.tuya_api_id` 和 `iot.tuya_api_secret`
-
-#### 方式二：MQTT 控制（规划中，暂未实现）
-
-#### 空调状态管理
-
-```python
-ac_status = {
-    'power': False,        # 开关状态
-    'temperature': 25,     # 设定温度
-    'mode': 'cool',        # 模式：cool/heat/auto/dry/fan
-    'fan_speed': 'auto'    # 风速：auto/low/medium/high
-}
-```
-
-用户通过语音指令（如"开空调"、"温度调到 26 度"）触发对应操作。
-
----
-
-### 5.11 IoT 远程通信（Blinker）
+### 5.10 IoT 远程通信（Blinker）
 
 文件：`smart-mirror-backend/features/iot/blinker/blinker_raspberrypi.py`
 
@@ -445,7 +411,7 @@ ac_status = {
 
 ---
 
-### 5.12 视线估计（GazeEstimator）
+### 5.11 视线估计（GazeEstimator）
 
 目录：`smart-mirror-backend/features/gaze_estimation/`，包含 `config.json` 配置文件。
 
@@ -463,7 +429,7 @@ ac_status = {
 | **低功耗** | 无人靠近时 PIR 传感器驱动按需激活，减少 CPU 占用 |
 | **安全** | API 密钥不提交到代码仓库（存于 `config.yaml`，`.gitignore` 处理） |
 | **可扩展** | 新 ASR/TTS/LLM 后端通过修改配置即可切换，无需改动核心逻辑 |
-| **多语言** | 界面、语音交互同时支持中文、英语、日语 |
+| **多语言** | 界面、语音交互支持中文、英语等多语言 |
 
 ---
 
@@ -473,15 +439,16 @@ ac_status = {
 
 | 服务 | 提供商 | 用途 | 配置键 |
 |------|--------|------|--------|
-| Paraformer ASR | 阿里云 DashScope | 多语言语音识别 | `asr.paraformer.api_key` |
+| Qwen3-ASR | 阿里云百炼 | 多语言语音识别（首选，含免费额度） | `asr.qwen3_asr.api_key` |
+| Paraformer ASR | 阿里云 DashScope | 语音识别（备选） | `asr.paraformer.api_key` |
 | 百度 ASR | 百度 AI 开放平台 | 中文语音识别（备选） | `asr.asr_baidu.*` |
 | 火山 TTS | 字节跳动火山引擎 | 情感化语音合成 | `tts.tts_huoshan.*` |
 | 百度 TTS | 百度 AI 开放平台 | 中文语音合成（备选） | `tts.tts_baidu.*` |
-| Qwen 通义千问 | 阿里云 DashScope | 大语言模型对话 | `llm.qwen.*` |
-| DeepSeek | DeepSeek 官方 | 大语言模型对话（备选） | `llm.deepseek.*` |
+| Qwen 通义千问 | 阿里云 DashScope | 大语言模型对话（qwen3.6-flash） | `llm.qwen.*` |
+| DeepSeek | DeepSeek 官方 | 大语言模型对话（备选，V4-Flash） | `llm.deepseek.*` |
+| SenseVoice 端侧 | 本地 sherpa-onnx | 离线语音识别兜底 | `asr.sensevoice_local.*` |
 | 和风天气 | QWeather | 实时天气查询 | `weather.weather_api_key` |
 | 聚合数据新闻 | juhe.cn | 新闻内容 | 前端模块配置 |
-| 涂鸦 IoT | Tuya Smart | 红外智能控制 | `iot.tuya_api_id` |
 
 ### 主要 Python 依赖库
 
@@ -529,7 +496,6 @@ smart-mirror-backend/
 │   ├── tts/              # 语音合成
 │   ├── vad/              # 语音活动检测
 │   └── weather/          # 天气服务
-├── home_control/         # 家居控制
 ├── known_faces/          # 已知人脸图片
 ├── tests/                # 测试文件
 └── log/                  # 日志输出
@@ -623,8 +589,7 @@ npm start
 
 | 限制 | 说明 |
 |------|------|
-| GPIO 依赖 | 人体检测、红外控制仅支持树莓派，Windows/macOS 开发需关闭 |
-| MQTT 空调控制 | 代码中已有接口定义，但功能未实现 |
+| GPIO 依赖 | 人体检测仅支持树莓派，Windows/macOS 开发需关闭 |
 | DeepSeek 后端 | `deepseek_chat()` 函数体为 `pass`，待实现 |
 | 视线估计 | `features/gaze_estimation/` 当前以配置驱动为主，算法待完善 |
 | 唤醒词精度 | 当前为关键词匹配，存在误唤醒风险 |
@@ -633,11 +598,10 @@ npm start
 ### 后续规划
 
 1. 完善 DeepSeek LLM 后端接入
-2. 实现 MQTT 协议的 WiFi 空调控制
-3. 完善视线估计模块，支持"用户注视触发亮屏"
-4. 接入本地小模型（如 Whisper）实现离线语音识别
-5. 增加用户配置界面（Web 管理页）
-6. 优化多线程架构，减少资源竞争
+2. 完善视线估计模块，支持"用户注视触发亮屏"
+3. 接入 SenseVoice-Small 端侧离线语音识别（sherpa-onnx）
+4. 增加用户配置界面（Web 管理页）
+5. 优化多线程架构，减少资源竞争
 
 ---
 

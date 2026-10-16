@@ -110,8 +110,7 @@
 		"stylelint-prettier": "^5.0.2"
 	},
 	"optionalDependencies": {
-		"electron": "^32.2.7",
-		"node-dht-sensor": "^0.4.5"
+		"electron": "^32.2.7"
 	},
 	"engines": {
 		"node": ">=20.18.1 <21 || >=22"

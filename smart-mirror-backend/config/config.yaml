@@ -86,9 +86,6 @@ llm :
 weather :
   weather_api_key: "8ff8d7c3dd9d4e3190df3931536544ef"
 
-iot :
-  tuya_api_id: ""
-  tuya_api_secret : ""
 #==============参数配置===============================
 vad:
   #音频录制超时配置，单位均为s
