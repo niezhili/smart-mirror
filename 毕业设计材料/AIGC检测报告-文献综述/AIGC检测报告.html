@@ -1,0 +1,1581 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style media="screen"></style>
+    <title>AIGC检测报告</title>
+
+    <meta name="toTop" content="true">
+    <meta content="0" http-equiv="Expires"/>
+    <meta content="no-cache" http-equiv="Pragma"/>
+    <meta content="no-cache" http-equiv="Cache-Control"/>
+    <meta content="no-cache" http-equiv="Cache"/>
+    <link href="css_v2/index_2018051810.css" type="text/css" rel="stylesheet">
+    <link href="css_v2/aigc.css" type="text/css" rel="stylesheet">
+    <script src="js_v2/jquery1.42.min.js" type="text/javascript"></script>
+        <script src="js_v2/toTop.js" type="text/javascript"></script>
+
+        <script>
+            $(function(){
+                var script = document.createElement('script');
+                script.src = "js_v2/report.js";
+                // 添加onload事件处理
+                script.onload = function() {
+                    var script2 = document.createElement('script');
+                    script2.src = "js_v2/text_check.js";
+                    document.body.appendChild(script2);
+                };
+                script.onerror = function() {
+                    $(".top-nav__tab-li-icon-lock,.top-nav__tab-li-lock").css({
+                        display: "inline-block",
+                    });
+                    $(".top-nav").addClass("top-nav-lock");
+                };
+                document.body.appendChild(script);
+            })
+        </script>
+
+
+    <!--解决IE 6不支持png格式的代码-->
+    <!--[if IE 6]>-->
+    <script src="js_v2/png.js" type="text/javascript"></script>
+    <script>
+        // linkUrl = linkUrl ? linkUrl : 'https://www.paperyy.com/paper_service.aspx';
+        var linkUrl = 'https://www.paperyy.com/paper_service.aspx';
+        var domainUrl = linkUrl.substring(linkUrl.indexOf("//") + 2, linkUrl.indexOf("/", linkUrl.indexOf("//") + 2));
+        DD_belatedPNG.fix('.pngfix');
+
+    </script>
+    <script>
+        var _hmt = _hmt || [];
+        (function () {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?4f829408523566fa48748597eeea7cb2";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+<body>
+
+<!--topbg-->
+<a name="top"></a>
+<div class="topbg">
+    <div class="top">
+        <div style="top: 30px;position: absolute;left: 50px;z-index: 66;width: 108px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px 6px 6px 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+            text-align: center;
+            line-height: 32px;
+        ">
+            <a class="left_top_btn" href="https://www.paperyy.com/member_new/thesis/post.aspx" target="_blank"
+            style="color: #fff;font-size: 13px;display: block;width: 100%;height: 100%;">
+                <img src="images_v2/new_img/left_top_icon.png" style="margin-right: 5px;position: relative;top: -2px;">
+                免费查重
+            </a>
+        </div>
+        <div class="logo pngfix">
+             <img src="images_v2/new_img/logo_new1.png">
+        </div>
+    </div>
+</div>
+<!--topbg end-->
+<!--wrapper-->
+<div class="wrapper">
+    <!--wrapper_topbg-->
+    <div class="wrapper_topbg">
+        <!--xp 20150305 begin-->
+        <div class="type1" style="font-size: 13px;height: 14px;line-height: 41px;"></div>
+        <!--xp 20150305 end-->
+        <!--wrapper_con-->
+        <div class="wrapper_con">
+            <div class="zjk-tips" style="display: none;"></div>
+
+            <!-- 头部导航切换 -->
+            <div class="top-nav-box">
+              <div class="top-nav">
+                  <div class="top-nav__tab top-nav__tab--left">
+                    <div class="top-nav__tab-li">
+                      <img class="top-nav__tab-li-icon top-nav__tab-li-icon-unlock" src="images_v2/new_img/top_icon_left.png" />
+                      <img class="top-nav__tab-li-icon top-nav__tab-li-icon-lock" src="images_v2/new_img/top_nav_lock_icon.png" />
+                      <span class="top-nav__title"><i>论文查重报告:</i> 检测是否抄袭</span>
+                    </div>
+                    <div class="top-nav__tab-li top-nav__tab-li-unlock">
+                      相似度：<span class="top-nav__tab-li-num"></span>
+                    </div>
+                    <div class="top-nav__tab-li top-nav__tab-li-lock">
+                      相似度：
+                      <span class="top-nav__tab-li-lock-btn">
+                        <a class="top-nav__tab-li-lock-btn-a" href="https://www.paperyy.com/member_new/thesis/unlock?unlockType=0&taskId=8505d98e-db01-4537-821c-01eea4f04fc4" target="_blank">解锁查看</a>
+                        <span class="top-nav__tab-li-lock-btn-tips">
+                          <img src="images_v2/new_img/top_lock_tip_icon.png" alt="">
+                          每天免费1篇
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="top-nav__tab top-nav__tab--right top-nav__tab-right--active">
+                      <div class="top-nav__tab-li">
+                          <img class="top-nav__tab-li-icon" src="images_v2/new_img/top_icon_right.png" />
+                          <span class="top-nav__title"><i>AIGC报告: </i> 检测是否由AI生成</span>
+                      </div>
+                      <div class="top-nav__tab-li">
+                        疑似率：<span class="top-nav__tab-li-num">24.6%</span>
+                      </div>
+                  </div>
+              </div>
+            </div>
+            <!-- 头部导航切换 END -->
+
+            <div class="wrapper_conT"></div>
+            <div class="wrapper_con_content">
+                <!--TextInfo-->
+                <div class="TextInfo Mar">
+                    <div class="navbar">
+                        <ul class="fastBar">
+                            <li>
+                                <a class="rptDownload" href="https://report.paperyy.com/20261018/8505d98e-db01-4537-821c-01eea4f04fc4-aigc/report.zip?AccessKeyId=HBDT3R50QARZFDNEE0FT&Expires=1792898078&Signature=70zmJAHRd0vRhMf8ZBVb6q05ZBE%3D" target="_blank"></a>
+                                <a class="pdfDownload" href="https://report.paperyy.com/20261018/8505d98e-db01-4537-821c-01eea4f04fc4-aigc/report.pdf?AccessKeyId=HBDT3R50QARZFDNEE0FT&Expires=1792898078&Signature=m%2Bfb4yOsXagJNiJqbP5nLhGWfCs%3D" target="_blank"></a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="aigc-container">
+                        <div class="aigc-box-detection-info">
+                            <div class="aigc-box-detection-info-l">
+                                    <div class="aigc-box-info-l-li"><span>检测文献：</span>AIGC文档检测（<i
+                                                class="aigc-box-info-l-li-xbt" title="文献综述-基于树莓派的Agent智能镜子助手">文献综述-基于树莓派的Agent智能镜子助手</i>）
+                                    </div>
+                                <div class="aigc-box-info-l-li"><span>字数：</span>5,315字</div>
+                                    <div class="aigc-box-info-l-li"><span>段落数：</span>55段
+                                    </div>
+                                <div class="aigc-box-info-l-li"><span>句子数：</span>148句</div>
+                                <div class="aigc-box-info-l-li"><span>报告时间：</span>2026-10-18 11:14:38</div>
+                                <div class="aigc-box-info-l-li"><span>报告编号：</span>AIGC202610181114369853</div>
+                            </div>
+                            <div class="aigc-box-detection-info-x"></div>
+                            <div class="aigc-box-detection-info-r">
+                                <div class="aigc-box-info-r-xbt">检测范围：</div>
+                                <div class="aigc-box-info-r-lis">
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/gpt35.png" alt="">ChatGPT-3.5
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/gpt4.png" alt="">ChatGPT-5.1
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/gemini.png" alt="">Gemini
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/claude.png" alt="">Claude
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/wxyy.png" alt="">文心一言
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/tyqw.png" alt="">通义千问
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/zpai.png" alt="">智谱AI
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/doubao.png" alt="">豆包
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/kimi.png" alt="">Kimi
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/o1_mini.png" alt="">o1-mini
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/o1_preview.png" alt="">o1-preview
+                                            </div>
+                                            <div class="aigc-box-info-r-lis-li">
+                                                <img src="images_v2/aigc/deepseek.png" alt="">Deepseek
+                                            </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="aigc-box-detection-chance">
+                                <div class="aigc-box-detection-chance-li">
+                                    <div class="aigc-detection-chance-xbt">
+                                        AIGC疑似率：<span>24.6%</span>
+                                    </div>
+                                    <div class="aigc-detection-chance-txt">
+                                        <p>高度疑似AIGC占全文比：24%</p>
+                                        <p>中度疑似AIGC占全文比：2.5%</p>
+                                        <p>低度疑似AIGC占全文比：24.7%</p>
+                                        <p>不予检测文字占全文比：48.9%</p>
+                                    </div>
+                                </div>
+
+
+                            <div class="aigc-reduce-btn-box">
+                                <div class="aigc-reduce-btn-box-xbt">推荐服务</div>
+                                <a class="recommend_row recom-row recommend_width" href="https://www.paperyy.com/check-pay/reduce-pay-task/AIGC202610181114369853?sid=24" target="_blank">
+                                    <div class="recommend-box-li">
+                                        <div class="recommend-box-li-left">
+                                            <img class="recommend-box-li-left__img" src="images_v2/new_img/sqjc_icon.png">
+                                            <span class="recommend-box-li-left__xbt"><i>双擎降重</i></span>
+                                            <span class="recommend-box-li-left__txt">：AIGC降重+学术论文降重</span>
+                                        </div>
+                                        <div class="recommend-box-li-right">
+                                            立即降重
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <a class="recommend_row recom-row recommend_width" href="https://www.paperyy.com/check-pay/reduce-pay-task/AIGC202610181114369853?sid=25" target="_blank">
+                                    <div class="recommend-box-li recommend-box-li-gg">
+                                    <div class="recommend-box-li-left">
+                                        <img class="recommend-box-li-left__img" src="images_v2/new_img/wxgg_icon.png">
+                                        <span class="recommend-box-li-left__xbt"><i>AI无限改稿</i></span>
+                                        <span class="recommend-box-li-left__txt">：不限次数对论文在线降重、润色等</span>
+                                    </div>
+                                    <div class="recommend-box-li-right">
+                                        立即改稿
+                                    </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="aigc-box-detection-chancet-tips">
+                                <div class="aigc-box-detection-chancet-tips-xbt">
+                                    您也可以查看逐句检测结果，片段的不同颜色表示该片段可能为AI生成的概率
+                                </div>
+                                <div class="aigc-box-detection-chancet-tips-lis">
+                                    <div class="aigc-box-detection-chancet-tips-li">
+                                        <i class="black"></i>
+                                        <span>黑色：低度疑似AI生成</span>
+                                        AI生成的概率在0%~40%,判定为人类创作
+                                    </div>
+                                    <div class="aigc-box-detection-chancet-tips-li">
+                                        <i class="orange"></i>
+                                        <span>橙色：中度疑似AI生成</span>
+                                        AI生成的概率在40%~60%,疑似为AI生成
+                                    </div>
+                                    <div class="aigc-box-detection-chancet-tips-li">
+                                        <i class="red"></i>
+                                        <span>红色：高度疑似AI生成</span>
+                                        AI生成的概率在60%~100%,判定为AI创作
+                                    </div>
+                                    <div class="aigc-box-detection-chancet-tips-li">
+                                        <i class="grey"></i>
+                                        <span>灰色：未检测片段</span>
+                                        过短片段、标题及字符等不予检测的片段
+                                    </div>
+                                </div>
+                                <div class="aigc-box-detection-chancet-tips-bom">
+                                    <img src="images_v2/aigc/aigc_icon1.png" alt="">
+                                    如需查看片段详细识别结果，请将鼠标移到有颜色标识的部分
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="aigc-box-detection-tab">
+                                <div class="aigc-box-detection-tab-li aigc-box-detection-tab-li-active">
+                                    查看全文
+                                </div>
+                                    <div class="aigc-box-detection-tab-li">
+                                        <i class="red"></i>
+                                        高度疑似AI生成
+                                    </div>
+                                    <div class="aigc-box-detection-tab-li">
+                                        <i class="orange"></i>
+                                        中度疑似AI生成
+                                    </div>
+                                    <div class="aigc-box-detection-tab-li">
+                                        <i class="black"></i>
+                                        低度疑似AI生成
+                                    </div>
+                            </div>
+
+                            <div class="aigc-box-detection-content aigc-box-detection-content-lis">
+                                <div class="aigc-box-detection-content-title">
+                                    <i></i>
+                                    原文内容
+                                </div>
+                                <div class="aigc-box-detection-content-txt">
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>毕业设计（论文）文献综述<br>课题名称：基于树莓派的Agent智能镜子助手设计与实现</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>学生姓名：聂志理　　专业：通信工程　　学院：人工智能与信息工程学院</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>一、引言</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='1'>随着人工智能与物联网技术的快速发展，人机交互方式正从键盘、鼠标、触摸屏等传统手段，向语音、视觉等更自然的方式演进。镜面是人们在盥洗、更衣、出门前高频接触的界面，将其与显示屏、传感器和智能算法结合，就形成了智能镜面（Smart Mirror）这一新型交互终端。智能镜面能够在用户照镜的同时展示时间、天气、新闻等信息，并通过语音和视觉感知与用户交流，是智能家居场景中极具代表性的嵌入式人工智能应用。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">15.8%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 15.8%">15.8%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 15.8%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：15.8%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>本文围绕智能镜面系统、语音交互关键技术与嵌入式实现平台三个方向，对国内外研究现状进行综述，为本课题的研究提供依据。</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>二、智能镜面系统的研究与应用现状</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='1'>国外方面，智能镜面较早以创客项目和概念产品的形式出现。开源框架 MagicMirror²[10] 由 Michael Teeuw 发起，采用模块化架构，开发者可以像安装插件一样组合时钟、天气、日历、新闻等显示模块，目前已形成活跃的国际社区，是绝大多数智能镜面研究与二次开发的原型基础。在产业界，三星、松下等公司先后在国际消费电子展（CES）上展出智能镜子概念产品，将增强现实、健康检测等功能引入镜面形态；相关研究还探索了智能镜在皮肤分析、体重管理等健康监测场景中的应用。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">15.4%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 15.4%">15.4%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 15.4%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：15.4%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>国内方面，随着智能家居生态的成熟，智能镜产品逐步进入浴室、美妆与服装零售等场景，各类“智能魔镜”“智能化妆镜”商用产品不断涌现。在高校与研究层面，多数工作基于树莓派等单板计算机与 MagicMirror² 框架进行二次开发，重点集中在信息展示定制与简单语音控制上。总体来看，现有智能镜面系统大多停留在“信息展示+简单指令控制”阶段，将大语言模型、人脸识别、多模态感知深度融合进镜面终端的研究仍较少，交互的自然度与智能化水平有较大提升空间。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">95.3%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 95.3%">95.3%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 95.3%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：95.3%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>三、语音交互关键技术研究现状</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.1 语音活动检测与唤醒</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='medium' id='1'>语音交互的第一环是判断“用户是否在说话”。传统的语音活动检测（VAD）依赖能量阈值与过零率等手工特征，在噪声环境下性能明显下降。近年来，基于深度学习的 VAD 成为主流，其中 Silero VAD[9] 是典型的轻量级预训练模型，单模型体积小、推理快，可以直接在树莓派等嵌入式设备上本地运行，为资源受限终端提供了可靠的人声检测能力。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="medium">
+                                                                        中度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="medium">57.7%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="medium"
+                                                                           style="left: 57.7%">57.7%</p>
+                                                                        <img src="images_v2/aigc/medium.png"
+                                                                             style="left: 57.7%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段疑似为AI生成，有可能通过AIGC改写或通过AIGC生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：57.7%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>唤醒词检测（Keyword Spotting）通常在本地持续监听特定关键词，其挑战在于误唤醒率与功耗的平衡：唤醒模型需要全天候运行，过灵敏会造成误唤醒和隐私顾虑，过迟钝则影响首次交互体验。目前常用的做法是将轻量唤醒模型与 VAD 级联，先由 VAD 过滤静音段再进行关键词判决，并引入连续多帧确认与冷却时间等防抖策略，在保证唤醒率的同时降低无效识别带来的资源消耗。此外，唤醒与 VAD 环节尽量在端侧本地完成，也有助于减少音频数据上云带来的隐私风险。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">95.3%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 95.3%">95.3%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 95.3%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：95.3%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.2 语音识别</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='1'>语音识别（ASR）经历了从 GMM-HMM 到 DNN-HMM 混合系统，再到端到端深度模型的演进[6][7][11]。端到端模型免去了人工设计的发音词典与决策树，主流路线包括 CTC、注意力机制与 Transducer 等。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">28.5%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 28.5%">28.5%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 28.5%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='2'>在效率方面，Paraformer[3] 提出非自回归的并行预测结构，在保持识别精度的同时显著降低推理时延，适合对实时性要求高的交互场景；在鲁棒性方面，Whisper[4] 利用大规模弱监督数据训练，在中英文等多语种、多口音场景下表现出很强的泛化能力。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">18.3%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 18.3%">18.3%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 18.3%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='3'>对嵌入式终端而言，直接本地部署高精度 ASR 仍然困难，因此通过云端 API（如阿里云 DashScope、百度智能云）调用大规模识别模型，成为当前智能硬件产品的普遍做法。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">18.1%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 18.1%">18.1%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 18.1%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：21.3%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.3 大语言模型对话</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>Transformer 结构[1]的提出奠定了大语言模型（LLM）的基础。以 GPT 为代表的自回归语言模型证明了规模化的价值，此后 Qwen[2]、DeepSeek 等模型在中文理解、多语言能力与推理水平上不断进步，并通过开放 API 的方式降低了应用接入门槛。综述研究[5]指出，大语言模型已具备多轮上下文对话、指令遵循与角色扮演能力，可以承担智能设备的“对话大脑”。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">94%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 94%">94%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 94%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='2'>在智能镜面场景中，将用户语音经 ASR 转写后交给 LLM 理解与生成，再由 TTS 播报，即可获得远超固定模板问答的自然对话体验；结合人设配置与多轮上下文管理，还能实现个性化、多语种的助手形象。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">18.5%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 18.5%">18.5%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 18.5%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：65.5%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.4 语音合成</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>语音合成（TTS）从早期的拼接合成与参数合成，发展到基于深度神经网络的波形生成，自然度已接近真人水平。当前的云端 TTS 服务（如火山引擎、百度智能云）普遍支持多语种、多音色与情感风格控制，并采用 WebSocket 流式接口，可以边生成边播放。对于智能镜面这类交互终端，将长句按标点分段流式合成与播放，能有效压缩用户感知延迟，是提升对话体验的关键工程手段。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">94%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 94%">94%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 94%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：94%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.5 大语言模型智能体与工具调用</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='1'>单纯对话之外，研究者进一步提出了大语言模型智能体（LLM Agent）的概念：以模型为“大脑”，通过工具调用感知环境、执行动作。ReAct[13] 将推理轨迹与行动交织，让模型边思考边调用外部工具，显著提升复杂任务的完成率；Toolformer[14] 证明模型可以在自监督条件下学会在合适位置插入 API 调用。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">29.4%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 29.4%">29.4%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 29.4%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='2'>综述研究[15]将智能体的基本结构归纳为“规划—记忆—工具使用”三个模块，成为当前端侧与云端 Agent 应用的通用设计范式。在工程实现上，函数调用（Function Calling）通过让模型输出结构化的调用参数而非自然语言，保证了工具执行的确定性；配合单次请求工具调用轮数上限与解析失败回退策略，可以约束小模型误调用带来的风险。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">21.6%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 21.6%">21.6%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 21.6%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='3'>在部署侧，模型量化技术与 llama.cpp 等推理框架的成熟，使 0.5B—2B 级模型可以在树莓派等资源受限设备上本地常驻运行，为离线场景下的工具调用与简单对话提供了可行路径。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">28.2%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 28.2%">28.2%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 28.2%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：25.9%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>3.6 会议内容理解与任务抽取</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>从会议或谈话录音中自动提取待办事项，学术上属于会议内容理解的研究范畴。AMI 会议语料库[16]提供了多通道录音、转写与标注数据，是该方向的经典评测基础；QMSum[17] 进一步提出基于查询的多域会议摘要任务，推动了对长转写文本要点抽取的研究。相关工作表明，将长转写按语义分段后交由大语言模型进行结构化抽取（待办、日程、提醒、纪要等类别），比传统规则方法具有明显更高的准确率与泛化能力。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">92.1%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 92.1%">92.1%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 92.1%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='2'>工程实践中，录音采集与转写通常由成熟的商业平台完成（如飞书妙记等会议转写服务，提供开放 API 供增量拉取转写结果），研究重点集中在转写文本的下游处理——即如何可靠地将非结构化谈话内容映射为可执行的任务条目，并交由用户确认后落地，以控制自动抽取的误判风险。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">39.2%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 39.2%">39.2%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 39.2%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：70.3%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>四、嵌入式平台与系统集成研究现状</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='1'>树莓派（Raspberry Pi）是目前应用最广泛的单板计算机之一，具备 GPIO 通用接口、多媒体处理与网络通信能力，且拥有完善的操作系统与软件生态，非常适合智能硬件原型验证。在感知层面，dlib[8] 提供了基于深度度量学习的人脸特征编码方法，将人脸映射为 128 维特征向量进行比对，在常规硬件上即可获得较高的识别精度，广泛用于嵌入式身份识别。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">18.5%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 18.5%">18.5%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 18.5%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：18.5%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>系统架构方面，受算力约束，嵌入式 AI 终端普遍采用“端云协同”模式：本地负责传感器采集、VAD、人脸识别等轻量计算，云端负责 ASR、LLM、TTS 等重计算任务，两者通过网络衔接。这种架构兼顾了响应速度、识别质量与设备成本，是当前智能语音硬件的主流方案。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">96.9%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 96.9%">96.9%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 96.9%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='low' id='2'>其代价是系统对网络质量高度敏感，且需要妥善管理多后端服务的密钥与配置；因此工程上普遍强调配置驱动与模块可插拔设计，使同类能力（如不同厂商的 ASR）可以按需切换，核心逻辑不与具体云服务耦合，从而提高系统的可维护性与可扩展性。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="low">
+                                                                        低度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="low">15.4%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="low"
+                                                                           style="left: 15.4%">15.4%</p>
+                                                                        <img src="images_v2/aigc/low.png"
+                                                                             style="left: 15.4%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段可能为人类创作
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：56.2%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>五、总结</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis ">
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='1'>综上所述，智能镜面系统的展示框架、语音交互各环节的关键技术、大语言模型智能体与工具调用方法、会议内容理解技术以及嵌入式平台均已较为成熟，为构建 Agent 智能镜子助手提供了坚实的技术基础。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">96.9%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 96.9%">96.9%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 96.9%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='2'>但现有研究仍存在以下不足：一是多数智能镜面仅实现简单语音指令，缺少基于大语言模型的多轮自然对话与工具调用能力；二是语音交互链路的端到端延迟优化研究不足，影响实际体验；三是身份识别与对话系统往往相互独立，个性化服务难以落地；四是从谈话录音到可执行任务的自动化处理链路，在面向个人场景的智能终端上仍缺少完整实践。</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">96.9%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 96.9%">96.9%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 96.9%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                        <span class="aigc-box-detection-content-list-lis-txt">
+                                                        <em class='high' id='3'>本课题拟在已有大学生创新创业训练项目的基础上，融合 Silero VAD、Qwen3-ASR 语音识别、Qwen3.6 大语言模型、流式 TTS、dlib 人脸识别与 MagicMirror² 展示框架，并构建端侧轻量智能体、集成基于飞书妙记的个人任务管理，在树莓派平台上实现一个交互自然、响应及时、支持多语种与个性化的 Agent 智能镜子助手，并对其中的端云协同与延迟优化问题进行重点研究，具有较</em>
+                                                        <div class="aigc-detection-chance-popover">
+                                                            <div class="aigc-detection-chance-popover-top">
+                                                                <span class="high">
+                                                                        高度
+                                                                    疑似AIGC
+                                                                </span>
+                                                                该句子为AI生成的可能性为：<i
+                                                                        class="high">96.9%</i>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-con">
+                                                                <div class="aigc-detection-chance-popover-con-perss">
+                                                                    <div class="aigc-detection-chance-popover-con-orientation">
+                                                                        <p class="high"
+                                                                           style="left: 96.9%">96.9%</p>
+                                                                        <img src="images_v2/aigc/high.png"
+                                                                             style="left: 96.9%"/>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss1">
+                                                                        <span class="aigc-detection-chance-popover-tips">人类创作</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">40%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss2">
+                                                                        <span class="aigc-detection-chance-popover-tips">疑似AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">60%</span>
+                                                                    </div>
+                                                                    <div class="aigc-detection-chance-popover-con-perss3">
+                                                                        <span class="aigc-detection-chance-popover-tips">AI生成</span>
+                                                                        <span class="aigc-detection-chance-popover-percent">100%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="aigc-detection-chance-popover-bom">
+                                                                    该片段有较大概率为AI模型生成
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                <div class="aigc-box-detection-content-list-bom">
+                                                    该段落可能为AI生成的概率为：96.9%
+                                                </div>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>高的研究价值与应用前景。</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>参考文献</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[1] Vaswani A, Shazeer N, Parmar N, et al. Attention is all you need[C]//Advances in Neural Information Processing Systems (NIPS). 2017: 5998-6008.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[2] Bai J, Bai S, Chu Y, et al. Qwen technical report[EB/OL]. arXiv preprint arXiv:2309.16609, 2023.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[3] Zhang J, Zhang Y, Shi J, et al. Paraformer: Fast and accurate parallel transformer for non-autoregressive end-to-end ASR[C]//Proceedings of Interspeech. 2022: 2063-2067.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[4] Radford A, Kim J W, Xu T, et al. Robust speech recognition via large-scale weak supervision[C]//Proceedings of the 40th International Conference on Machine Learning (ICML). 2023: 28492-28518.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[5] Zhao W X, Zhou K, Li J, et al. A survey of large language models[EB/OL]. arXiv preprint arXiv:2303.18223, 2023.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[6] LeCun Y, Bengio Y, Hinton G. Deep learning[J]. Nature, 2015, 521(7553): 436-444.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[7] Schmidhuber J. Deep learning in neural networks: An overview[J]. Neural Networks, 2015, 61: 85-117.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[8] King D E. Dlib-ml: A machine learning toolkit[J]. Journal of Machine Learning Research, 2009, 10: 1755-1758.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[9] Silero Team. Silero VAD: Pre-trained enterprise-grade voice activity detector[EB/OL]. https://github.com/snakers4/silero-vad, 2024.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[10] Teeuw M. MagicMirror²: The open source modular smart mirror platform[EB/OL]. https://magicmirror.builders, 2024.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[11] 俞栋, 邓力. 解析深度学习：语音识别实践[M]. 俞凯, 钱彦旻, 等译. 北京: 电子工业出版社, 2016.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[12] 宗成庆. 统计自然语言处理（第2版）[M]. 北京: 清华大学出版社, 2013.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[13] Yao S, Zhao J, Yu D, et al. ReAct: Synergizing reasoning and acting in language models[C]//Proceedings of the 11th International Conference on Learning Representations (ICLR). 2023.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[14] Schick T, Dwivedi-Yu J, Dessì R, et al. Toolformer: Language models can teach themselves to use tools[C]//Advances in Neural Information Processing Systems (NeurIPS). 2023.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[15] Xi Z, Chen W, Guo X, et al. The rise and potential of large language model based agents: A survey[EB/OL]. arXiv preprint arXiv:2309.07864, 2023.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[16] Carletta J, Ashby S, Bourban S, et al. The AMI meeting corpus: A pre-announcement[C]//International Workshop on Machine Learning for Multimodal Interaction (MLMI). 2005: 28-39.</p>
+                                        </div>
+                                        <div class="aigc-box-detection-content-list-lis uncheck">
+                                                <p class='uncheck'>[17] Zhong M, Yin D, Yu T, et al. QMSum: A query-based multi-domain meeting summarization dataset[C]//Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics (NAACL). 2021: 5590-5600.</p>
+                                        </div>
+                                </div>
+                            </div>
+
+                                    <div class="aigc-box-detection-content-table aigc-box-detection-content-lis aigc-box-detection-content-lis-high"
+                                         style="display: none;">
+                                        <div class="aigc-box-detection-table-head">
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-l">
+                                                检测片段
+                                            </div>
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-r">
+                                                AI生成的概率
+                                            </div>
+                                        </div>
+                                        <table class="aigc-box-detection-table-body">
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>国内方面，随着智能家居生态的成熟，智能镜产品逐步进入浴室、美妆与服装零售等场景，各类“智能魔镜”“智能化妆镜”商用产品不断涌现。在高校与研究层面，多数工作基于树莓派等单板计算机与 MagicMirror² 框架进行二次开发，重点集中在信息展示定制与简单语音控制上。总体来看，现有智能镜面系统大多停留在“信息展示+简单指令控制”阶段，将大语言模型、人脸识别、多模态感知深度融合进镜面终端的研究仍较少，交互的自然度与智能化水平有较大提升空间。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>95.3%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>唤醒词检测（Keyword Spotting）通常在本地持续监听特定关键词，其挑战在于误唤醒率与功耗的平衡：唤醒模型需要全天候运行，过灵敏会造成误唤醒和隐私顾虑，过迟钝则影响首次交互体验。目前常用的做法是将轻量唤醒模型与 VAD 级联，先由 VAD 过滤静音段再进行关键词判决，并引入连续多帧确认与冷却时间等防抖策略，在保证唤醒率的同时降低无效识别带来的资源消耗。此外，唤醒与 VAD 环节尽量在端侧本地完成，也有助于减少音频数据上云带来的隐私风险。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>95.3%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>Transformer 结构[1]的提出奠定了大语言模型（LLM）的基础。以 GPT 为代表的自回归语言模型证明了规模化的价值，此后 Qwen[2]、DeepSeek 等模型在中文理解、多语言能力与推理水平上不断进步，并通过开放 API 的方式降低了应用接入门槛。综述研究[5]指出，大语言模型已具备多轮上下文对话、指令遵循与角色扮演能力，可以承担智能设备的“对话大脑”。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>94%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>语音合成（TTS）从早期的拼接合成与参数合成，发展到基于深度神经网络的波形生成，自然度已接近真人水平。当前的云端 TTS 服务（如火山引擎、百度智能云）普遍支持多语种、多音色与情感风格控制，并采用 WebSocket 流式接口，可以边生成边播放。对于智能镜面这类交互终端，将长句按标点分段流式合成与播放，能有效压缩用户感知延迟，是提升对话体验的关键工程手段。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>94%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>从会议或谈话录音中自动提取待办事项，学术上属于会议内容理解的研究范畴。AMI 会议语料库[16]提供了多通道录音、转写与标注数据，是该方向的经典评测基础；QMSum[17] 进一步提出基于查询的多域会议摘要任务，推动了对长转写文本要点抽取的研究。相关工作表明，将长转写按语义分段后交由大语言模型进行结构化抽取（待办、日程、提醒、纪要等类别），比传统规则方法具有明显更高的准确率与泛化能力。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>92.1%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>系统架构方面，受算力约束，嵌入式 AI 终端普遍采用“端云协同”模式：本地负责传感器采集、VAD、人脸识别等轻量计算，云端负责 ASR、LLM、TTS 等重计算任务，两者通过网络衔接。这种架构兼顾了响应速度、识别质量与设备成本，是当前智能语音硬件的主流方案。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>96.9%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='1'>综上所述，智能镜面系统的展示框架、语音交互各环节的关键技术、大语言模型智能体与工具调用方法、会议内容理解技术以及嵌入式平台均已较为成熟，为构建 Agent 智能镜子助手提供了坚实的技术基础。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>96.9%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='2'>但现有研究仍存在以下不足：一是多数智能镜面仅实现简单语音指令，缺少基于大语言模型的多轮自然对话与工具调用能力；二是语音交互链路的端到端延迟优化研究不足，影响实际体验；三是身份识别与对话系统往往相互独立，个性化服务难以落地；四是从谈话录音到可执行任务的自动化处理链路，在面向个人场景的智能终端上仍缺少完整实践。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>96.9%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='high' id='3'>本课题拟在已有大学生创新创业训练项目的基础上，融合 Silero VAD、Qwen3-ASR 语音识别、Qwen3.6 大语言模型、流式 TTS、dlib 人脸识别与 MagicMirror² 展示框架，并构建端侧轻量智能体、集成基于飞书妙记的个人任务管理，在树莓派平台上实现一个交互自然、响应及时、支持多语种与个性化的 Agent 智能镜子助手，并对其中的端云协同与延迟优化问题进行重点研究，具有较</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>96.9%</span>
+                                                    </td>
+                                                </tr>
+                                        </table>
+                                    </div>
+
+                                    <div class="aigc-box-detection-content-table aigc-box-detection-content-lis aigc-box-detection-content-lis-medium"
+                                         style="display: none;">
+                                        <div class="aigc-box-detection-table-head">
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-l">
+                                                检测片段
+                                            </div>
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-r">
+                                                AI生成的概率
+                                            </div>
+                                        </div>
+                                        <table class="aigc-box-detection-table-body">
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='medium' id='1'>语音交互的第一环是判断“用户是否在说话”。传统的语音活动检测（VAD）依赖能量阈值与过零率等手工特征，在噪声环境下性能明显下降。近年来，基于深度学习的 VAD 成为主流，其中 Silero VAD[9] 是典型的轻量级预训练模型，单模型体积小、推理快，可以直接在树莓派等嵌入式设备上本地运行，为资源受限终端提供了可靠的人声检测能力。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>57.7%</span>
+                                                    </td>
+                                                </tr>
+                                        </table>
+                                    </div>
+
+                                    <div class="aigc-box-detection-content-table aigc-box-detection-content-lis aigc-box-detection-content-lis-low"
+                                         style="display: none;">
+                                        <div class="aigc-box-detection-table-head">
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-l">
+                                                检测片段
+                                            </div>
+                                            <div class="aigc-box-detection-table-head-li aigc-box-detection-table-head-li-r">
+                                                AI生成的概率
+                                            </div>
+                                        </div>
+                                        <table class="aigc-box-detection-table-body">
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='1'>随着人工智能与物联网技术的快速发展，人机交互方式正从键盘、鼠标、触摸屏等传统手段，向语音、视觉等更自然的方式演进。镜面是人们在盥洗、更衣、出门前高频接触的界面，将其与显示屏、传感器和智能算法结合，就形成了智能镜面（Smart Mirror）这一新型交互终端。智能镜面能够在用户照镜的同时展示时间、天气、新闻等信息，并通过语音和视觉感知与用户交流，是智能家居场景中极具代表性的嵌入式人工智能应用。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>15.8%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='1'>国外方面，智能镜面较早以创客项目和概念产品的形式出现。开源框架 MagicMirror²[10] 由 Michael Teeuw 发起，采用模块化架构，开发者可以像安装插件一样组合时钟、天气、日历、新闻等显示模块，目前已形成活跃的国际社区，是绝大多数智能镜面研究与二次开发的原型基础。在产业界，三星、松下等公司先后在国际消费电子展（CES）上展出智能镜子概念产品，将增强现实、健康检测等功能引入镜面形态；相关研究还探索了智能镜在皮肤分析、体重管理等健康监测场景中的应用。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>15.4%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='1'>语音识别（ASR）经历了从 GMM-HMM 到 DNN-HMM 混合系统，再到端到端深度模型的演进[6][7][11]。端到端模型免去了人工设计的发音词典与决策树，主流路线包括 CTC、注意力机制与 Transducer 等。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>28.5%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='2'>在效率方面，Paraformer[3] 提出非自回归的并行预测结构，在保持识别精度的同时显著降低推理时延，适合对实时性要求高的交互场景；在鲁棒性方面，Whisper[4] 利用大规模弱监督数据训练，在中英文等多语种、多口音场景下表现出很强的泛化能力。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>18.3%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='3'>对嵌入式终端而言，直接本地部署高精度 ASR 仍然困难，因此通过云端 API（如阿里云 DashScope、百度智能云）调用大规模识别模型，成为当前智能硬件产品的普遍做法。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>18.1%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='2'>在智能镜面场景中，将用户语音经 ASR 转写后交给 LLM 理解与生成，再由 TTS 播报，即可获得远超固定模板问答的自然对话体验；结合人设配置与多轮上下文管理，还能实现个性化、多语种的助手形象。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>18.5%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='1'>单纯对话之外，研究者进一步提出了大语言模型智能体（LLM Agent）的概念：以模型为“大脑”，通过工具调用感知环境、执行动作。ReAct[13] 将推理轨迹与行动交织，让模型边思考边调用外部工具，显著提升复杂任务的完成率；Toolformer[14] 证明模型可以在自监督条件下学会在合适位置插入 API 调用。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>29.4%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='2'>综述研究[15]将智能体的基本结构归纳为“规划—记忆—工具使用”三个模块，成为当前端侧与云端 Agent 应用的通用设计范式。在工程实现上，函数调用（Function Calling）通过让模型输出结构化的调用参数而非自然语言，保证了工具执行的确定性；配合单次请求工具调用轮数上限与解析失败回退策略，可以约束小模型误调用带来的风险。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>21.6%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='3'>在部署侧，模型量化技术与 llama.cpp 等推理框架的成熟，使 0.5B—2B 级模型可以在树莓派等资源受限设备上本地常驻运行，为离线场景下的工具调用与简单对话提供了可行路径。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>28.2%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='2'>工程实践中，录音采集与转写通常由成熟的商业平台完成（如飞书妙记等会议转写服务，提供开放 API 供增量拉取转写结果），研究重点集中在转写文本的下游处理——即如何可靠地将非结构化谈话内容映射为可执行的任务条目，并交由用户确认后落地，以控制自动抽取的误判风险。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>39.2%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='1'>树莓派（Raspberry Pi）是目前应用最广泛的单板计算机之一，具备 GPIO 通用接口、多媒体处理与网络通信能力，且拥有完善的操作系统与软件生态，非常适合智能硬件原型验证。在感知层面，dlib[8] 提供了基于深度度量学习的人脸特征编码方法，将人脸映射为 128 维特征向量进行比对，在常规硬件上即可获得较高的识别精度，广泛用于嵌入式身份识别。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>18.5%</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="aigc-box-table-body-list">
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-l">
+                                                        <em class='low' id='2'>其代价是系统对网络质量高度敏感，且需要妥善管理多后端服务的密钥与配置；因此工程上普遍强调配置驱动与模块可插拔设计，使同类能力（如不同厂商的 ASR）可以按需切换，核心逻辑不与具体云服务耦合，从而提高系统的可维护性与可扩展性。</em>
+                                                    </td>
+                                                    <td class="aigc-box-table-body-list-li aigc-box-table-body-list-li-r">
+                                                        <span>15.4%</span>
+                                                    </td>
+                                                </tr>
+                                        </table>
+                                    </div>
+
+                    </div>
+
+                </div>
+                <!--TextInfo end-->
+
+            </div>
+            <div class="wrapper_con_Bottom"></div>
+        </div>
+        <!--wrapper_con end-->
+    </div>
+    <!--wrapper_topbg end-->
+    <div class="copyright">版权所有 <a href="https://www.paperyy.com/" target="_blank">www.paperyy.com</a></div>
+</div>
+<!--wrapper end-->
+
+<script type="text/javascript">
+    $(".left_top_btn").each(function () {
+        var href = $(this).attr("href");
+        $(this).attr("href", "https://" + domainUrl + href.substring(href.indexOf("/", href.indexOf("//") + 2)));
+    })
+    $(".top-nav__tab-li-lock-btn-a").each(function () {
+        var href = $(this).attr("href");
+        $(this).attr("href", "https://" + domainUrl + href.substring(href.indexOf("/", href.indexOf("//") + 2)));
+    })
+    $(".aigc-box-detection-tab-li").click(function () {
+        var index = $(this).index();
+        $(this).addClass("aigc-box-detection-tab-li-active").siblings().removeClass("aigc-box-detection-tab-li-active");
+        $(".aigc-box-detection-content-lis").hide().eq(index).show();
+    })
+    $(function(){
+      $('.aigc-box-detection-content-list-lis-txt em').mouseenter(function(){
+        var id = $(this).attr('id');
+        var dom = $('#'+id).siblings('.aigc-detection-chance-popover')[0];
+        const overflow = getOverflowAmount(dom);
+        console.log(overflow);
+        if(overflow.right > 0){
+          dom.style.left = -(overflow.right + 30) + 'px';
+        }
+      })
+    })
+    function getOverflowAmount(el) {
+      const rect = el.getBoundingClientRect();
+      let overflow = {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
+      };
+
+      // 计算元素超出视口的量
+      if (rect.top < 0) overflow.top = Math.abs(rect.top);
+      if (rect.left < 0) overflow.left = Math.abs(rect.left);
+      if (rect.bottom > window.innerHeight) overflow.bottom = Math.abs(rect.bottom - window.innerHeight);
+      if (rect.right > window.innerWidth) overflow.right = Math.abs(rect.right - window.innerWidth);
+
+      return overflow;
+    }
+</script>
+
+</body>
+</html>
